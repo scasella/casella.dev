@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>One Lean checker certified 32-bit indexing for 25 PyTorch kernels | Stephen Casella</title>
+  <meta name="description" content="Claude Opus 5.5 agents generalized a one-kernel Lean proof into a checker that certified 32-bit size arguments for 25 torch.compile kernels, including 10 of 24 held out. Most were not faster." />
+  <meta name="author" content="Stephen Casella" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#080c0f" />
+  <link rel="canonical" href="https://casella.dev/blog_certified_narrowing.html" />
+  <meta property="og:site_name" content="Stephen Casella" />
+  <meta property="og:title" content="Agents turned a one-kernel Lean proof into a checker that certified 25 PyTorch kernels" />
+  <meta property="og:description" content="One Lean theorem, a small checker and an untrusted search certified 25 torch.compile kernels, 10 of 24 held out. Proofs bind to the live compilation. Two of nine tuned kernels got faster." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://casella.dev/blog_certified_narrowing.html" />
+  <meta property="og:image" content="https://casella.dev/assets/og/blog_certified_narrowing.png" />
+  <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_certified_narrowing.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Share card for the write-up: Agents turned a one-kernel Lean proof into a checker that certified 25 PyTorch kernels." />
+  <meta property="article:author" content="Stephen Casella" />
+  <meta property="article:published_time" content="2026-09-27" />
+  <meta property="article:modified_time" content="2026-09-27" />
+  <meta property="article:tag" content="AI agents" />
+  <meta property="article:tag" content="Lean" />
+  <meta property="article:tag" content="PyTorch" />
+  <meta property="article:tag" content="torch.compile" />
+  <meta property="article:tag" content="Triton" />
+  <meta property="article:tag" content="formal verification" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Agents turned a one-kernel Lean proof into a checker that certified 25 PyTorch kernels" />
+  <meta name="twitter:description" content="One Lean theorem, a small checker and an untrusted search certified 25 torch.compile kernels, 10 of 24 held out. Proofs bind to the live compilation. Two of nine tuned kernels got faster." />
+  <meta name="twitter:image" content="https://casella.dev/assets/og/blog_certified_narrowing.png" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-2RSWDWW67D');
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "Agents turned a one-kernel Lean proof into a checker that certified 25 PyTorch kernels",
+      "description": "Claude Opus 5.5 agents generalized a one-kernel Lean proof into a checker that certified 32-bit size arguments for 25 torch.compile kernels, including 10 of 24 held out. Most were not faster.",
+      "url": "https://casella.dev/blog_certified_narrowing.html",
+      "mainEntityOfPage": "https://casella.dev/blog_certified_narrowing.html",
+      "image": "https://casella.dev/assets/og/blog_certified_narrowing.png",
+      "datePublished": "2026-09-27",
+      "dateModified": "2026-09-27",
+      "author": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/",
+        "sameAs": [
+          "https://github.com/scasella",
+          "https://www.linkedin.com/in/stevecasella/"
+        ]
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "keywords": [
+        "PyTorch Inductor",
+        "torch.compile",
+        "Triton",
+        "Lean 4",
+        "formal verification",
+        "integer narrowing",
+        "AI agents",
+        "Claude Opus 5.5",
+        "GPU kernels"
+      ],
+      "codeRepository": "https://github.com/scasella/certified-int-narrowing"
+    }
+  </script>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:           #fafaf8;
+      --paper:        #ffffff;
+      --fg:           #222;
+      --fg-mute:      #555;
+      --fg-faint:     #8a8a85;
+      --rule:         #e2e2dd;
+      --hi:           #f3f2ec;
+      --link:         #1a5fb4;
+      --link-visited: #5a3aa3;
+      --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono:    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      font-size: 16.5px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: rgba(0,0,0,0.08); color: inherit; }
+
+    .site-header {
+      max-width: 720px; margin: 0 auto; padding: 28px 24px 0;
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 13px; color: var(--fg-mute);
+    }
+    .site-header a {
+      color: var(--fg-mute); text-decoration: none;
+      border-bottom: 1px dotted var(--fg-faint); padding-bottom: 1px;
+    }
+    .site-header a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+
+    article {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 24px 64px;
+    }
+    .meta, .date {
+      color: var(--fg-faint); font-size: 13px;
+      margin-bottom: 8px; text-transform: none; letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: 32px; line-height: 1.22; font-weight: 600;
+      margin: 0 0 10px; letter-spacing: -0.01em; color: #111;
+    }
+    .subtitle {
+      color: var(--fg-mute); font-size: 17px; font-weight: 400;
+      line-height: 1.5; margin: 0 0 24px;
+    }
+    h2 {
+      font-size: 22px; font-weight: 600; line-height: 1.3;
+      margin: 1.9em 0 0.5em; letter-spacing: -0.005em; color: #111;
+    }
+    h3 { font-size: 17px; font-weight: 600; margin: 1.5em 0 0.35em; }
+
+    p { margin: 0 0 0.9em; }
+    ul, ol { margin: 0 0 1em; padding-left: 1.4em; }
+    li { margin-bottom: 0.35em; }
+    li::marker { color: var(--fg-faint); }
+
+    a { color: var(--link); text-decoration: underline; text-decoration-color: rgba(26,95,180,0.4); }
+    a:visited { color: var(--link-visited); }
+    a:hover { text-decoration-color: var(--link); }
+
+    code {
+      font-family: var(--font-mono); font-size: 0.85em;
+      background: var(--hi); padding: 1px 5px; border-radius: 3px;
+    }
+    pre {
+      background: var(--hi); padding: 14px 18px; border-radius: 8px;
+      overflow-x: auto; margin: 1em 0; font-size: 13px; line-height: 1.55;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    pre code { background: none; padding: 0; border-radius: 0; font-size: inherit; }
+    strong { font-weight: 600; color: var(--fg); }
+    em { font-style: italic; }
+
+    blockquote {
+      margin: 1em 0; padding: 6px 0 6px 18px;
+      border-left: 3px solid var(--rule); color: var(--fg-mute);
+    }
+    blockquote p { font-size: 15.5px; margin: 0; }
+
+    /* Paper links / pill button */
+    .paper-links {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 18px 0 8px; flex-wrap: wrap;
+    }
+    .paper-links .btn-pill {
+      font-size: 13px; line-height: 1; color: var(--fg);
+      text-decoration: none; background: var(--paper);
+      border: 1px solid var(--rule); border-radius: 999px;
+      padding: 0.55rem 0.95rem 0.65rem;
+      transition: background 200ms ease;
+    }
+    .paper-links .btn-pill:hover { background: var(--hi); }
+
+    /* TL;DR */
+    .tldr {
+      margin: 1.2em 0 1.6em;
+      padding: 14px 18px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      font-size: 15.5px;
+    }
+    .tldr-label, .tldr .label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .tldr p { font-size: 15.5px; line-height: 1.6; color: var(--fg); margin: 0; }
+    .tldr p + p { margin-top: 0.6em; }
+
+    /* Callout */
+    .callout {
+      margin: 1.5em 0; padding: 14px 18px;
+      background: var(--hi); border-radius: 6px;
+    }
+    .callout-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-mute); margin-bottom: 8px;
+    }
+    .callout p { font-size: 15px; line-height: 1.55; color: var(--fg); margin: 0; }
+
+    /* Stat row */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0;
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+    @media (min-width: 600px) {
+      .stat-row { grid-template-columns: repeat(4, 1fr); }
+    }
+    .stat {
+      padding: 16px 18px;
+      border-right: 1px solid var(--rule);
+    }
+    .stat:first-child { padding-left: 0; }
+    .stat:last-child { border-right: 0; }
+    @media (max-width: 599px) {
+      .stat:nth-child(2n) { border-right: 0; }
+      .stat:nth-child(n+3) { border-top: 1px solid var(--rule); }
+    }
+    .stat .k {
+      display: block;
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .stat .v {
+      font-size: 22px; font-weight: 600; color: var(--fg);
+      line-height: 1.1; letter-spacing: -0.01em;
+    }
+    .stat .s {
+      font-size: 12px; color: var(--fg-faint);
+      margin-top: 6px; line-height: 1.4;
+    }
+
+    /* Mode grid */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin: 1.5em 0;
+    }
+    @media (min-width: 600px) { .mode-grid { grid-template-columns: repeat(2, 1fr); } }
+    .mode-card {
+      background: var(--paper);
+      border-radius: 8px;
+      padding: 16px 18px;
+      border: 1px solid var(--rule);
+    }
+    .mode-card .tag {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .mode-card .t {
+      display: block;
+      font-size: 16px; font-weight: 600; color: var(--fg);
+      margin-bottom: 6px; letter-spacing: -0.005em;
+    }
+    .mode-card .desc {
+      font-size: 14px; line-height: 1.5; color: var(--fg-mute);
+    }
+
+    /* Table */
+    .table-wrap { margin: 1.5em 0; }
+    .table-label {
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 10px;
+    }
+    .table-label .id { color: var(--fg); margin-right: 12px; }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+    th, td {
+      padding: 8px 12px 8px 0; text-align: left;
+      border-bottom: 1px solid var(--rule); color: var(--fg);
+    }
+    th {
+      font-weight: 600; color: var(--fg-mute);
+      font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--fg-mute);
+    }
+    td.num { text-align: right; white-space: nowrap; }
+    td.pos { color: var(--fg); }
+    td.neg { color: var(--fg-faint); }
+    tr:last-child td { border-bottom: none; }
+    tr.highlight td { background: var(--hi); }
+    tr.totals td { border-top: 1px solid var(--fg-mute); }
+
+    /* Figure / chart */
+    figure.chart, figure { margin: 1.6em 0; }
+    figure svg, figure.chart svg {
+      display: block; width: 100%; height: auto;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+    }
+    figcaption {
+      font-size: 13px; color: var(--fg-mute);
+      line-height: 1.5; margin-top: 10px;
+    }
+    figcaption strong { color: var(--fg); font-weight: 500; }
+    @media (min-width: 960px) {
+      article > figure.chart, .body-main > figure.chart {
+        width: min(1100px, calc(100vw - 3rem));
+        max-width: none;
+        margin-left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+
+    /* Neg list */
+    .neg-list {
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+    }
+    .neg-list-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin: 14px 0 6px;
+    }
+    .neg-list ul { list-style: none; padding: 0; margin: 0; }
+    .neg-list li {
+      padding: 14px 0; border-bottom: 1px solid var(--rule);
+      font-size: 15px; line-height: 1.6; color: var(--fg-mute);
+      margin-bottom: 0;
+    }
+    .neg-list li:last-child { border-bottom: 0; }
+    .neg-list li strong { color: var(--fg); font-weight: 600; }
+
+    /* Break */
+    .break {
+      display: flex; align-items: center; justify-content: center;
+      margin: 3rem 0 2.5rem;
+      color: var(--fg-faint);
+      font-size: 11px; letter-spacing: 0.6em;
+    }
+
+    hr { border: 0; border-top: 1px solid var(--rule); margin: 1.8em 0; }
+    .footer { font-size: 12.5px; color: var(--fg-faint); }
+
+    /* Reproducibility panel */
+    table.repro { margin: 1em 0 1.5em; }
+    table.repro th {
+      width: 7.5em; vertical-align: top; text-transform: none; letter-spacing: 0;
+      font-size: 13px; border-bottom: 1px solid var(--rule);
+    }
+    table.repro td { font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+    table.repro tr:last-child th { border-bottom: none; }
+
+    @media (max-width: 480px) {
+      .site-header { padding: 22px 20px 0; }
+      article { padding: 16px 20px 56px; }
+      h1 { font-size: 28px; }
+      .subtitle { font-size: 16px; }
+      .stat-row { grid-template-columns: 1fr; }
+      .mode-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+    <!-- PANES:HEAD:START -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
+  <link rel="stylesheet" href="panes.css?v=4a6ced04" />
+  <script src="ascii.js?v=6f1f421a" defer></script>
+  <!-- PANES:HEAD:END -->
+</head>
+<body class="pn-body panes-post">
+  <!-- PANES:BAR:START -->
+  <div class="split split--inner">
+    <aside class="side">
+      <div class="side__pin">
+        <figure class="side__art">
+          <pre data-landscape data-rows="22" aria-hidden="true">                                                      
+                                                      
+                                                      
+                           ===                        
+                         -======                      
+                      ----========                    
+                :::::::-----========                  
+   ,::::::----::::::::::::----==========              
+    :::::-----::::::,,,,,:::--======================= 
+     ::::-----::::::,,...,,:--=====================   
+      ::::::::::::::::,...,:--===--===============    
+        :::::::::::::::::,.,<b>@</b>==------===========      
+          ,,,,,,,,::::---========-------------        
+           ,,,,,,,,,,::--========-----------          
+             ,,,,...,,::-=======---------             
+              ,,,,....,:-====---------                
+                :,,,,..,:--:::----                    
+                  :::::::::::::                       
+                     :::::                            
+                                                      
+                                                      
+                                                      </pre>
+        </figure>
+        <p class="side__name"><a href="/">Stephen<br> Casella<span class="accent">_</span></a></p>
+        <p class="side__bio">I study how language models reason and respond to training, and put AI agents to work on hard, checkable problems: formal proofs, faster code, real bugs.</p>
+        <nav class="side__nav" aria-label="Site">
+          <a href="research.html" aria-current="true">research</a>
+          <a href="projects.html">software</a>
+          <a href="/#contact">contact</a>
+        </nav>
+      </div>
+      <div class="side__links">
+        <a class="side__grid" href="blog_diversity.html" title="pick a random integer between 1 and 100." aria-label="Pick a random integer between 1 and 100. It put more than 95% of its probability on three numbers: 4, 42, and 47. Read the write-up."><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></a>
+        <a href="https://github.com/scasella" rel="me">github.com/scasella</a>
+        <a href="https://huggingface.co/scasella91" rel="me">huggingface.co/scasella91</a>
+        <a href="https://www.linkedin.com/in/stevecasella/" rel="me">linkedin</a>
+      </div>
+    </aside>
+    <div class="split__main">
+  <!-- PANES:BAR:END -->
+  <main class="post-main">
+  <article class="post">
+
+<h1>Agents turned a one-kernel Lean proof into a checker that certified 25 PyTorch kernels</h1>
+<!-- PANES:META:START -->
+    <p class="post-byline">[ <time datetime="2026-09-27">2026-09-27</time> ] // Claude Opus 5.5 · Lean 4 · PyTorch Inductor // 11 MIN READ</p>
+  <!-- PANES:META:END -->
+        <p class="subtitle">My last post proved, for one <code>torch.compile</code> kernel, when 32-bit size arguments are exact. Claude Opus 5.5 agents then built a general version: one Lean theorem, a small checker, and a search that proposes certificates. Frozen before a pre-registered test, it certified 10 of 24 kernels it had never seen, and 25 in all. The narrowed kernels are safe to use. Most of them aren't faster.</p>
+
+        <div class="tldr">
+          <span class="tldr-label">TL;DR</span>
+          <p>PyTorch Inductor passes a dynamic-shape kernel's sizes as 64-bit integers. Declaring them 32-bit makes division and remainder cheaper, but it is only safe when no index expression overflows. The first project proved that for one kernel by hand. This one proves it once, as a generic Lean theorem over a small language for Inductor's 1D pointwise kernels. An untrusted search picks, for each kernel, which of the compiler's own shape guards bounds each subexpression. Lean recomputes every bound and checks the result. The method was frozen, then run on 26 pre-registered programs: it certified 10 of the 24 kernels with 64-bit sizes, plus 15 of 35 from development. At deployment, a proof is reused only if the live compilation has the same guards, and all 128 variants with a guard dropped or weakened were refused. The speed result is narrower than the proof result. With both versions tuned, 2 of 9 kernels kept a real gain (1.17–1.19× and 1.32–1.42×), and the rest were within about 2%.</p>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat">
+            <span class="k">Kernels certified</span>
+            <div class="v">25</div>
+            <div class="s">15 of 35 development, 10 of 24 held out</div>
+          </div>
+          <div class="stat">
+            <span class="k">Held-out, method frozen</span>
+            <div class="v">10 / 24</div>
+            <div class="s">10 of the 12 the frontend could read</div>
+          </div>
+          <div class="stat">
+            <span class="k">Weakened guards refused</span>
+            <div class="v">128 / 128</div>
+            <div class="s">Same kernel body, guard dropped or weakened</div>
+          </div>
+          <div class="stat">
+            <span class="k">Faster once tuned</span>
+            <div class="v">2 / 9</div>
+            <div class="s">Both variants tuned over four launch configs</div>
+          </div>
+        </div>
+
+        <div class="callout">
+          <span class="callout-label">Status</span>
+          <p>The certifier, all 25 instances, the held-out pre-registration, the evaluation and the manuscript are public in <a href="https://github.com/scasella/certified-int-narrowing">scasella/certified-int-narrowing</a>. None of this is in PyTorch. The open PR from the first post, <a href="https://github.com/pytorch/pytorch/pull/198733">pytorch/pytorch#198733</a>, still covers one kernel.</p>
+        </div>
+
+        <h2 id="setup">From one proof to a checker</h2>
+        <p>The <a href="blog_pytorch_narrowing.html">first post</a> ended with a limit: each new kernel class would need its own extraction and proof. That proof, <code>NarrowCat.lean</code>, covered one concatenation kernel under four hand-stated hypotheses. I wanted to know whether the idea generalized, or whether it only worked for the kernel it was written for.</p>
+        <p>The work lives in the same <a href="https://github.com/scasella/veritile-narrow-cat">fork of VeriTile</a>, a Triton-verification project by Zenan Li and collaborators, but it doesn't build on VeriTile's definitions. The new theorem defines its own small integer, mask and payload semantics, and it checks with <code>import Mathlib</code> alone. It reuses the first proof's modelling choices: Triton's type promotion and wraparound, symbolic tensor values, and the grid lemma.</p>
+        <p>The agents were Claude Opus 5.5, directed from Claude Code, with occasional second opinions from Claude Fable 5.1. They wrote the theorem, checker, search, frontend, benchmarks and manuscript. I set the tasks, approved each GPU run and reviewed each stage before the next. Proofs ran on my M4 Pro MacBook Pro, and timing on one NVIDIA L4 through Modal.</p>
+
+        <h2 id="method">How the checker works</h2>
+        <p>An Inductor kernel reaches the checker in two parts. A frontend turns the printed Triton kernel into a typed term. An exporter reads Inductor's symbolic shape state: each size argument and the element count as a polynomial in shape symbols, plus the guards Inductor installs, such as a product of sizes being at most 2<sup>31</sup> − 1. Both of those steps are trusted, not proved.</p>
+        <p>A Python search then proposes a certificate. The certificate cannot assert a bound. It can only choose which guard bounds each subexpression, which quotient bound each division uses, and whether a load is checked only where its own mask holds. Lean recomputes every interval from those choices and emits side conditions: polynomials in the shape symbols that must be non-negative. One tactic, the same for every kernel, proves them.</p>
+        <p>For the held-out <code>torch.tile</code> kernel, the key step is 2ab − a(b − 1) = ab + a ≥ 0. It uses Inductor's guard on the product 2ab, which a per-symbol range would lose. During development, the search once proposed a side condition that held on sampled values but not on large ones. Lean rejected it, and that case is now a regression test.</p>
+        <p>Every accepted kernel instantiates the same theorem, proved once. On every lane of the launch grid:</p>
+        <ul>
+          <li>on active lanes, the 64-bit and 32-bit kernels read the same addresses and store the same value to the same address;</li>
+          <li>on inactive lanes, neither one reads or stores, though their intermediates may differ;</li>
+          <li>every division and remainder has a divisor of at least 1, in both widths;</li>
+          <li>every size argument fits in 32 bits, so passing it as int32 is exact;</li>
+          <li>no unspecified masked-off value reaches a store.</li>
+        </ul>
+        <p>Tensor values stay symbolic, so this says the same data reaches the same operations. It says nothing about floating-point arithmetic.</p>
+
+        <h2 id="observable">Requiring agreement only where it can be observed</h2>
+        <p>The obvious safety condition is that every integer intermediate fits in 32 bits on every lane. It's too strong. Five of the 25 certified kernels fail it, each with a concrete launched lane where an intermediate leaves int32 but nothing observable changes.</p>
+        <p>The sharpest case is the kernel Inductor emits for a rotary embedding. Under Inductor's own guards, there's a shape and a lane where one load's offset is exactly 2<sup>31</sup>:</p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 01</span><code>rotary</code> at ks1 = 6, xindex = 2,147,483,645</div>
+          <table>
+            <thead>
+              <tr><th>Load</th><th>Mask here</th><th>Offset</th><th>Observed?</th></tr>
+            </thead>
+            <tbody>
+              <tr class="highlight"><td>First arm of the <code>where</code></td><td>5 &lt; 3, false</td><td class="num">2<sup>31</sup> (int32: −2<sup>31</sup>)</td><td>No, disabled in both widths</td></tr>
+              <tr><td>Second arm</td><td>5 ≥ 3, true</td><td class="num">2,147,483,642</td><td>Yes, equal in both widths</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The two kernels compute different offsets for a load that neither of them performs. The checker requires a load's offset to fit only where the load's own mask holds, and it derives those bounds from the mask itself, never from the certificate. Under that condition <code>rotary</code> is certified. Under the strict one it is rejected. Running both widths through the compiler's own intermediate representation at that lane reproduced the table.</p>
+        <p>That rule adds exactly one kernel. Treating inactive lanes separately matters for at least five.</p>
+
+        <h2 id="heldout">The held-out test</h2>
+        <p>The development corpus had 35 programs. Before any checker run on new code, the agents wrote a list of 26 programs using operations the development corpus did not use, hashed it and froze the checker (<a href="https://github.com/scasella/certified-int-narrowing/blob/main/heldout/HELDOUT_PREREG.json">pre-registration</a>). The same party wrote the list, so this guards against editing afterward, not against choosing easy programs.</p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 02</span>Held-out kernels with 64-bit sizes, frozen checker</div>
+          <table>
+            <thead>
+              <tr><th>Outcome</th><th class="num">Kernels</th></tr>
+            </thead>
+            <tbody>
+              <tr class="highlight"><td>Certified, method unchanged</td><td class="num">10</td></tr>
+              <tr><td>Unsupported syntax (6 from Inductor's <code>max(1, ·)</code> in index expressions)</td><td class="num">8</td></tr>
+              <tr><td>Unsupported semantics</td><td class="num">4</td></tr>
+              <tr><td>Certificate search failed</td><td class="num">2</td></tr>
+              <tr class="totals"><td>Total</td><td class="num">24</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The ten cover patterns absent from development: triangular masking, <code>movedim</code>, expand then reshape, <code>tile</code>, multi-way cat and stack, and permute then flatten. Neither search failure is a real overflow. One came from a guard Inductor had rewritten into a form the exporter did not pass through, and the other from a negative symbolic factor the checker cannot handle. A rejection means the checker couldn't show safety, not that the kernel is unsafe.</p>
+
+        <h2 id="binding">Binding the proof to the live compilation</h2>
+        <p>A proof about a kernel's text isn't enough, because the same kernel body can be compiled under different guards. The first deployment path had exactly that gap: it matched kernel text alone.</p>
+        <p>The research integration hooks Inductor's kernel definition. It narrows a kernel only if the kernel's hash matches a certified one, and the live size polynomials and guards match the proof's premises up to renaming of shape symbols. On real Inductor compilations, 178 cases over 25 programs, every certified kernel bound. With the body unchanged, all 128 variants with a certified guard dropped or weakened were refused. The old text-only matcher had narrowed them. A cached lookup and binding took a median of 0.6 ms per kernel. Checking a new instance in Lean took a median of 4.8 s.</p>
+
+        <h2 id="speed">Does it make them faster?</h2>
+        <p>The narrowed code is always different. In every certified kernel, all of the 64-bit division call sites (8 to 43 per kernel) disappear, and the machine code is 21–62% smaller. Whether that shows up as time depends on the launch configuration.</p>
+        <p>At one fixed configuration, 7 of the 25 were at least 1.10× faster, 16 were within 2% and 2 were slightly slower. Some of those gains came from a configuration that suited the wide kernel badly. So the agents tuned both versions of nine kernels over the same four configurations, chose on half the rounds and timed on the other half, with L2 flushed:</p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 03</span>Tuned with the narrowed kernel available vs tuned 64-bit only, one L4</div>
+          <table>
+            <thead>
+              <tr><th>Kernel</th><th class="num">Ratio, two builds</th><th>Selection rule's pick</th></tr>
+            </thead>
+            <tbody>
+              <tr class="highlight"><td><code>repeat</code></td><td class="num">1.32–1.42×</td><td>32-bit</td></tr>
+              <tr class="highlight"><td>Concatenation from issue #189940</td><td class="num">1.17–1.19×</td><td>32-bit</td></tr>
+              <tr><td><code>bf16_cat3</code></td><td class="num">1.00–1.02×</td><td>32-bit</td></tr>
+              <tr><td><code>tile</code>, <code>movedim3</code>, <code>permute_flat</code></td><td class="num">1.00–1.01×</td><td>32-bit</td></tr>
+              <tr><td><code>flip</code>, <code>bcast_row</code>, <code>head_merge</code></td><td class="num">1.00×</td><td>64-bit</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Above 1 means the narrowed option helped. The ranges span two builds, with and without pointer-alignment hints, and are not confidence intervals. <code>head_merge</code>'s narrowed kernel was about 2% slower than its 64-bit one at their best configurations, so the rule kept the original. That selection rule was evaluated on the same run's other half. It is not an implemented tuner, and the integration as built narrows whenever a proof binds.</p>
+        <p>The #189940 figure is not a correction of the first post. That post timed a 14-shape sequence of whole calls under sustained load and pre-registered the comparison, which gave 1.349×. Table 03 is kernel time with L2 flushed and both variants tuned. Timed as whole programs on repeated inputs, the same two kernels were 1.41–1.48× and 1.49–1.52× faster, but that includes effects outside the kernel that weren't separated. Each number answers a different question. I’m keeping them separate rather than picking the largest.</p>
+        <p>The gains show up where size-dependent division or remainder sits in a hot kernel. A certified control with no division was 1.00× as a kernel and 0.99× as a program.</p>
+
+        <h2 id="baselines">Compared with MLIR and Alive2</h2>
+        <p>MLIR's integer-range narrowing pass, run unchanged on all 25 kernels, narrowed none of 233 64-bit operations. Given the checker's proven bounds as clamps, it narrowed all 65 divisions and remainders but left 161 operations wide, mostly address arithmetic, and made only 3 kernels fully 32-bit. Its ranges are per variable, so it can't use a guard on a product of sizes.</p>
+        <p>That leaves an open question: MLIR-style partial narrowing, which narrows only division and remainder, might recover most of the speed. I didn't measure it.</p>
+        <p>Alive2, a translation validator for LLVM, verified the division-free control in 0.1 s. It timed out at 60 s on all 25 certified kernels, each of which contains 64-bit division. That's one encoding and one budget, not a speed comparison between the tools. It does show why the proof avoids bit-level division reasoning.</p>
+
+        <h2 id="checks">How the agents were checked</h2>
+        <ul>
+          <li><strong>Frozen before testing.</strong> The checker and theorem were hash-frozen before the held-out run, and held-out failures stayed failures.</li>
+          <li><strong>Compared against the compiler's output.</strong> For all 25, an independent interpreter of the compiler's intermediate representation matched the model at about 320 sampled lanes per kernel per build, at shapes near the guard limit, with 0 mismatches. A control outside the premises showed that the comparison catches differences.</li>
+          <li><strong>Outside review.</strong> A fresh read-only reviewer, then two confirmation passes, looked for ways to sneak a division past the frontend. The first two rounds found bypasses: reassigning a variable after the check, and an expression form the extractor drops. A new pre-check that rejects them was added, and the final round found no bypass in 16 targeted probes. The same review found two latent frontend defects. Neither construct occurs in any certified kernel, so the frontend's contract holds for these 25 by audit, not by construction.</li>
+          <li><strong>A claim ledger.</strong> Each of 26 claims in the manuscript is tagged as proved, tested, measured, derived or assumed, with its source. The review corrected several, including one that had called runtime guard installation audited when there was no recorded evidence for it (<a href="https://github.com/scasella/certified-int-narrowing/blob/main/paper/LEDGER.md">LEDGER.md</a>).</li>
+          <li><strong>One reproduction command.</strong> It verifies every pinned file, regenerates all 25 instances byte for byte, checks them in Lean with only the standard axioms, and confirms the 10 negative tests fail. I re-ran it on the public copy before publishing.</li>
+        </ul>
+
+        <h2 id="interpretation">Interpretation and limits</h2>
+        <p>The positive result is about safety and reach. One theorem and one small checker certified a change the compiler cannot make on its own, across kernels the method hadn't seen, and the proof is tied to the compilation it came from. The speed result is narrow. Certification makes the narrowed kernel an eligible alternative, and tuning should decide whether to use it.</p>
+        <ul>
+          <li>Only Inductor's 1D pointwise kernels are covered. Reductions, matmuls and multi-dimensional kernels are out of class.</li>
+          <li>The frontend, the shape exporter, the Triton-to-machine-code toolchain and floating point are trusted. That Inductor's shape guards become runtime guards is assumed, with no recorded evidence.</li>
+          <li>The theorem is per lane. Reading it as whole-kernel equivalence also assumes disjoint stores, no aliasing between inputs and outputs, and in-bounds accesses in the original kernel.</li>
+          <li>One GPU, one compiler version (a PyTorch 2.15 nightly, Triton 3.8.0), and nine kernels with tuned timings. The other 16 have fixed-configuration data only.</li>
+          <li>One whole-program output mismatch in an early run (attention, forced pointwise cat) didn't recur in eight controlled repeats. Its cause is unknown, and it is excluded from the validated results.</li>
+        </ul>
+
+        <h2 id="next-experiment">Next experiment</h2>
+        <ul>
+          <li>Measure partial narrowing, division and remainder only, against the full specialization.</li>
+          <li>Let the autotuner choose between the two kernels instead of always narrowing.</li>
+        </ul>
+
+        <h2 id="reproducibility">Reproducibility</h2>
+        <table class="repro">
+          <tbody>
+            <tr><th scope="row">Model</th><td>Claude Opus 5.5 agents, directed from Claude Code, with occasional second opinions from Claude Fable 5.1.</td></tr>
+            <tr><th scope="row">Experiment</th><td>Lean 4.29.0 with Mathlib, on an M4 Pro MacBook Pro. Timing on one NVIDIA L4 on Modal: torch 2.15.0.dev20260926, Triton 3.8.0. Held-out corpus pre-registered and hashed before any checker run. The GPU runs were a few dollars, estimated from job durations; that is not the total project or agent cost.</td></tr>
+            <tr><th scope="row">Data</th><td>35 development and 26 held-out PyTorch programs compiled with <code>dynamic=True</code>, plus four constructed controls.</td></tr>
+            <tr><th scope="row">Results</th><td><a href="https://github.com/scasella/certified-int-narrowing/blob/main/EVALUATION.md">EVALUATION.md</a>, <a href="https://github.com/scasella/certified-int-narrowing/blob/main/paper/DRAFT.md">manuscript draft</a>, <a href="https://github.com/scasella/certified-int-narrowing/tree/main/review">review record</a>.</td></tr>
+            <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/certified-int-narrowing">scasella/certified-int-narrowing</a>: <code>NarrowGeneric.lean</code>, the 25 instances, the search, the frontend and <code>repro/run_repro.py</code>. The Lean build uses <a href="https://github.com/scasella/veritile-narrow-cat/tree/stage15-patch-timing">veritile-narrow-cat</a> at tag <code>stage15-patch-timing</code>.</td></tr>
+            <tr><th scope="row">Status</th><td>Published 2026-09-27 · Code, proofs and data public under MIT. Research prototype, not upstream.</td></tr>
+          </tbody>
+        </table>
+
+
+            <!-- PANES:NEXT:START -->
+    <nav class="post-next" aria-label="More research">
+      <a href="blog_pytorch_narrowing.html"><span>next →</span><span>A Lean proof let agents cut a compiled PyTorch workload’s runtime by 26%</span></a>
+      <a class="post-next__all" href="research.html">← all research</a>
+    </nav>
+  <!-- PANES:NEXT:END -->
+  </article>
+  </main>
+  <!-- PANES:FOOT:START -->
+    <footer class="pn-foot">
+      <p>Personal projects. Not affiliated with or endorsed by my employer. No employer data, infrastructure, or confidential information used.</p>
+    </footer>
+    </div>
+  </div>
+  <!-- PANES:FOOT:END -->
+</body>
+</html>

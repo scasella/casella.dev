@@ -1,0 +1,435 @@
+/* casella.dev — "sticky split" (design 4c, after brandur.org): name, bio, nav and
+   "now" pinned in a left column; the page's content scrolls on the right.
+   Shared by index.html, projects.html and the blog posts. */
+
+:root {
+  --pn-bg: oklch(0.15 0.01 250);
+  --pn-fg: oklch(0.9 0.008 250);
+  --pn-accent: oklch(0.82 0.1 200);
+  --pn-line: oklch(0.26 0.015 250);
+  --pn-rule: oklch(0.3 0.015 250);
+  --pn-quiet: oklch(0.62 0.015 250);
+  --pn-dim: oklch(0.7 0.012 250);
+  --pn-hover: oklch(0.21 0.014 250);
+  --pn-raise: oklch(0.19 0.012 250);
+  --pn-plate: #f6f5f1;
+  --pn-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --pn-side: 440px;
+  --pn-top: 96px;
+  color-scheme: dark;
+}
+
+.pn-body {
+  margin: 0;
+  background: var(--pn-bg);
+  color: var(--pn-fg);
+  font-family: var(--pn-mono);
+  font-size: 15px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+.pn-body *, .pn-body *::before, .pn-body *::after { box-sizing: border-box; }
+.pn-body a { color: inherit; }
+.pn-body a:hover { opacity: 0.8; }
+.pn-body :focus-visible { outline: 2px solid var(--pn-accent); outline-offset: 2px; }
+.posts, .rows, .proj-list { list-style: none; margin: 0; padding: 0; }
+.accent { color: var(--pn-accent); }
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ── the split ──────────────────────────────────────────────────────────── */
+.split {
+  display: grid;
+  grid-template-columns: var(--pn-side) minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.side {
+  padding: var(--pn-top) 48px 48px 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 56px;
+  border-right: 1px solid var(--pn-line);
+}
+.side__pin {
+  position: sticky;
+  z-index: 1;
+  top: var(--pn-top);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.side__name {
+  margin: 0;
+  font-size: 40px;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.side__name a { text-decoration: none; }
+.side__bio { margin: 0; font-size: 16px; text-wrap: pretty; }
+.side__nav { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.side__nav a { text-decoration: none; }
+.side__nav a::before { content: '\00a0\00a0'; }
+.side__nav a[aria-current] { color: var(--pn-accent); }
+.side__nav a[aria-current]::before { content: '→\00a0'; }
+.side__now {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 20px;
+  border-top: 1px solid var(--pn-line);
+}
+.side__now span { font-size: 13px; color: var(--pn-quiet); }
+.side__now p { margin: 0; font-size: 14px; line-height: 1.65; }
+.side__links { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--pn-quiet); }
+.side__links a { text-decoration: none; }
+.side__links a:hover { color: var(--pn-accent); opacity: 1; }
+
+/* The loss-landscape figure above the name, in the accent cyan; the ball and
+   its trail are set bolder so they read against the terrain. */
+.side__art { margin: -40px 0 -4px; }
+.side .side__art pre {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  height: 220px;
+  overflow: hidden;
+  font: 10px/10px var(--pn-mono);
+  color: var(--pn-accent);
+  white-space: pre;
+  user-select: none;
+}
+.side .side__art pre b { font-weight: 600; color: var(--pn-accent); }
+
+/* The art: loss-landscape contours pinned to the bottom of the left column,
+   a 1–100 grid with the collapse picks lit, and a slow terminal cursor. */
+.side::before {
+  content: '';
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  z-index: 0;
+  width: var(--pn-side);
+  height: 100vh;
+  background: url(assets/art/contours.svg) center bottom / 100% auto no-repeat;
+  pointer-events: none;
+}
+.side__grid {
+  display: grid;
+  grid-template-columns: repeat(10, 5px);
+  gap: 6px;
+  width: max-content;
+  margin-bottom: 18px;
+}
+.side__grid i { width: 5px; height: 5px; border-radius: 50%; background: oklch(0.9 0.008 250 / 0.1); }
+.side__grid i.on { background: oklch(0.82 0.1 200 / 0.8); }
+.side__grid:hover { opacity: 1; }
+.side__grid:hover i.on { background: var(--pn-accent); box-shadow: 0 0 6px oklch(0.82 0.1 200 / 0.6); }
+@media (prefers-reduced-motion: no-preference) {
+  .side__name .accent { animation: pn-blink 1.2s infinite; }
+}
+@keyframes pn-blink { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
+
+.split__main {
+  min-width: 0;
+  padding: var(--pn-top) 64px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 80px;
+}
+.flow { display: flex; flex-direction: column; gap: 80px; min-width: 0; }
+.flow > section { display: flex; flex-direction: column; min-width: 0; max-width: 800px; }
+
+/* Quiet section label: `models`, or `projects ... all 22 →` */
+.label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--pn-quiet);
+}
+.label .label__aside { color: var(--pn-quiet); text-decoration: none; white-space: nowrap; }
+.label a.label__aside:hover { color: var(--pn-accent); opacity: 1; }
+
+/* ── home ───────────────────────────────────────────────────────────────── */
+.posts { display: flex; flex-direction: column; gap: 40px; }
+.posts a { display: flex; flex-direction: column; gap: 8px; text-decoration: none; max-width: 760px; }
+.posts a:hover { opacity: 1; }
+.posts a:hover .posts__title { color: var(--pn-accent); }
+.posts__kicker { font-size: 13px; color: var(--pn-accent); }
+.posts__title { font-size: 22px; line-height: 1.4; font-weight: 500; letter-spacing: -0.01em; text-wrap: pretty; }
+.posts__dek { color: var(--pn-dim); text-wrap: pretty; }
+.posts__scope { font-size: 13px; line-height: 1.6; color: var(--pn-quiet); text-wrap: pretty; }
+
+.rows { display: flex; flex-direction: column; }
+.rows a { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; padding: 6px 0; text-decoration: none; font-size: 14px; }
+.rows a span:first-child { overflow-wrap: anywhere; min-width: 0; }
+.rows a span:last-child { flex: none; color: var(--pn-quiet); }
+.rows a:hover { opacity: 1; color: var(--pn-accent); }
+
+/* ── projects ───────────────────────────────────────────────────────────── */
+.proj-main { gap: 64px; }
+.proj-head { display: flex; flex-direction: column; gap: 8px; }
+.proj-head h1 { margin: 0; font-size: 30px; line-height: 1.3; font-weight: 600; }
+.proj-head p { margin: 0; font-size: 13px; color: var(--pn-quiet); }
+.proj-head__hint { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .proj-head__hint { display: inline; }
+}
+.proj-group { scroll-margin-top: 32px; }
+.proj-group .label { padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid var(--pn-line); }
+.proj-group .label > span:first-child { color: var(--pn-accent); }
+.proj-list a { display: grid; grid-template-columns: minmax(0, 280px) minmax(0, 1fr); gap: 32px; padding: 9px 0; text-decoration: none; }
+.proj-list a:hover, .proj-list a.is-hot { opacity: 1; }
+.proj-list a:hover .proj__name, .proj-list a.is-hot .proj__name { color: var(--pn-accent); }
+.proj__name { font-weight: 500; overflow-wrap: anywhere; }
+.proj__repo { display: block; font-size: 12px; font-weight: 400; color: var(--pn-quiet); }
+.proj__desc { font-size: 14px; line-height: 1.6; color: var(--pn-dim); }
+.proj__meta { display: block; margin-top: 4px; font-size: 12px; color: var(--pn-quiet); }
+.proj__meta--note { margin-top: 0; }
+
+/* ── featured software and model adapters (home) ──────────────────────── */
+.feats { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 28px; }
+.feat { display: grid; grid-template-columns: minmax(0, 280px) minmax(0, 1fr); gap: 32px; }
+.feat p { margin: 0; }
+.feat__name { font-weight: 500; }
+.feat__name a { text-decoration: none; }
+.feat__name a:hover { color: var(--pn-accent); opacity: 1; }
+.feat__body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.feat__desc { font-size: 14px; line-height: 1.6; color: var(--pn-dim); text-wrap: pretty; }
+.feat__why { font-size: 13px; line-height: 1.6; color: var(--pn-dim); text-wrap: pretty; }
+.feat__meta { font-size: 12px; line-height: 1.6; color: var(--pn-quiet); overflow-wrap: anywhere; }
+.feat__meta code, .feat__actions code { font-family: var(--pn-mono); font-size: 12px; background: var(--pn-hover); padding: 1px 5px; overflow-wrap: anywhere; }
+.feat__id { color: var(--pn-quiet); }
+.feat__actions { margin-top: 4px !important; font-size: 13px; color: var(--pn-quiet); }
+.feat__actions a { color: var(--pn-accent); text-decoration: none; }
+.posts--quiet .posts__title { font-size: 17px; }
+.posts--quiet .posts__kicker { color: var(--pn-quiet); }
+
+/* ── contact (home) ─────────────────────────────────────────────────────── */
+.contact p { margin: 0 0 12px; max-width: 680px; text-wrap: pretty; }
+.contact .contact__link { color: var(--pn-accent); text-decoration: none; }
+.contact .contact__aside { margin: 0; font-size: 13px; color: var(--pn-quiet); }
+
+.preview {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  width: 320px;
+  pointer-events: none;
+  background: var(--pn-raise);
+  border: 1px solid var(--pn-accent);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+.preview[hidden] { display: none; }
+.preview__img {
+  aspect-ratio: 3 / 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: repeating-linear-gradient(135deg, oklch(0.24 0.015 250) 0 1px, oklch(0.2 0.012 250) 1px 9px);
+  font-size: 12px;
+  color: var(--pn-quiet);
+}
+.preview__img img { width: 100%; height: 100%; object-fit: contain; background: #fff; display: block; }
+.preview__cap { padding: 10px 14px; font-size: 12px; line-height: 1.6; color: var(--pn-dim); }
+
+/* ── footer ─────────────────────────────────────────────────────────────── */
+.pn-foot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 760px;
+  font-family: var(--pn-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--pn-quiet);
+}
+.pn-foot p { margin: 0; }
+
+/* ── blog posts ─────────────────────────────────────────────────────────
+   The posts keep their own inline styles and markup; these overrides re-point
+   their palette at the site tokens. Figures keep their light-theme colours, so
+   they sit on a light plate the way thumbnails do. */
+.panes-post {
+  --bg: var(--pn-bg);
+  --paper: var(--pn-raise);
+  --fg: var(--pn-fg);
+  --fg-mute: var(--pn-dim);
+  --fg-faint: var(--pn-quiet);
+  --rule: var(--pn-rule);
+  --hi: var(--pn-hover);
+  --link: var(--pn-accent);
+  --link-visited: var(--pn-accent);
+  --font-sans: var(--pn-mono);
+  --font-mono: var(--pn-mono);
+  font-size: 15px;
+  line-height: 1.75;
+}
+.post-main { display: block; min-width: 0; }
+.panes-post article.post {
+  max-width: 800px;
+  margin: 0;
+  padding: 0;
+}
+.post > p.meta:first-of-type { display: none; }
+.panes-post h1,
+.panes-post h2,
+.panes-post h3 { color: var(--pn-fg); font-family: var(--pn-mono); }
+.panes-post .post h1 { font-size: 34px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; text-wrap: pretty; margin: 0 0 24px; }
+.post-byline { margin: 0 0 24px !important; font-size: 13px; line-height: 1.6 !important; color: var(--pn-quiet); }
+.panes-post .post .subtitle { color: var(--pn-dim); font-size: 15px; line-height: 1.75; margin: 0 0 24px; font-style: normal; }
+.panes-post .paper-links { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0 0 48px; }
+.panes-post .paper-links .btn-pill {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--pn-accent);
+  text-decoration: none;
+}
+.panes-post .paper-links .btn-pill::before { content: '↗ '; }
+.panes-post .paper-links .btn-pill:hover { background: none; }
+
+.panes-post .post h2 { font-size: 21px; line-height: 1.4; font-weight: 600; margin: 56px 0 18px; scroll-margin-top: 24px; }
+.panes-post .post h2::before { content: '## '; color: var(--pn-accent); font-weight: 400; }
+.panes-post .post h3 { font-size: 16px; margin: 36px 0 12px; }
+.panes-post .post p { margin: 0 0 20px; line-height: 1.75; text-wrap: pretty; }
+.panes-post .post li { line-height: 1.75; margin-bottom: 8px; }
+.panes-post .post ul, .panes-post .post ol { margin: 0 0 20px; }
+.panes-post a { text-decoration-color: color-mix(in oklch, var(--pn-accent) 45%, transparent); }
+.panes-post .post .tldr,
+.panes-post .post .callout {
+  margin: 0 0 40px;
+  padding: 24px 28px;
+  background: var(--pn-raise);
+  border: 0;
+  border-radius: 0;
+}
+.panes-post .post .tldr p,
+.panes-post .post .callout p { margin: 0 0 12px; line-height: 1.75; font-size: 15px; }
+.panes-post .post .tldr p:last-child,
+.panes-post .post .callout p:last-child { margin-bottom: 0; }
+.panes-post .tldr .label,
+.panes-post .tldr-label,
+.panes-post .callout-label { display: block; margin-bottom: 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; color: var(--pn-accent); }
+.panes-post .tldr strong,
+.panes-post .callout strong { color: var(--pn-accent); }
+.panes-post .post blockquote {
+  margin: 32px 0;
+  padding: 0 0 0 24px;
+  border-left: 2px solid var(--pn-accent);
+  color: var(--pn-fg);
+}
+.panes-post .post blockquote p { font-size: 18px; line-height: 1.65; font-style: italic; margin: 0; }
+.panes-post code { background: var(--pn-hover); color: var(--pn-fg); overflow-wrap: anywhere; }
+.panes-post pre { background: var(--pn-raise); color: var(--pn-fg); border-color: var(--pn-rule); }
+.panes-post table { margin: 28px 0 32px; }
+.panes-post th { border-bottom-color: var(--pn-rule); color: var(--pn-quiet); }
+.panes-post td { border-bottom-color: transparent; }
+.panes-post tr.hl td,
+.panes-post tr.highlight td { background: none; color: var(--pn-accent); }
+.panes-post details.glossary { border-color: var(--pn-rule); border-radius: 0; margin: 32px 0; }
+
+/* Figures on a light plate, filling the text column. */
+.panes-post .post figure { margin: 40px 0; }
+.panes-post .post > figure.chart { width: auto; max-width: none; margin-left: 0; transform: none; }
+.panes-post figure svg,
+.panes-post figure img { background: var(--pn-plate) !important; border-color: var(--pn-rule) !important; }
+.panes-post .post figcaption { margin-top: 20px; font-size: 12px; line-height: 1.6; color: var(--pn-quiet); }
+
+.post-next {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 72px;
+  padding-top: 24px;
+  border-top: 1px solid var(--pn-rule);
+}
+.post-next a { display: flex; flex-direction: column; gap: 6px; text-decoration: none !important; color: var(--pn-fg) !important; }
+.post-next a span:first-child { color: var(--pn-quiet); font-size: 13px; }
+.post-next a span:last-child { font-weight: 600; }
+.post-next a.post-next__all { font-size: 13px; color: var(--pn-quiet) !important; }
+.post-next a.post-next__all:hover { color: var(--pn-accent) !important; opacity: 1; }
+
+/* The reproducibility panel every post carries before its limitations. */
+.panes-post table.repro { width: 100%; border-collapse: collapse; font-size: 14px; }
+.panes-post table.repro th { width: 8.5em; padding: 8px 16px 8px 0; text-align: left; vertical-align: top; font-weight: 500; color: var(--pn-quiet); border-bottom: 1px solid var(--pn-line); }
+.panes-post table.repro td { padding: 8px 0; vertical-align: top; line-height: 1.6; border-bottom: 1px solid var(--pn-line); overflow-wrap: anywhere; }
+
+/* ── responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  :root { --pn-side: 360px; }
+  .side { padding-left: 48px; padding-right: 36px; }
+  .split__main { padding-left: 48px; padding-right: 48px; }
+  .side__name { font-size: 34px; }
+}
+
+/* On short screens the pinned column (figure, name, bio, nav, now) would run
+   past the bottom of the viewport, so it scrolls with the page instead. */
+@media (min-width: 901px) and (max-height: 860px) {
+  .side__pin { position: static; }
+}
+
+/* Below this the column stops being pinned and becomes a header. On inner
+   pages it shrinks to name + nav so the content starts on the first screen. */
+@media (max-width: 900px) {
+  :root { --pn-top: 48px; }
+  .split { display: block; }
+  .side {
+    padding: 40px 16px 32px;
+    border-right: 0;
+    border-bottom: 1px solid var(--pn-line);
+    gap: 24px;
+  }
+  .side__pin { position: static; gap: 20px; }
+  .side__name { font-size: 30px; }
+  .side__nav { flex-direction: row; flex-wrap: wrap; gap: 4px 18px; }
+  .side__nav a::before { content: none; }
+  .side__nav a[aria-current]::before { content: '→\00a0'; }
+  .side__links { flex-direction: row; flex-wrap: wrap; gap: 4px 18px; }
+  .side::before { content: none; }
+  .side__art { margin: 0; }
+  .split--inner .side__art { display: none; }
+  .side__grid { flex-basis: 100%; margin-bottom: 8px; }
+  .split--inner .side { padding-top: 24px; padding-bottom: 20px; }
+  .split--inner .side__name { font-size: 22px; }
+  .split--inner .side__name br { display: none; }
+  .split--inner .side__bio,
+  .split--inner .side__now,
+  .split--inner .side__links { display: none; }
+  .split__main { padding: 40px 16px 40px; gap: 56px; }
+  .flow { gap: 56px; }
+  .posts { gap: 32px; }
+  .posts__title { font-size: 19px; }
+  .proj-main { gap: 48px; }
+  .proj-head h1 { font-size: 26px; }
+  .proj-list a { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .rows a { gap: 16px; }
+  .feat { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .panes-post .post h1 { font-size: 25px; }
+  .panes-post .post h2 { font-size: 18px; margin-top: 44px; }
+  .panes-post .post .tldr, .panes-post .post .callout { padding: 22px 20px; }
+  .panes-post .paper-links { margin-bottom: 36px; }
+  .panes-post .post table { display: block; overflow-x: auto; }
+  .panes-post .post table.repro { display: table; }
+  .panes-post table.repro th { width: 6.5em; padding-right: 10px; }
+}

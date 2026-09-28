@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agents and Lean cut a compiled PyTorch workload’s runtime 26% | Stephen Casella</title>
+  <meta name="description" content="Claude Opus 5.5 agents narrowed a torch.compile kernel's size arguments to 32 bits, proved in Lean when that is exact, and cut a changing-shape workload's time by 26% on one L4." />
+  <meta name="author" content="Stephen Casella" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#080c0f" />
+  <link rel="canonical" href="https://casella.dev/blog_pytorch_narrowing.html" />
+  <meta property="og:site_name" content="Stephen Casella" />
+  <meta property="og:title" content="A Lean proof let agents cut a compiled PyTorch workload’s runtime by 26%" />
+  <meta property="og:description" content="A Lean proof of when 32-bit size arguments are exact, a compiler rule that checks it, and a pre-registered 1.349× speedup on one L4. The opt-in patch is an open PyTorch PR." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://casella.dev/blog_pytorch_narrowing.html" />
+  <meta property="og:image" content="https://casella.dev/assets/og/blog_pytorch_narrowing.png" />
+  <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_pytorch_narrowing.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Share card for the write-up: A Lean proof let agents cut a compiled PyTorch workload’s runtime by 26%." />
+  <meta property="article:author" content="Stephen Casella" />
+  <meta property="article:published_time" content="2026-09-26" />
+  <meta property="article:modified_time" content="2026-09-26" />
+  <meta property="article:tag" content="AI agents" />
+  <meta property="article:tag" content="Lean" />
+  <meta property="article:tag" content="PyTorch" />
+  <meta property="article:tag" content="torch.compile" />
+  <meta property="article:tag" content="Triton" />
+  <meta property="article:tag" content="formal verification" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="A Lean proof let agents cut a compiled PyTorch workload’s runtime by 26%" />
+  <meta name="twitter:description" content="A Lean proof of when 32-bit size arguments are exact, a compiler rule that checks it, and a pre-registered 1.349× speedup on one L4. The opt-in patch is an open PyTorch PR." />
+  <meta name="twitter:image" content="https://casella.dev/assets/og/blog_pytorch_narrowing.png" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-2RSWDWW67D');
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "A Lean proof let agents cut a compiled PyTorch workload’s runtime by 26%",
+      "description": "Claude Opus 5.5 agents narrowed a torch.compile kernel's size arguments to 32 bits, proved in Lean when that is exact, and cut a changing-shape workload's time by 26% on one L4.",
+      "url": "https://casella.dev/blog_pytorch_narrowing.html",
+      "mainEntityOfPage": "https://casella.dev/blog_pytorch_narrowing.html",
+      "image": "https://casella.dev/assets/og/blog_pytorch_narrowing.png",
+      "datePublished": "2026-09-26",
+      "dateModified": "2026-09-26",
+      "author": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/",
+        "sameAs": [
+          "https://github.com/scasella",
+          "https://www.linkedin.com/in/stevecasella/"
+        ]
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "keywords": [
+        "PyTorch Inductor",
+        "torch.compile",
+        "Triton",
+        "Lean 4",
+        "formal verification",
+        "integer narrowing",
+        "AI agents",
+        "Claude Opus 5.5",
+        "GPU kernels"
+      ],
+      "codeRepository": "https://github.com/scasella/veritile-narrow-cat"
+    }
+  </script>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:           #fafaf8;
+      --paper:        #ffffff;
+      --fg:           #222;
+      --fg-mute:      #555;
+      --fg-faint:     #8a8a85;
+      --rule:         #e2e2dd;
+      --hi:           #f3f2ec;
+      --link:         #1a5fb4;
+      --link-visited: #5a3aa3;
+      --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono:    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      font-size: 16.5px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: rgba(0,0,0,0.08); color: inherit; }
+
+    .site-header {
+      max-width: 720px; margin: 0 auto; padding: 28px 24px 0;
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 13px; color: var(--fg-mute);
+    }
+    .site-header a {
+      color: var(--fg-mute); text-decoration: none;
+      border-bottom: 1px dotted var(--fg-faint); padding-bottom: 1px;
+    }
+    .site-header a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+
+    article {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 24px 64px;
+    }
+    .meta, .date {
+      color: var(--fg-faint); font-size: 13px;
+      margin-bottom: 8px; text-transform: none; letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: 32px; line-height: 1.22; font-weight: 600;
+      margin: 0 0 10px; letter-spacing: -0.01em; color: #111;
+    }
+    .subtitle {
+      color: var(--fg-mute); font-size: 17px; font-weight: 400;
+      line-height: 1.5; margin: 0 0 24px;
+    }
+    h2 {
+      font-size: 22px; font-weight: 600; line-height: 1.3;
+      margin: 1.9em 0 0.5em; letter-spacing: -0.005em; color: #111;
+    }
+    h3 { font-size: 17px; font-weight: 600; margin: 1.5em 0 0.35em; }
+
+    p { margin: 0 0 0.9em; }
+    ul, ol { margin: 0 0 1em; padding-left: 1.4em; }
+    li { margin-bottom: 0.35em; }
+    li::marker { color: var(--fg-faint); }
+
+    a { color: var(--link); text-decoration: underline; text-decoration-color: rgba(26,95,180,0.4); }
+    a:visited { color: var(--link-visited); }
+    a:hover { text-decoration-color: var(--link); }
+
+    code {
+      font-family: var(--font-mono); font-size: 0.85em;
+      background: var(--hi); padding: 1px 5px; border-radius: 3px;
+    }
+    pre {
+      background: var(--hi); padding: 14px 18px; border-radius: 8px;
+      overflow-x: auto; margin: 1em 0; font-size: 13px; line-height: 1.55;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    pre code { background: none; padding: 0; border-radius: 0; font-size: inherit; }
+    strong { font-weight: 600; color: var(--fg); }
+    em { font-style: italic; }
+
+    blockquote {
+      margin: 1em 0; padding: 6px 0 6px 18px;
+      border-left: 3px solid var(--rule); color: var(--fg-mute);
+    }
+    blockquote p { font-size: 15.5px; margin: 0; }
+
+    /* Paper links / pill button */
+    .paper-links {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 18px 0 8px; flex-wrap: wrap;
+    }
+    .paper-links .btn-pill {
+      font-size: 13px; line-height: 1; color: var(--fg);
+      text-decoration: none; background: var(--paper);
+      border: 1px solid var(--rule); border-radius: 999px;
+      padding: 0.55rem 0.95rem 0.65rem;
+      transition: background 200ms ease;
+    }
+    .paper-links .btn-pill:hover { background: var(--hi); }
+
+    /* TL;DR */
+    .tldr {
+      margin: 1.2em 0 1.6em;
+      padding: 14px 18px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      font-size: 15.5px;
+    }
+    .tldr-label, .tldr .label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .tldr p { font-size: 15.5px; line-height: 1.6; color: var(--fg); margin: 0; }
+    .tldr p + p { margin-top: 0.6em; }
+
+    /* Callout */
+    .callout {
+      margin: 1.5em 0; padding: 14px 18px;
+      background: var(--hi); border-radius: 6px;
+    }
+    .callout-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-mute); margin-bottom: 8px;
+    }
+    .callout p { font-size: 15px; line-height: 1.55; color: var(--fg); margin: 0; }
+
+    /* Stat row */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0;
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+    @media (min-width: 600px) {
+      .stat-row { grid-template-columns: repeat(4, 1fr); }
+    }
+    .stat {
+      padding: 16px 18px;
+      border-right: 1px solid var(--rule);
+    }
+    .stat:first-child { padding-left: 0; }
+    .stat:last-child { border-right: 0; }
+    @media (max-width: 599px) {
+      .stat:nth-child(2n) { border-right: 0; }
+      .stat:nth-child(n+3) { border-top: 1px solid var(--rule); }
+    }
+    .stat .k {
+      display: block;
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .stat .v {
+      font-size: 22px; font-weight: 600; color: var(--fg);
+      line-height: 1.1; letter-spacing: -0.01em;
+    }
+    .stat .s {
+      font-size: 12px; color: var(--fg-faint);
+      margin-top: 6px; line-height: 1.4;
+    }
+
+    /* Mode grid */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin: 1.5em 0;
+    }
+    @media (min-width: 600px) { .mode-grid { grid-template-columns: repeat(2, 1fr); } }
+    .mode-card {
+      background: var(--paper);
+      border-radius: 8px;
+      padding: 16px 18px;
+      border: 1px solid var(--rule);
+    }
+    .mode-card .tag {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .mode-card .t {
+      display: block;
+      font-size: 16px; font-weight: 600; color: var(--fg);
+      margin-bottom: 6px; letter-spacing: -0.005em;
+    }
+    .mode-card .desc {
+      font-size: 14px; line-height: 1.5; color: var(--fg-mute);
+    }
+
+    /* Table */
+    .table-wrap { margin: 1.5em 0; }
+    .table-label {
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 10px;
+    }
+    .table-label .id { color: var(--fg); margin-right: 12px; }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+    th, td {
+      padding: 8px 12px 8px 0; text-align: left;
+      border-bottom: 1px solid var(--rule); color: var(--fg);
+    }
+    th {
+      font-weight: 600; color: var(--fg-mute);
+      font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--fg-mute);
+    }
+    td.num { text-align: right; white-space: nowrap; }
+    td.pos { color: var(--fg); }
+    td.neg { color: var(--fg-faint); }
+    tr:last-child td { border-bottom: none; }
+    tr.highlight td { background: var(--hi); }
+    tr.totals td { border-top: 1px solid var(--fg-mute); }
+
+    /* Figure / chart */
+    figure.chart, figure { margin: 1.6em 0; }
+    figure svg, figure.chart svg {
+      display: block; width: 100%; height: auto;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+    }
+    figcaption {
+      font-size: 13px; color: var(--fg-mute);
+      line-height: 1.5; margin-top: 10px;
+    }
+    figcaption strong { color: var(--fg); font-weight: 500; }
+    @media (min-width: 960px) {
+      article > figure.chart, .body-main > figure.chart {
+        width: min(1100px, calc(100vw - 3rem));
+        max-width: none;
+        margin-left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+
+    /* Neg list */
+    .neg-list {
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+    }
+    .neg-list-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin: 14px 0 6px;
+    }
+    .neg-list ul { list-style: none; padding: 0; margin: 0; }
+    .neg-list li {
+      padding: 14px 0; border-bottom: 1px solid var(--rule);
+      font-size: 15px; line-height: 1.6; color: var(--fg-mute);
+      margin-bottom: 0;
+    }
+    .neg-list li:last-child { border-bottom: 0; }
+    .neg-list li strong { color: var(--fg); font-weight: 600; }
+
+    /* Break */
+    .break {
+      display: flex; align-items: center; justify-content: center;
+      margin: 3rem 0 2.5rem;
+      color: var(--fg-faint);
+      font-size: 11px; letter-spacing: 0.6em;
+    }
+
+    hr { border: 0; border-top: 1px solid var(--rule); margin: 1.8em 0; }
+    .footer { font-size: 12.5px; color: var(--fg-faint); }
+
+    /* Reproducibility panel */
+    table.repro { margin: 1em 0 1.5em; }
+    table.repro th {
+      width: 7.5em; vertical-align: top; text-transform: none; letter-spacing: 0;
+      font-size: 13px; border-bottom: 1px solid var(--rule);
+    }
+    table.repro td { font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+    table.repro tr:last-child th { border-bottom: none; }
+
+    @media (max-width: 480px) {
+      .site-header { padding: 22px 20px 0; }
+      article { padding: 16px 20px 56px; }
+      h1 { font-size: 28px; }
+      .subtitle { font-size: 16px; }
+      .stat-row { grid-template-columns: 1fr; }
+      .mode-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+    <!-- PANES:HEAD:START -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
+  <link rel="stylesheet" href="panes.css?v=4a6ced04" />
+  <script src="ascii.js?v=6f1f421a" defer></script>
+  <!-- PANES:HEAD:END -->
+</head>
+<body class="pn-body panes-post">
+  <!-- PANES:BAR:START -->
+  <div class="split split--inner">
+    <aside class="side">
+      <div class="side__pin">
+        <figure class="side__art">
+          <pre data-landscape data-rows="22" aria-hidden="true">                                                      
+                                                      
+                                                      
+                           ===                        
+                         -======                      
+                      ----========                    
+                :::::::-----========                  
+   ,::::::----::::::::::::----==========              
+    :::::-----::::::,,,,,:::--======================= 
+     ::::-----::::::,,...,,:--=====================   
+      ::::::::::::::::,...,:--===--===============    
+        :::::::::::::::::,.,<b>@</b>==------===========      
+          ,,,,,,,,::::---========-------------        
+           ,,,,,,,,,,::--========-----------          
+             ,,,,...,,::-=======---------             
+              ,,,,....,:-====---------                
+                :,,,,..,:--:::----                    
+                  :::::::::::::                       
+                     :::::                            
+                                                      
+                                                      
+                                                      </pre>
+        </figure>
+        <p class="side__name"><a href="/">Stephen<br> Casella<span class="accent">_</span></a></p>
+        <p class="side__bio">I study how language models reason and respond to training, and put AI agents to work on hard, checkable problems: formal proofs, faster code, real bugs.</p>
+        <nav class="side__nav" aria-label="Site">
+          <a href="research.html" aria-current="true">research</a>
+          <a href="projects.html">software</a>
+          <a href="/#contact">contact</a>
+        </nav>
+      </div>
+      <div class="side__links">
+        <a class="side__grid" href="blog_diversity.html" title="pick a random integer between 1 and 100." aria-label="Pick a random integer between 1 and 100. It put more than 95% of its probability on three numbers: 4, 42, and 47. Read the write-up."><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></a>
+        <a href="https://github.com/scasella" rel="me">github.com/scasella</a>
+        <a href="https://huggingface.co/scasella91" rel="me">huggingface.co/scasella91</a>
+        <a href="https://www.linkedin.com/in/stevecasella/" rel="me">linkedin</a>
+      </div>
+    </aside>
+    <div class="split__main">
+  <!-- PANES:BAR:END -->
+  <main class="post-main">
+  <article class="post">
+
+<h1>A Lean proof let agents cut a compiled PyTorch workload’s runtime by 26%</h1>
+<!-- PANES:META:START -->
+    <p class="post-byline">[ <time datetime="2026-09-26">2026-09-26</time> ] // Claude Opus 5.5 · Lean 4 · PyTorch Inductor // 12 MIN READ</p>
+  <!-- PANES:META:END -->
+        <p class="subtitle">Claude Opus 5.5 agents found that a GPU kernel emitted by <code>torch.compile(dynamic=True)</code> ran faster with seven size arguments declared as 32-bit integers instead of 64-bit. A Lean proof shows when that change is exact, and a compiler rule applies it only then. On one NVIDIA L4, the result took 26% less time over a changing-shape workload, with one compiled graph and no recompilation. The opt-in patch is now an open PyTorch PR.</p>
+
+        <div class="tldr">
+          <span class="tldr-label">TL;DR</span>
+          <p>Inductor passes a kernel's tensor sizes as 64-bit integers, so its index arithmetic runs in 64 bits. For one fused concatenation kernel, the agents tried a faster division algorithm first. Declaring the seven size arguments as 32-bit helped more, because the compiler could then use cheaper division it already supports. Narrowing is not safe in general: a sum of sizes can overflow even when each size fits. A Lean theorem covers the kernel's actual index expressions, and a compile-time rule checks the kernel and Inductor's symbolic shape facts against the theorem's premises. Otherwise, it leaves the kernel alone. In a pre-registered confirmation on PyTorch 2.14, the narrowed kernel ran the sequence 1.349× faster (26% less time). The upstream patch, timed separately on a PyTorch nightly, ran it 1.388× faster with the flag on than off.</p>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat">
+            <span class="k">Less sequence time</span>
+            <div class="v">26%</div>
+            <div class="s">1.349× paired median, PyTorch 2.14, one L4</div>
+          </div>
+          <div class="stat">
+            <span class="k">Upstream patch</span>
+            <div class="v">1.388×</div>
+            <div class="s">Flag off vs on, PyTorch nightly, one L4</div>
+          </div>
+          <div class="stat">
+            <span class="k">Size arguments narrowed</span>
+            <div class="v">7</div>
+            <div class="s">int64 to int32, only when the rule's premises hold</div>
+          </div>
+          <div class="stat">
+            <span class="k">Compiles during timing</span>
+            <div class="v">0</div>
+            <div class="s">Output bitwise equal to eager at every shape</div>
+          </div>
+        </div>
+
+        <div class="callout">
+          <span class="callout-label">Upstream status</span>
+          <p>The patch is an open PR, <a href="https://github.com/pytorch/pytorch/pull/198733">pytorch/pytorch#198733</a>, behind a flag that is off by default, with a comment on <a href="https://github.com/pytorch/pytorch/issues/189940#issuecomment-5850251322">issue #189940</a>. It is marked ready for review, but PyTorch’s CI is waiting for a maintainer to approve the runs, and no one has reviewed it yet.</p>
+        </div>
+
+        <h2 id="setup">Setup</h2>
+        <p>I wanted agents' proof-writing to make real software faster, not to produce more proofs or beat a deliberately slow baseline.</p>
+        <p>I built on <a href="https://lizn-zn.github.io/VeriTile/">VeriTile</a>, a Triton-verification project by Zenan Li and collaborators. It provides a typed Triton-style language in Lean, its execution semantics, correctness and equivalence interfaces, and proof-checking infrastructure. I didn't build any of that. This work, in <a href="https://github.com/scasella/veritile-narrow-cat">a fork</a>, adds launch contracts, the transformation proofs and the narrowing rule.</p>
+        <p>Proof work ran on my M4 Pro MacBook Pro with 24 GB of memory, with the official Linux proof checks in a local container. CUDA runs and timing ran remotely on an L4 through Modal. Every agent was Claude Opus 5.5, directed from Claude Code. The agents wrote the implementations, proofs, tests and measurement harnesses. I set the tasks and spending limits and reviewed each stage before the next.</p>
+
+        <h2 id="baseline">First, find a baseline worth beating</h2>
+        <p>The project started with simpler kernels. Their launch proofs covered more than the arithmetic in one GPU program: checked configurations cover the whole output, every access is valid, and unrelated memory is untouched.</p>
+        <p>Fusing addition and ReLU into one verified kernel ran about 1.7× faster on the device than the two-kernel pipeline at large sizes. But warmed-up <code>torch.compile</code> was about as fast (<a href="https://github.com/scasella/veritile-narrow-cat/blob/stage15-patch-timing/bench/tritonbench_g/add_example/improvement/FUSION.md">FUSION.md</a>). That was a verified implementation, not an advantage over the compiler. I needed a workload where compiled code still did avoidable work, and where a proof could justify removing it.</p>
+        <p><a href="https://github.com/pytorch/pytorch/issues/189940">PyTorch issue #189940</a> supplied one: nested concatenation along a dynamic last dimension, with additions inside. The issue reported compiled code slower than eager on an H100. That didn't reproduce on the L4: dynamic compilation beat eager at all 7 shapes that completed. The mechanism did reproduce. Compiled dynamic code was 1.52–2.38× slower than compiled static code across 14 shapes (<a href="https://github.com/scasella/veritile-narrow-cat/blob/stage15-patch-timing/bench/optimizations/inductor_narrow/REPORT.md">report, §1</a>).</p>
+<pre><code>def nested_cat_add(q1, k1, v1a, v1b, q2, k2, v2a, v2b):
+    v1 = v1a + v1b
+    v2 = v2a + v2b
+    return torch.cat(
+        [
+            torch.cat([q1, k1, v1], dim=-1),
+            torch.cat([q2, k2, v2], dim=-1),
+        ],
+        dim=-1,
+    )</code></pre>
+        <p>The inputs are 2-D bf16 tensors whose widths change at runtime. Inductor already fuses all of it into one kernel, so fewer launches wasn't the opportunity.</p>
+
+        <h2 id="hypothesis">The first idea was the wrong one</h2>
+        <p>The kernel maps each flat output index back to a row and column:</p>
+<pre><code>row = xindex // width
+column = xindex % width</code></pre>
+        <p>The size arguments arrive as <code>int64</code>, which makes all of that arithmetic 64-bit. That's deliberate. PyTorch's <a href="https://github.com/pytorch/pytorch/blob/v2.14.0/torch/_inductor/codegen/triton_utils.py">source</a> warns that a product of size symbols can overflow even when each symbol fits.</p>
+        <p>A standalone kernel with 32-bit indexing and multiply-and-shift division, its constants computed on the host, was fast. It didn't say which change mattered. So the agents rewrote Inductor's emitted kernel during code generation in three ways, keeping its masks, loads, stores and launch structure. Each variant kept the original body as a guarded fallback.</p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 01</span>Three rewrites of the emitted kernel</div>
+          <table>
+            <thead>
+              <tr><th>Variant</th><th>Change</th><th>Sequence speedup, round 1 / round 2</th></tr>
+            </thead>
+            <tbody>
+              <tr class="highlight"><td>N</td><td>Narrow the size arguments to int32</td><td class="num">1.28× / 1.21×</td></tr>
+              <tr><td>F</td><td>Replace division; compute its constants in the kernel</td><td class="num">0.94× / 0.95×</td></tr>
+              <tr><td>NF</td><td>Both</td><td class="num">1.10× / 1.11×</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Above 1 is faster than the emitted kernel. Narrowing alone won. The division helper had a valid proof, and it made the kernel slower (<a href="https://github.com/scasella/veritile-narrow-cat/blob/stage15-patch-timing/bench/optimizations/inductor_divmod/README.md">controlled experiment</a>).</p>
+        <p>The generated code showed why. With a 32-bit divisor, the compiler could reuse work that depends on the divisor instead of running the expensive 64-bit sequence per element. The recompiled emitted kernel has about 260 instructions per element, with calls to a 64-bit division slow path. The narrowed kernel has about 135 and no such calls. The custom helper added setup in every thread, which is not the same as computing its constants once on the host. So the formal work moved to the change that won.</p>
+
+        <h2 id="proof">The proof</h2>
+        <p>The first narrowing variant checked its range condition inside the kernel and carried both bodies. The final one, <strong>N1</strong>, decides eligibility at compile time and declares the seven size arguments as int32 in the kernel signature. The body is unchanged, and there is no wide fallback.</p>
+        <p>That is not permission to narrow every size argument. For this kernel, call the six segment widths w<sub>1</sub> to w<sub>6</sub>, the total width W = w<sub>1</sub> + … + w<sub>6</sub>, the row count r and the element count N = r · W. With positive dimensions and N ≤ 2<sup>31</sup> − 1, W and every segment width fit in signed 32 bits. A corollary, <code>narrow_cat_args_fit</code>, proves that part.</p>
+        <p>That alone isn't enough, because an intermediate expression can still overflow. So the agents extracted the kernel's actual index expressions from the emitted Triton into a typed expression language. Its semantics include signed 32- and 64-bit arithmetic, type promotion, wraparound at every operation and truncating division. The main theorem, <code>narrow_cat_equiv</code>, says that on every lane of the grid the 64-bit and 32-bit kernels agree on the store mask, the store's address and value, and every memory read. The tensor values stay symbolic on both sides, so the proof makes no claim about bf16 arithmetic. It shows the same data reaches the same operations (<a href="https://github.com/scasella/veritile-narrow-cat/blob/stage15-patch-timing/bench/optimizations/inductor_narrow/NarrowCat.lean">NarrowCat.lean</a>, standard Lean axioms only).</p>
+
+        <h3 id="rule">From theorem to compiler rule</h3>
+        <p>The rule checks structure and facts (<a href="https://github.com/scasella/veritile-narrow-cat/blob/stage15-patch-timing/bench/optimizations/inductor_narrow/RULE.md">RULE.md</a>). The kernel must match the proved class exactly: its arguments, casts, masks and memory operations. Then the checker reads Inductor's own symbolic state:</p>
+        <ul>
+          <li>each segment width has a lower bound of at least 1;</li>
+          <li>the total width is defined as the sum of the six segments;</li>
+          <li>the element count is a positive row count times the total width;</li>
+          <li>N ≤ 2<sup>31</sup> − 1 is guarded, and Dynamo re-checks that guard on every call.</li>
+        </ul>
+        <p>It never uses the sizes of the example inputs as evidence. Empty inputs fail the lower bounds and compile separately. Anything the recognizer doesn't model stays 64-bit, and a three-segment version of the program is rejected. The boundary tests include inputs where every size fits in 32 bits but the total-width relation doesn't hold. There, a sum of three widths overflows and the two kernels disagree. At N = 2<sup>31</sup>, Dynamo recompiled to a kernel with 64-bit indexing, the rule declined, and the output matched eager bit for bit.</p>
+
+        <h2 id="confirmation">Confirming the speedup</h2>
+        <p>N1 failed its first selection rule. It ran the whole sequence faster in both rounds, but in round 1 it fell to 0.951× of guarded N at one small shape, 3000 × (1000, 120, 136), below the 0.97× floor. In round 2 it was 1.09× at that shape. That verdict stays in the record. I didn't lower the threshold.</p>
+        <p>A separate confirmation tested whether the small-shape miss was real. Its procedure and stopping point were fixed before the GPU call (<a href="https://github.com/scasella/veritile-narrow-cat/blob/stage15-patch-timing/scripts/launch_narrow_confirm.py">harness</a>):</p>
+        <ul>
+          <li>The emitted kernel (B0), guarded N and N1 were compiled in one process as distinct functions.</li>
+          <li>24 paired triples ran in 2 processes, with all six orders equally often. Each block warmed up for at least 2 s under load, ran the 14-shape sequence (20 calls per shape), then made 50 calls at each of 10 small shapes.</li>
+          <li>N1 would be adopted only if its median benefit over guarded N was at least 1.03× with a 95% CI lower bound of at least 1.00, and every small shape's lower bound was at least 0.97.</li>
+          <li>Statistics were paired ratios with percentile-bootstrap intervals, with no interim looks and no retries.</li>
+        </ul>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 02</span>Pre-registered confirmation, PyTorch 2.14, one L4</div>
+          <table>
+            <thead>
+              <tr><th>Comparison</th><th>Median paired speedup</th><th>95% CI</th></tr>
+            </thead>
+            <tbody>
+              <tr class="highlight"><td>N1 vs emitted B0</td><td class="num">1.349×</td><td class="num">1.344–1.358</td></tr>
+              <tr><td>N1 vs guarded N</td><td class="num">1.090×</td><td class="num">1.082–1.094</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>N1 passed, including non-regression at all ten small shapes. Every variant was bitwise equal to eager at every shape, and nothing compiled during the measured blocks (<a href="https://github.com/scasella/veritile-narrow-cat/blob/stage15-patch-timing/bench/optimizations/inductor_narrow/CONFIRM.md">CONFIRM.md</a>). Median sequence times were 600.7 ms for B0, 482.8 ms for guarded N and 443.9 ms for N1. The speedups are medians of paired ratios, not ratios of those medians.</p>
+        <p>1.349× is 26% less time. That's warm execution time for this changing-shape workload, not 26% faster model training. The intervals describe this one experiment, not other GPUs. The first experiment, under a different protocol, showed about 30% less time. The two stay separate: I'm not pooling them or picking the larger one.</p>
+
+        <h3 id="power">Why sustained load mattered</h3>
+        <p>Isolated kernel timings didn't match repeated execution. Telemetry showed the L4 at its software power cap in every sample during sustained passes, with the SM clock at 52–57% of idle for the dynamic kernels. Kernels ran longer inside the sequence than alone: 1.39× for the emitted kernel and 1.12× for N1. Gaps between kernels were at most 1.6% of a pass. So the confirmation warmed each block under load and measured the regime I meant to report, rather than correcting toward isolated-call numbers.</p>
+
+        <h2 id="checks">How the agents were checked</h2>
+        <ul>
+          <li><strong>Frozen statements.</strong> Theorem statements were frozen before proof search. An agent could change its proof, but not pass by weakening the theorem. Later additions, like the nonempty-launch corollary, were recorded separately.</li>
+          <li><strong>Separate checks for separate questions.</strong> Lean checked the formal statements. Fresh builds, axiom audits and the official comparator checked the artifacts. GPU tests checked the actual executable on selected inputs.</li>
+          <li><strong>Tested links to the source.</strong> The emitted kernel feeds an extractor, whose output feeds both the Lean definition and the recognizer. Binding tests check those links, and mutations must be rejected: an extra size use, a changed cast, an unsupported operation. The parser and the symbolic-fact extraction are trusted, not proved (<a href="https://github.com/scasella/veritile-narrow-cat/blob/stage15-patch-timing/scripts/narrow_rule.py">reference checker</a>).</li>
+          <li><strong>Timing picked the proof target.</strong> A candidate needed both a measured benefit and its own correctness argument. The proof of the losing division helper didn't count toward the narrowing.</li>
+        </ul>
+
+        <h2 id="upstream">The upstream patch</h2>
+        <p>The agents ported the rule to PyTorch as an opt-in setting, <code>config.triton.narrow_proven_size_args</code>, on nightly 2.15.0.dev20260926 (git 6aa9e2fc, built from <code>main</code> ef166fb2). That build emits the same Triton source for this program, byte for byte. The patch applied, its four new GPU tests passed, and with the flag on the 14-shape sequence was bitwise equal to eager, with one graph, one kernel and all seven sizes as int32 (<a href="https://github.com/scasella/veritile-narrow-cat/blob/stage15-patch-timing/bench/tritonbench_g/add_example/launch_evidence/patch_check.json">patch check</a>).</p>
+        <p>Identical source doesn't guarantee identical compiled kernels or autotuning, so the patch was timed on its own revision. The flag was off in one callable and on in another, in the same patched process, under the same paired, pre-registered design, run once.</p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 03</span>The patch on the nightly, flag off vs on, one L4</div>
+          <table>
+            <thead>
+              <tr><th>Measure</th><th>Result</th></tr>
+            </thead>
+            <tbody>
+              <tr class="highlight"><td>Sequence speedup, flag on (median paired, 95% CI)</td><td class="num">1.388× (1.378–1.408)</td></tr>
+              <tr><td>Median sequence time, off / on</td><td class="num">592.4 / 426.8 ms</td></tr>
+              <tr><td>Small shapes with non-regression shown</td><td class="num">10 of 10 (lowest CI bound 1.289)</td></tr>
+              <tr><td>Time inside the eligibility check, per kernel compile</td><td class="num">14.7 ms accepted; 95 µs rejected</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>That's about 28% less time (<a href="https://github.com/scasella/veritile-narrow-cat/blob/stage15-patch-timing/bench/optimizations/inductor_narrow/REPORT.md">report, §8</a>). It comes from a different stack from the 26% result, so the two aren't combined. For four unrelated programs, first-call latency with the flag on was 2–4% higher, more than the check's own cost. With three processes per cell, that isn't separated from noise.</p>
+        <p>The patch recognizes one generated kernel, identified by a digest of its canonical form. It is not a general pass that narrows arbitrary indexing. A harmless code-generation change can make it stop matching, and the kernel then keeps 64-bit sizes. It can't make the rule misfire, provided the trusted recognizer and extractor are correct. The report asks reviewers whether the rule should work on typed index expressions earlier in the compiler instead.</p>
+
+        <h2 id="interpretation">Interpretation and limits</h2>
+        <p>Agents improved code from a mature compiler, found the mechanism with a controlled experiment, and wrote a machine-checked argument for the change that was kept. The gain isn't a new division algorithm. The proof lets the compiler use cheaper arithmetic it already supports.</p>
+        <ul>
+          <li>Everything was measured on one L4, for one program. The issue's H100 is untested.</li>
+          <li>The source extractor, the recognizer's parse, SymPy and Inductor's symbolic facts, and the Triton-to-machine-code toolchain are trusted, not proved. Masked-off lanes are assumed never to be dereferenced, as the emitted kernel already assumes.</li>
+          <li>The result is not general compiler correctness. Each new kernel class would currently need its own extraction and proof.</li>
+          <li>Static compilation is still about 12% faster at warm steady state, at about 20 s more cold compilation over this shape sequence (29 s against 9 s). Narrowing improves that trade-off. It doesn't make static compilation obsolete.</li>
+          <li>The GPU tests and timing ran on the PR's first commit. A second commit changed only formatting, one set type and type annotations for PyTorch's linters, and was re-checked on the CPU code-generation path only.</li>
+          <li>PyTorch-wide CI hasn't run. Four targeted tests don't replace it.</li>
+        </ul>
+
+        <h2 id="next-experiment">Next experiment</h2>
+        <ul>
+          <li>Get maintainer review on where the rule should live, and on whether it can become an automatic compiler decision instead of a flag.</li>
+          <li>Measure it together with <a href="https://github.com/pytorch/pytorch/pull/193614">#193614</a>, which fixes a separate alignment cost in the same kernel.</li>
+          <li>Try a second program and a second GPU, including an H100.</li>
+        </ul>
+
+        <h2 id="reproducibility">Reproducibility</h2>
+        <table class="repro">
+          <tbody>
+            <tr><th scope="row">Model</th><td>Claude Opus 5.5 for every agent, directed from Claude Code.</td></tr>
+            <tr><th scope="row">Experiment</th><td>Built on VeriTile by Zenan Li and collaborators, in a fork. Proofs in Lean 4 on an M4 Pro MacBook Pro (24 GB), official checks in a Linux container. Timing on an NVIDIA L4 on Modal with warm L2 and sustained-load warm-up. Confirmation: PyTorch 2.14.0+cu130, Triton 3.8.0, 24 paired triples in 2 processes, balanced orders, fixed stopping point. Patch timing: nightly 2.15.0.dev20260926 (6aa9e2fc), 24 pairs in 2 processes. The two final GPU calls took 596 s and 417 s, each under a $2 cap. That is not the total project or agent cost.</td></tr>
+            <tr><th scope="row">Data</th><td>Nested bf16 concatenation with additions: 14 changing shapes at 20 calls each, plus 10 small shapes at 50 calls each.</td></tr>
+            <tr><th scope="row">Results</th><td><a href="https://github.com/scasella/veritile-narrow-cat/blob/stage15-patch-timing/bench/optimizations/inductor_narrow/REPORT.md">Full report</a>, <a href="https://github.com/scasella/veritile-narrow-cat/blob/stage15-patch-timing/bench/tritonbench_g/add_example/launch_evidence/narrow_confirm.json">raw confirmation data</a>, <a href="https://github.com/scasella/veritile-narrow-cat/blob/stage15-patch-timing/bench/tritonbench_g/add_example/launch_evidence/patch_perf.json">raw patch timing</a>.</td></tr>
+            <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/veritile-narrow-cat/tree/stage15-patch-timing">scasella/veritile-narrow-cat</a> at tag <code>stage15-patch-timing</code>: <code>NarrowCat.lean</code>, the rule, the harnesses and the patch.</td></tr>
+            <tr><th scope="row">Status</th><td>Published 2026-09-26 · Proof, code and data public. PR <a href="https://github.com/pytorch/pytorch/pull/198733">pytorch/pytorch#198733</a> open and ready for review, awaiting CI approval.</td></tr>
+          </tbody>
+        </table>
+
+
+            <!-- PANES:NEXT:START -->
+    <nav class="post-next" aria-label="More research">
+      <a href="blog_cpython_ft.html"><span>next →</span><span>25 bugs in free-threaded CPython, found by agents</span></a>
+      <a class="post-next__all" href="research.html">← all research</a>
+    </nav>
+  <!-- PANES:NEXT:END -->
+  </article>
+  </main>
+  <!-- PANES:FOOT:START -->
+    <footer class="pn-foot">
+      <p>Personal projects. Not affiliated with or endorsed by my employer. No employer data, infrastructure, or confidential information used.</p>
+    </footer>
+    </div>
+  </div>
+  <!-- PANES:FOOT:END -->
+</body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>[Retracted] A Transferable 1.5B Bug Fixer from Ten LoRA Examples | Stephen Casella</title>
+  <meta name="description" content="An open-weight 1.5B model scored zero verified bug fixes in 384 tries. Verifier-guided prompt mining surfaced ten correct fixes; a LoRA on them generalized to unseen bugs." />
+  <meta name="author" content="Stephen Casella" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#fafaf8" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-2RSWDWW67D');
+  </script>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #fafaf8;
+      --paper: #ffffff;
+      --fg: #222;
+      --fg-mute: #555;
+      --fg-faint: #8a8a85;
+      --rule: #e2e2dd;
+      --hi: #f3f2ec;
+      --link: #1a5fb4;
+      --link-visited: #5a3aa3;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      font-size: 16.5px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    .site-header {
+      max-width: 720px; margin: 0 auto; padding: 28px 24px 0;
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 13px; color: var(--fg-mute);
+    }
+    .site-header a { color: var(--fg-mute); text-decoration: none; border-bottom: 1px dotted var(--fg-faint); }
+    article {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 24px 64px;
+    }
+    .meta {
+      color: var(--fg-faint); font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .meta .tag { color: var(--fg-mute); margin-left: 12px; }
+    h1 {
+      font-size: 32px;
+      line-height: 1.22;
+      font-weight: 600;
+      margin: 0 0 10px;
+      letter-spacing: -0.01em;
+      color: #111;
+    }
+    .subtitle {
+      color: var(--fg-mute);
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.5;
+      margin: 0 0 24px;
+    }
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin: 1.9em 0 0.5em;
+      line-height: 1.3;
+      letter-spacing: -0.005em;
+      color: #111;
+    }
+    h3 { font-size: 17px; font-weight: 600; margin: 1.5em 0 0.35em; }
+    p { margin: 0 0 0.9em; }
+    ul, ol { margin: 0 0 1em; padding-left: 1.4em; }
+    li { margin-bottom: 0.35em; }
+    a { color: var(--link); text-decoration: underline; text-decoration-color: rgba(26,95,180,0.4); }
+    a:visited { color: var(--link-visited); }
+    code { font-family: var(--font-mono); font-size: 0.85em; background: var(--hi); padding: 1px 5px; border-radius: 3px; }
+    strong { font-weight: 600; }
+    em { font-style: italic; }
+
+    blockquote {
+      margin: 1em 0;
+      padding: 6px 0 6px 18px;
+      border-left: 3px solid var(--rule);
+      color: var(--fg-mute);
+      font-style: normal;
+    }
+    blockquote p { font-size: 15.5px; margin: 0; }
+
+    .tldr {
+      margin: 1.2em 0 1.6em;
+      padding: 14px 18px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      font-size: 15.5px;
+    }
+    .tldr .label {
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .tldr p:last-child { margin: 0; }
+
+    figure, figure.chart { margin: 1.6em 0; }
+    figure svg, figure.chart svg { display: block; width: 100%; height: auto; background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; }
+    figcaption { font-size: 13px; color: var(--fg-mute); margin-top: 10px; line-height: 1.5; }
+    @media (min-width: 960px) {
+      article > figure.chart {
+        width: min(1100px, calc(100vw - 3rem));
+        max-width: none;
+        margin-left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+
+    details.glossary { margin: 1.4em 0; border: 1px solid var(--rule); border-radius: 4px; background: var(--paper); }
+    details.glossary > summary { cursor: pointer; padding: 10px 14px; font-size: 13px; font-weight: 600; color: var(--fg-mute); letter-spacing: 0.02em; list-style: none; }
+    details.glossary > summary::-webkit-details-marker { display: none; }
+    details.glossary > summary::before { content: "▸"; display: inline-block; width: 14px; font-size: 11px; color: var(--fg-faint); }
+    details.glossary[open] > summary::before { content: "▾"; }
+    details.glossary[open] > summary { border-bottom: 1px solid var(--rule); }
+    details.glossary ul { margin: 0; padding: 12px 18px 14px 36px; font-size: 14px; }
+    details.glossary li + li { margin-top: 6px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 1em 0 1.5em; }
+    th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--rule); }
+    th { font-weight: 600; color: var(--fg-mute); font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--fg-mute); }
+    tr.hl td { background: var(--hi); }
+    td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+
+    hr { border: 0; border-top: 1px solid var(--rule); margin: 1.8em 0; }
+    .footer { font-size: 12.5px; color: var(--fg-faint); }
+
+    @media (max-width: 480px) {
+      .site-header { padding: 22px 20px 0; }
+      article { padding: 16px 20px 56px; }
+      h1 { font-size: 26px; line-height: 1.25; }
+      .subtitle { font-size: 16px; }
+      h2 { font-size: 20px; }
+      table { font-size: 13px; }
+      th, td { padding: 6px 8px; }
+    }
+    .retracted { border: 1px solid #b33; background: #fff4f2; padding: 12px 16px; margin: 0 0 24px; font-size: 14px; }
+    .retracted a { color: inherit; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a href="../index.html">casella.dev</a>
+    <a href="../blog_diversity.html">~/next</a>
+  </header>
+  <article>
+    <p class="retracted"><strong>Retracted.</strong> This is the original text of a post withdrawn on 2026-09-23, kept as a record. Its conclusions do not hold. <a href="../blog_finetuning.html">Read why it was withdrawn.</a></p>
+    <p class="meta">May 2026</p>
+    <h1>Verifier-guided prompt mining turned a zero-success 1.5B model into a transferable bug fixer with ten LoRA examples</h1>
+    <p class="subtitle">A small open-weight instruction model (Qwen2.5-1.5B-Instruct, not a code-specialized model) produced zero correct fixes across 384 attempts at a synthetic Python bug-fix task. A prompt-optimization pass mined ten verified-correct fixes from the same model. A LoRA trained on those ten solved bug categories the model had never trained on.</p>
+
+    <div class="tldr">
+      <div class="label">TL;DR</div>
+      <p>Take an open-weight 1.5-billion-parameter language model (Qwen2.5-1.5B-Instruct). Ask it to fix bugs in 32 synthetic Python programs with hidden pytest cases as the verifier. The deployment prompt produces <strong>0 verified-correct patches across 384 attempts</strong>. Switch to optimized prompts on the same model, and you get verified-correct fixes for <strong>8 to 14 different bug tasks per run</strong> across 3 to 5 bug categories.</p>
+      <p>Train a LoRA adapter on ten of those patches for 24 steps. The adapter solves <strong>3 to 4 of 6 unseen bug categories</strong>. The same setup with patches mined using only a pass/fail count solves 0 to 1. LoRA training cost: about thirty cents.</p>
+    </div>
+
+    <h2>Where the training data already lives</h2>
+    <p>The default story for adapting AI looks like this. Take an existing model, gather labeled examples of a new task, fine-tune the model on them, get a better model. The expensive part is the examples. Annotation companies exist to provide them, and synthetic-data pipelines exist to generate them. "We need more data" is the standard diagnosis when fine-tuning fails.</p>
+    <p>I tested whether the apparent shortage was structural or a prompting failure. It was a prompting failure. The training pass that recovered the missing skill cost about thirty cents on a Modal L4 GPU.</p>
+    <p>"In the model" is a slight overstatement. The data is reachable from the model in interaction with a verifier and its failure messages, not by the deployment prompt on its own. The model plus the verifier-feedback loop is where the data lives. That distinction matters because the verifier shapes what counts as correct, and (as the chart below shows) the quality of the feedback the optimizer sees changes what the mined examples teach.</p>
+
+    <details class="glossary">
+      <summary>Terms used below</summary>
+      <ul>
+        <li><strong>Open-weight model.</strong> A language model whose parameters are publicly downloadable. <code>Qwen2.5-1.5B-Instruct</code> is the model I used.</li>
+        <li><strong>Fine-tuning.</strong> Customizing an existing AI model by training it on examples of a specific task.</li>
+        <li><strong>LoRA.</strong> Low-Rank Adaptation. A method that fine-tunes a model cheaply by training only a small set of additional parameters and leaving the original weights frozen.</li>
+        <li><strong>Verifier.</strong> An automated grader. In my case, a set of hidden pytest cases that decide whether a candidate patch passes.</li>
+        <li><strong>Held-out category.</strong> A bug type that does not appear in any training example. The hardest generalization test for the trained model.</li>
+        <li><strong>Prompt optimization (GEPA).</strong> An evolutionary search over prompt wordings. The optimizer mutates the prompt, scores how close each variant comes to passing the verifier, and keeps the variants that do best.</li>
+        <li><strong>Mining.</strong> Producing model outputs under varied prompts and keeping the ones the verifier accepts.</li>
+        <li><strong>Scalar feedback (during mining).</strong> The prompt-optimization run sees only a single overall score per prompt candidate (for example, the count of tests that passed). The search has to infer which wordings help from that one number.</li>
+        <li><strong>Localized feedback (during mining).</strong> The prompt-optimization run sees per-test-case detail: which specific tests failed and the assertion errors. The search can target the specific things that broke.</li>
+      </ul>
+    </details>
+
+    <h2>What this enables</h2>
+    <p>The same approach applies anywhere you want to fine-tune a small open-weight model on a verifier-friendly task and the deployment prompt is scoring zero.</p>
+    <ol>
+      <li><strong>Code-repair tools with automated tests.</strong> The deployment prompt may not produce correct fixes on its own. The model may still know how, under different wording.</li>
+      <li><strong>Structured-extraction pipelines with schema validators.</strong> If a schema check is your verifier, prompt optimization can find wordings that produce schema-valid outputs the model couldn't otherwise emit.</li>
+      <li><strong>Any sparse-reward task where you were about to commission expensive annotation.</strong> Try the cheap experiment first. If prompt optimization mines verified-correct examples from the model, you may not need the annotation pass at all.</li>
+    </ol>
+    <p>The approach does not apply when the deployment prompt is already producing correct outputs at a workable rate, or when no automated verifier exists for the task.</p>
+
+    <h2>The result, in one chart</h2>
+    <p>The chart compares two ways of running the mining pass. In the <strong>scalar</strong> condition, the prompt-optimization search saw only the count of tests each prompt candidate passed. In the <strong>localized</strong> condition, the search saw per-test-case failures with assertion errors. Both pools yielded ten verified-correct fixes; both LoRAs used the same training recipe. The transferability gap on held-out categories (3.67/6 vs 0.33/6) is the post's strongest practical lesson: diagnostic feedback quality, not just example count, determines whether mined examples teach generalizable behavior.</p>
+    <figure class="chart">
+      <svg viewBox="0 0 900 360" role="img" aria-label="Category-heldout repair success: scalar-feedback vs localized-feedback adapters across three random training samples and the mean">
+        <rect x="0" y="0" width="900" height="360" fill="#ffffff" />
+        <text x="20" y="22" fill="#222" font-family="Inter, sans-serif" font-size="13" font-weight="600">Repair success on six bug categories never seen during training</text>
+        <text x="20" y="40" fill="#8a8a85" font-family="Inter, sans-serif" font-size="11">Each LoRA trained on ten verified-correct fixes for 24 steps. Three random training samples per condition plus the mean.</text>
+
+        <line x1="120" y1="300" x2="880" y2="300" stroke="#bbb" stroke-width="1" />
+        <line x1="120" y1="260" x2="880" y2="260" stroke="#eee" stroke-width="1" />
+        <line x1="120" y1="220" x2="880" y2="220" stroke="#eee" stroke-width="1" />
+        <line x1="120" y1="180" x2="880" y2="180" stroke="#eee" stroke-width="1" />
+        <line x1="120" y1="140" x2="880" y2="140" stroke="#eee" stroke-width="1" />
+        <line x1="120" y1="100" x2="880" y2="100" stroke="#eee" stroke-width="1" />
+        <line x1="120" y1="60"  x2="880" y2="60"  stroke="#eee" stroke-width="1" />
+
+        <text x="115" y="304" text-anchor="end" fill="#8a8a85" font-family="Inter, sans-serif" font-size="10">0 / 6</text>
+        <text x="115" y="264" text-anchor="end" fill="#8a8a85" font-family="Inter, sans-serif" font-size="10">1 / 6</text>
+        <text x="115" y="224" text-anchor="end" fill="#8a8a85" font-family="Inter, sans-serif" font-size="10">2 / 6</text>
+        <text x="115" y="184" text-anchor="end" fill="#8a8a85" font-family="Inter, sans-serif" font-size="10">3 / 6</text>
+        <text x="115" y="144" text-anchor="end" fill="#8a8a85" font-family="Inter, sans-serif" font-size="10">4 / 6</text>
+        <text x="115" y="104" text-anchor="end" fill="#8a8a85" font-family="Inter, sans-serif" font-size="10">5 / 6</text>
+        <text x="115" y="64"  text-anchor="end" fill="#8a8a85" font-family="Inter, sans-serif" font-size="10">6 / 6</text>
+
+        <!-- Group 1: Sample 1 (subset seed 0) - scalar 0/6, localized 4/6 -->
+        <g>
+          <rect x="208" y="300" width="20" height="0" fill="#bbb" />
+          <rect x="232" y="140" width="20" height="160" fill="#1a5fb4" />
+          <text x="218" y="296" text-anchor="middle" fill="#555" font-family="Inter, sans-serif" font-size="10">0</text>
+          <text x="242" y="134" text-anchor="middle" fill="#1a5fb4" font-family="Inter, sans-serif" font-size="10" font-weight="600">4</text>
+        </g>
+
+        <!-- Group 2: Sample 2 (subset seed 1) - scalar 0/6, localized 3/6 -->
+        <g>
+          <rect x="388" y="300" width="20" height="0" fill="#bbb" />
+          <rect x="412" y="180" width="20" height="120" fill="#1a5fb4" />
+          <text x="398" y="296" text-anchor="middle" fill="#555" font-family="Inter, sans-serif" font-size="10">0</text>
+          <text x="422" y="174" text-anchor="middle" fill="#1a5fb4" font-family="Inter, sans-serif" font-size="10" font-weight="600">3</text>
+        </g>
+
+        <!-- Group 3: Sample 3 (subset seed 2) - scalar 1/6, localized 4/6 -->
+        <g>
+          <rect x="568" y="260" width="20" height="40" fill="#bbb" />
+          <rect x="592" y="140" width="20" height="160" fill="#1a5fb4" />
+          <text x="578" y="256" text-anchor="middle" fill="#555" font-family="Inter, sans-serif" font-size="10">1</text>
+          <text x="602" y="134" text-anchor="middle" fill="#1a5fb4" font-family="Inter, sans-serif" font-size="10" font-weight="600">4</text>
+        </g>
+
+        <!-- Group 4: Mean - scalar 0.33, localized 3.67 -->
+        <g>
+          <rect x="748" y="287" width="20" height="13" fill="#bbb" />
+          <rect x="772" y="153" width="20" height="147" fill="#1a5fb4" />
+          <text x="758" y="283" text-anchor="middle" fill="#555" font-family="Inter, sans-serif" font-size="10">0.33</text>
+          <text x="782" y="147" text-anchor="middle" fill="#1a5fb4" font-family="Inter, sans-serif" font-size="10" font-weight="600">3.67</text>
+        </g>
+
+        <text x="228" y="322" fill="#555" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">sample 1</text>
+        <text x="408" y="322" fill="#555" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">sample 2</text>
+        <text x="588" y="322" fill="#555" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">sample 3</text>
+        <text x="768" y="322" fill="#111" font-family="Inter, sans-serif" font-size="11" text-anchor="middle" font-weight="600">mean</text>
+
+        <rect x="640" y="6" width="14" height="10" fill="#bbb" />
+        <text x="658" y="15" fill="#555" font-family="Inter, sans-serif" font-size="11">Scalar feedback</text>
+        <rect x="760" y="6" width="14" height="10" fill="#1a5fb4" />
+        <text x="778" y="15" fill="#555" font-family="Inter, sans-serif" font-size="11">Localized feedback</text>
+      </svg>
+      <figcaption>Three random samples of ten training fixes per condition, taken from the same verified-positive pool. The mean of localized-feedback samples is more than ten times the mean of scalar-feedback samples on bug categories absent from any training example.</figcaption>
+    </figure>
+
+    <h2>Why this is not training on the test set</h2>
+    <p>You might ask: if the AI produces the fixes and you train it on its own fixes, isn't that circular? It would be, but the verifier breaks the loop. The hidden pytest cases the model never sees decide which of its outputs count as correct. The training material is the subset of model outputs an automated grader accepts. That is different from training a model on its own opinion of itself.</p>
+    <p>The held-out test adds a second layer. Six of the 38 validation tasks belong to bug categories that do not appear in any training example for any condition. The trained model handles bug types it saw zero examples of during training.</p>
+
+    <h2>Per-condition numbers</h2>
+    <table>
+      <thead><tr><th>Stage</th><th>Static prompt</th><th>Scalar-feedback prompt</th><th>Localized-feedback prompt</th></tr></thead>
+      <tbody>
+        <tr><td>Verified-correct patches per run (out of 128)</td><td class="num">0</td><td class="num">22 to 26</td><td class="num">23 to 33</td></tr>
+        <tr><td>Unique bug tasks solved during mining</td><td class="num">0</td><td class="num">8 to 9</td><td class="num">12 to 14</td></tr>
+        <tr><td>Unique bug categories covered</td><td class="num">0</td><td class="num">3</td><td class="num">4 to 5</td></tr>
+        <tr><td>Validation repair success after LoRA (mean of 3 samples)</td><td class="num">0 / 38</td><td class="num">15 / 38</td><td class="num">22 / 38</td></tr>
+        <tr class="hl"><td>Held-out-category repair success (mean of 3 samples)</td><td class="num">0 / 6</td><td class="num">0.33 / 6</td><td class="num">3.67 / 6</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Bounds</h2>
+    <p>One intervention on one model. I tested one open-weight family at one size (1.5B parameters, instruction-tuned), trained on one synthetic Python code-repair benchmark with hidden pytest verification, and evaluated on a 38-task validation suite with 6 items in the toughest held-out-category split. Any individual number could move with a different random sample. The held-out tasks belong to bug categories the LoRA never saw, but they share the synthetic benchmark's task grammar, file structure, and hidden-test style. The claim is cross-category transfer inside a synthetic repair distribution, not broad code-repair generalization. I have not shown the result transfers to real codebases, larger models, multi-file bugs, or anything that is not code.</p>
+    <p>The most important baseline I have not run: take the same ten mined examples and use them as few-shot in the prompt, without LoRA. If few-shot prompting reaches similar held-out performance, the LoRA is mostly compression and deployment convenience. If LoRA beats few-shot under equal context cost, the adapter story is stronger. That comparison is open.</p>
+    <p>Two things I stand behind. The direction of the result reproduced across three random training samples and a fresh seed/split mining package. The methodology, including the adapter overfit gate that caught a training-format bug before the matched-pool comparison ran, is reconstructible from the source artifacts.</p>
+
+    <h2>Close</h2>
+    <p>The conventional move when fine-tuning fails is to gather more training data. On one task surface, the bottleneck was example visibility instead. The information needed to teach a small model a generalizable skill sat inside the model already. The everyday wording of the request was not reaching it. A better wording reached it. The automated grader confirmed which answers were real. Ten of those answers were enough to retrain the model into something usable on bugs it had never seen.</p>
+    <p>If you are fine-tuning a small open-weight model for a verifier-friendly task and you cannot mine a single training example from the deployment prompt, the deployment prompt may not be the only question to ask. Try the others before commissioning the corpus.</p>
+
+  </article>
+</body>
+</html>

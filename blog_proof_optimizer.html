@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agent-written, formally verified speedups in Dafny | Stephen Casella</title>
+  <meta name="description" content="Claude Opus 5.5 rewrote four deliberately slow Dafny routines under a frozen, machine-checked spec it could not edit. Seven rewrites verified, and one ran 105× faster on a workload it never saw." />
+  <meta name="author" content="Stephen Casella" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#080c0f" />
+  <link rel="canonical" href="https://casella.dev/blog_proof_optimizer.html" />
+  <meta property="og:site_name" content="Stephen Casella" />
+  <meta property="og:title" content="I used formal verification and agents to make an algorithm 105× faster and prove it behaves the same" />
+  <meta property="og:description" content="Seven agent-written rewrites of deliberately slow Dafny code verified against a frozen spec. One ran 105× faster on a workload it never saw; held-out inputs also caught two slowdowns." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://casella.dev/blog_proof_optimizer.html" />
+  <meta property="og:image" content="https://casella.dev/assets/og/blog_proof_optimizer.png" />
+  <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_proof_optimizer.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Share card for the write-up: I used formal verification and agents to make an algorithm 105× faster and prove it behaves the same." />
+  <meta property="article:author" content="Stephen Casella" />
+  <meta property="article:published_time" content="2026-09-24" />
+  <meta property="article:modified_time" content="2026-09-24" />
+  <meta property="article:tag" content="formal verification" />
+  <meta property="article:tag" content="Dafny" />
+  <meta property="article:tag" content="AI agents" />
+  <meta property="article:tag" content="Claude Opus 5.5" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="I used formal verification and agents to make an algorithm 105× faster and prove it behaves the same" />
+  <meta name="twitter:description" content="Seven agent-written rewrites of deliberately slow Dafny code verified against a frozen spec. One ran 105× faster on a workload it never saw; held-out inputs also caught two slowdowns." />
+  <meta name="twitter:image" content="https://casella.dev/assets/og/blog_proof_optimizer.png" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-2RSWDWW67D');
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "I used formal verification and agents to make an algorithm 105× faster and prove it behaves the same",
+      "description": "Claude Opus 5.5 rewrote four deliberately slow Dafny routines under a frozen, machine-checked spec it could not edit. Seven rewrites verified, and one ran 105× faster on a workload it never saw.",
+      "url": "https://casella.dev/blog_proof_optimizer.html",
+      "mainEntityOfPage": "https://casella.dev/blog_proof_optimizer.html",
+      "image": "https://casella.dev/assets/og/blog_proof_optimizer.png",
+      "datePublished": "2026-09-24",
+      "dateModified": "2026-09-24",
+      "author": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/",
+        "sameAs": [
+          "https://github.com/scasella",
+          "https://www.linkedin.com/in/stevecasella/"
+        ]
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "keywords": [
+        "formal verification",
+        "Dafny",
+        "AI agents",
+        "Claude Opus 5.5",
+        "program optimization",
+        "held-out benchmarks",
+        "verified refinement"
+      ]
+    }
+  </script>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:           #fafaf8;
+      --paper:        #ffffff;
+      --fg:           #222;
+      --fg-mute:      #555;
+      --fg-faint:     #8a8a85;
+      --rule:         #e2e2dd;
+      --hi:           #f3f2ec;
+      --link:         #1a5fb4;
+      --link-visited: #5a3aa3;
+      --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono:    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      font-size: 16.5px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: rgba(0,0,0,0.08); color: inherit; }
+
+    .site-header {
+      max-width: 720px; margin: 0 auto; padding: 28px 24px 0;
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 13px; color: var(--fg-mute);
+    }
+    .site-header a {
+      color: var(--fg-mute); text-decoration: none;
+      border-bottom: 1px dotted var(--fg-faint); padding-bottom: 1px;
+    }
+    .site-header a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+
+    article {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 24px 64px;
+    }
+    .meta, .date {
+      color: var(--fg-faint); font-size: 13px;
+      margin-bottom: 8px; text-transform: none; letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: 32px; line-height: 1.22; font-weight: 600;
+      margin: 0 0 10px; letter-spacing: -0.01em; color: #111;
+    }
+    .subtitle {
+      color: var(--fg-mute); font-size: 17px; font-weight: 400;
+      line-height: 1.5; margin: 0 0 24px;
+    }
+    h2 {
+      font-size: 22px; font-weight: 600; line-height: 1.3;
+      margin: 1.9em 0 0.5em; letter-spacing: -0.005em; color: #111;
+    }
+    h3 { font-size: 17px; font-weight: 600; margin: 1.5em 0 0.35em; }
+
+    p { margin: 0 0 0.9em; }
+    ul, ol { margin: 0 0 1em; padding-left: 1.4em; }
+    li { margin-bottom: 0.35em; }
+    li::marker { color: var(--fg-faint); }
+
+    a { color: var(--link); text-decoration: underline; text-decoration-color: rgba(26,95,180,0.4); }
+    a:visited { color: var(--link-visited); }
+    a:hover { text-decoration-color: var(--link); }
+
+    code {
+      font-family: var(--font-mono); font-size: 0.85em;
+      background: var(--hi); padding: 1px 5px; border-radius: 3px;
+    }
+    pre {
+      background: var(--hi); padding: 14px 18px; border-radius: 8px;
+      overflow-x: auto; margin: 1em 0; font-size: 13px; line-height: 1.55;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    pre code { background: none; padding: 0; border-radius: 0; font-size: inherit; }
+    strong { font-weight: 600; color: var(--fg); }
+    em { font-style: italic; }
+
+    blockquote {
+      margin: 1em 0; padding: 6px 0 6px 18px;
+      border-left: 3px solid var(--rule); color: var(--fg-mute);
+    }
+    blockquote p { font-size: 15.5px; margin: 0; }
+
+    /* Paper links / pill button */
+    .paper-links {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 18px 0 8px; flex-wrap: wrap;
+    }
+    .paper-links .btn-pill {
+      font-size: 13px; line-height: 1; color: var(--fg);
+      text-decoration: none; background: var(--paper);
+      border: 1px solid var(--rule); border-radius: 999px;
+      padding: 0.55rem 0.95rem 0.65rem;
+      transition: background 200ms ease;
+    }
+    .paper-links .btn-pill:hover { background: var(--hi); }
+
+    /* TL;DR */
+    .tldr {
+      margin: 1.2em 0 1.6em;
+      padding: 14px 18px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      font-size: 15.5px;
+    }
+    .tldr-label, .tldr .label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .tldr p { font-size: 15.5px; line-height: 1.6; color: var(--fg); margin: 0; }
+    .tldr p + p { margin-top: 0.6em; }
+
+    /* Callout */
+    .callout {
+      margin: 1.5em 0; padding: 14px 18px;
+      background: var(--hi); border-radius: 6px;
+    }
+    .callout-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-mute); margin-bottom: 8px;
+    }
+    .callout p { font-size: 15px; line-height: 1.55; color: var(--fg); margin: 0; }
+
+    /* Stat row */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0;
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+    @media (min-width: 600px) {
+      .stat-row { grid-template-columns: repeat(4, 1fr); }
+    }
+    .stat {
+      padding: 16px 18px;
+      border-right: 1px solid var(--rule);
+    }
+    .stat:first-child { padding-left: 0; }
+    .stat:last-child { border-right: 0; }
+    @media (max-width: 599px) {
+      .stat:nth-child(2n) { border-right: 0; }
+      .stat:nth-child(n+3) { border-top: 1px solid var(--rule); }
+    }
+    .stat .k {
+      display: block;
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .stat .v {
+      font-size: 22px; font-weight: 600; color: var(--fg);
+      line-height: 1.1; letter-spacing: -0.01em;
+    }
+    .stat .s {
+      font-size: 12px; color: var(--fg-faint);
+      margin-top: 6px; line-height: 1.4;
+    }
+
+    /* Mode grid */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin: 1.5em 0;
+    }
+    @media (min-width: 600px) { .mode-grid { grid-template-columns: repeat(2, 1fr); } }
+    .mode-card {
+      background: var(--paper);
+      border-radius: 8px;
+      padding: 16px 18px;
+      border: 1px solid var(--rule);
+    }
+    .mode-card .tag {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .mode-card .t {
+      display: block;
+      font-size: 16px; font-weight: 600; color: var(--fg);
+      margin-bottom: 6px; letter-spacing: -0.005em;
+    }
+    .mode-card .desc {
+      font-size: 14px; line-height: 1.5; color: var(--fg-mute);
+    }
+
+    /* Table */
+    .table-wrap { margin: 1.5em 0; }
+    .table-label {
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 10px;
+    }
+    .table-label .id { color: var(--fg); margin-right: 12px; }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+    th, td {
+      padding: 8px 12px 8px 0; text-align: left;
+      border-bottom: 1px solid var(--rule); color: var(--fg);
+    }
+    th {
+      font-weight: 600; color: var(--fg-mute);
+      font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--fg-mute);
+    }
+    td.num { text-align: right; white-space: nowrap; }
+    td.pos { color: var(--fg); }
+    td.neg { color: var(--fg-faint); }
+    tr:last-child td { border-bottom: none; }
+    tr.highlight td { background: var(--hi); }
+    tr.totals td { border-top: 1px solid var(--fg-mute); }
+
+    /* Figure / chart */
+    figure.chart, figure { margin: 1.6em 0; }
+    figure svg, figure.chart svg {
+      display: block; width: 100%; height: auto;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+    }
+    figcaption {
+      font-size: 13px; color: var(--fg-mute);
+      line-height: 1.5; margin-top: 10px;
+    }
+    figcaption strong { color: var(--fg); font-weight: 500; }
+    @media (min-width: 960px) {
+      article > figure.chart, .body-main > figure.chart {
+        width: min(1100px, calc(100vw - 3rem));
+        max-width: none;
+        margin-left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+
+    /* Neg list */
+    .neg-list {
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+    }
+    .neg-list-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin: 14px 0 6px;
+    }
+    .neg-list ul { list-style: none; padding: 0; margin: 0; }
+    .neg-list li {
+      padding: 14px 0; border-bottom: 1px solid var(--rule);
+      font-size: 15px; line-height: 1.6; color: var(--fg-mute);
+      margin-bottom: 0;
+    }
+    .neg-list li:last-child { border-bottom: 0; }
+    .neg-list li strong { color: var(--fg); font-weight: 600; }
+
+    /* Break */
+    .break {
+      display: flex; align-items: center; justify-content: center;
+      margin: 3rem 0 2.5rem;
+      color: var(--fg-faint);
+      font-size: 11px; letter-spacing: 0.6em;
+    }
+
+    hr { border: 0; border-top: 1px solid var(--rule); margin: 1.8em 0; }
+    .footer { font-size: 12.5px; color: var(--fg-faint); }
+
+    /* Reproducibility panel */
+    table.repro { margin: 1em 0 1.5em; }
+    table.repro th {
+      width: 7.5em; vertical-align: top; text-transform: none; letter-spacing: 0;
+      font-size: 13px; border-bottom: 1px solid var(--rule);
+    }
+    table.repro td { font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+    table.repro tr:last-child th { border-bottom: none; }
+
+    @media (max-width: 480px) {
+      .site-header { padding: 22px 20px 0; }
+      article { padding: 16px 20px 56px; }
+      h1 { font-size: 28px; }
+      .subtitle { font-size: 16px; }
+      .stat-row { grid-template-columns: 1fr; }
+      .mode-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+    <!-- PANES:HEAD:START -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
+  <link rel="stylesheet" href="panes.css?v=4a6ced04" />
+  <script src="ascii.js?v=6f1f421a" defer></script>
+  <!-- PANES:HEAD:END -->
+</head>
+<body class="pn-body panes-post">
+  <!-- PANES:BAR:START -->
+  <div class="split split--inner">
+    <aside class="side">
+      <div class="side__pin">
+        <figure class="side__art">
+          <pre data-landscape data-rows="22" aria-hidden="true">                                                      
+                                                      
+                                                      
+                           ===                        
+                         -======                      
+                      ----========                    
+                :::::::-----========                  
+   ,::::::----::::::::::::----==========              
+    :::::-----::::::,,,,,:::--======================= 
+     ::::-----::::::,,...,,:--=====================   
+      ::::::::::::::::,...,:--===--===============    
+        :::::::::::::::::,.,<b>@</b>==------===========      
+          ,,,,,,,,::::---========-------------        
+           ,,,,,,,,,,::--========-----------          
+             ,,,,...,,::-=======---------             
+              ,,,,....,:-====---------                
+                :,,,,..,:--:::----                    
+                  :::::::::::::                       
+                     :::::                            
+                                                      
+                                                      
+                                                      </pre>
+        </figure>
+        <p class="side__name"><a href="/">Stephen<br> Casella<span class="accent">_</span></a></p>
+        <p class="side__bio">I study how language models reason and respond to training, and put AI agents to work on hard, checkable problems: formal proofs, faster code, real bugs.</p>
+        <nav class="side__nav" aria-label="Site">
+          <a href="research.html" aria-current="true">research</a>
+          <a href="projects.html">software</a>
+          <a href="/#contact">contact</a>
+        </nav>
+      </div>
+      <div class="side__links">
+        <a class="side__grid" href="blog_diversity.html" title="pick a random integer between 1 and 100." aria-label="Pick a random integer between 1 and 100. It put more than 95% of its probability on three numbers: 4, 42, and 47. Read the write-up."><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></a>
+        <a href="https://github.com/scasella" rel="me">github.com/scasella</a>
+        <a href="https://huggingface.co/scasella91" rel="me">huggingface.co/scasella91</a>
+        <a href="https://www.linkedin.com/in/stevecasella/" rel="me">linkedin</a>
+      </div>
+    </aside>
+    <div class="split__main">
+  <!-- PANES:BAR:END -->
+  <main class="post-main">
+  <article class="post">
+
+        <h1>I used formal verification and agents to make an algorithm 105× faster and prove it behaves the same</h1>
+<!-- PANES:META:START -->
+    <p class="post-byline">[ <time datetime="2026-09-24">2026-09-24</time> ] // Claude Opus 5.5 · Dafny 4.11 // 7 MIN READ</p>
+  <!-- PANES:META:END -->
+        <p class="subtitle">Across four deliberately slow Dafny routines, Claude Opus 5.5 produced seven faster implementations, each verified against a frozen specification it could not edit. On a held-out run-length encoding workload it never saw, the accepted version ran 105× faster. Held-out workloads also caught small-input slowdowns the acceptance gate could not see, and failed proofs, not the speed gate, ended three of the four runs.</p>
+
+        <div class="tldr">
+          <span class="tldr-label">TL;DR</span>
+          <p>I let Claude Opus 5.5 edit only the implementation and proof annotations of four naive Dafny routines: integer square root, population count, run-length encoding and sort. A harness accepted a change only if the frozen spec still verified, the compiled Python matched the naive output on every workload, and the search workloads got faster. Seven changes were accepted. On sort and RLE, held-out speedups ran from 3.8× to 105×, with one exception at 1.07×. Every number is Dafny-compiled Python from a single run per routine, and the run recorded about $18.12 in Claude charges.</p>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat">
+            <span class="k">Accepted rewrites</span>
+            <div class="v">7</div>
+            <div class="s">Across 4 routines, each verified against its frozen spec</div>
+          </div>
+          <div class="stat">
+            <span class="k">RLE, held-out</span>
+            <div class="v">105×</div>
+            <div class="s">10,000 ints, a workload the agent never saw</div>
+          </div>
+          <div class="stat">
+            <span class="k">Speed-gate rejections</span>
+            <div class="v">0</div>
+            <div class="s">Every early stop was a failed proof</div>
+          </div>
+          <div class="stat">
+            <span class="k">Claude cost</span>
+            <div class="v">$18.12</div>
+            <div class="s">Whole run, failed attempts included</div>
+          </div>
+        </div>
+
+        <h2 id="setup">Setup</h2>
+
+        <p>
+          Each routine is a pair of Dafny files. <a href="https://dafny.org/">Dafny</a> is a programming language with a built-in program verifier: you write code plus statements about what it must guarantee, and a solver checks them for every possible input. <code>Spec.dfy</code> holds the contract and is frozen. <code>Impl.dfy</code> refines it and starts deliberately naive. It is the only file the agent could change.
+        </p>
+        <p>For sorting, the whole contract is two lines:</p>
+<pre><code>ensures Sorted(b)
+ensures multiset(b) == multiset(a)</code></pre>
+        <p>The output must be in order, and it must contain exactly the elements of the input, with the same number of copies of each.</p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 01</span>Routines, contracts and naive starting points</div>
+          <table>
+            <thead>
+              <tr><th>Routine</th><th>Contract (ensures)</th><th>Naive start</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>ISqrt(n)</td><td><code>r*r &lt;= n &lt; (r+1)*(r+1)</code></td><td>count up from 0</td></tr>
+              <tr><td>Popcount(n)</td><td><code>c == Pop(n)</code>, bits defined recursively</td><td>peel one bit at a time</td></tr>
+              <tr><td>RLE Encode(xs)</td><td><code>Decode(rs) == xs</code>, runs canonical</td><td>rebuild the result sequence on every element</td></tr>
+              <tr><td>Sort(a)</td><td>sorted and same multiset</td><td>insertion sort on sequences, O(n²)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          Claude ran through the <code>claude -p</code> CLI with read and edit tools on a scratch copy. It could not run Dafny or the benchmarks. It saw the spec, the current implementation, a description of the search workloads and the latest timings. A harness then applied four checks in order:
+        </p>
+        <ol>
+          <li>Reject the candidate if <code>Spec.dfy</code> changed by a single byte, or if the implementation used an escape hatch: <code>assume</code>, <code>{:axiom}</code>, <code>{:verify false}</code>, <code>{:extern}</code>, <code>{:only}</code>, <code>expect</code> or <code>decreases *</code>.</li>
+          <li>Run the Dafny verifier with a 60 s solver limit. On failure, send the errors back, for up to three attempts per round.</li>
+          <li>Compile to Python and check that the output matches the naive version on every workload, held-out ones included.</li>
+          <li>Time the search workloads with seven interleaved repeats, each in a fresh process. Accept only if the geometric-mean speedup is at least 1.10× and no search workload falls below 0.95×.</li>
+        </ol>
+        <p>
+          Each routine got at most three rounds and stopped at the first rejected one. Each routine also had held-out workloads with different sizes and shapes. Their outputs were checked in step 3, but their timings were only reported afterward, never used for acceptance.
+        </p>
+
+        <h2 id="accepted">Accepted changes</h2>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 02</span>Rounds, accepted changes and final speedups against the naive start</div>
+          <table>
+            <thead>
+              <tr><th>Routine</th><th>Rounds</th><th>Accepted changes</th><th>Search</th><th>Held-out</th><th>Why it stopped</th><th>Claude cost</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>ISqrt</td><td>3 of 3 accepted</td><td>binary search → Newton → comparison tree + Newton</td><td>500×, 4190×</td><td>437×, 24856×; tiny inputs 0.97×</td><td>three-round cap</td><td class="num">$0.66</td></tr>
+              <tr><td>Popcount</td><td>2 accepted, round 3 failed proof</td><td>8 bits per step → lookup table</td><td>2.55×, 3.19×</td><td>14.4×, 10.4×; small inputs 0.76×</td><td>solver time-outs on all 3 attempts</td><td class="num">$13.97</td></tr>
+              <tr><td>RLE</td><td>1 accepted, round 2 failed proof</td><td>scan ahead, emit whole runs</td><td>35×, 20×</td><td>105×, 4.4×, 4.3×</td><td>3 failed proof attempts</td><td class="num">$1.13</td></tr>
+              <tr><td>Sort</td><td>1 accepted, round 2 failed proof</td><td>insertion sort → merge sort</td><td>11×, 3.5×</td><td>45×, 13.6×, 3.8×; tiny lists 1.07×</td><td>proof time-out and termination</td><td class="num">$2.36</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>Each speedup is the naive median time over the new median time, from seven repeats. About $12 of the $18.12 total was one failed popcount round.</p>
+        <p>
+          On sort, the agent replaced insertion sort with a top-down merge sort and wrote the loop invariants Dafny needed to accept it. The first proof attempt passed. On RLE, the naive version rebuilt its output for every element. The accepted version finds where each run ends and appends the whole run at once, and it also verified on the first attempt.
+        </p>
+
+        <h2 id="held-out">Held-out workloads</h2>
+
+        <p>Sort and RLE each had one accepted round, so every workload in Table 03 compares that round directly with the naive start.</p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 03</span>Sort and RLE, per workload</div>
+          <table>
+            <thead>
+              <tr><th>Routine</th><th>Workload</th><th>Shown to agent</th><th>Median speedup</th><th>Range</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>RLE</td><td>3,000 ints, runs of average length 8</td><td>yes</td><td class="num">35.3×</td><td class="num">23.8–40.7×</td></tr>
+              <tr><td>RLE</td><td>3,000 ints, about 10 runs</td><td>yes</td><td class="num">19.6×</td><td class="num">18.8–21.5×</td></tr>
+              <tr class="highlight"><td>RLE</td><td>10,000 ints, runs of average length 4</td><td>no</td><td class="num">104.7×</td><td class="num">74.7–117.2×</td></tr>
+              <tr><td>RLE</td><td>300 sequences of 20 ints</td><td>no</td><td class="num">4.39×</td><td class="num">1.91–8.10×</td></tr>
+              <tr><td>RLE</td><td>3,000 ints, no two neighbors equal</td><td>no</td><td class="num">4.33×</td><td class="num">1.57–7.11×</td></tr>
+              <tr><td>Sort</td><td>3 lists of 1,000 random ints</td><td>yes</td><td class="num">10.95×</td><td class="num">7.02–13.72×</td></tr>
+              <tr><td>Sort</td><td>20 lists of 300 random ints</td><td>yes</td><td class="num">3.47×</td><td class="num">1.85–5.37×</td></tr>
+              <tr><td>Sort</td><td>2,000 ints, already sorted</td><td>no</td><td class="num">44.5×</td><td class="num">17.4–50.0×</td></tr>
+              <tr><td>Sort</td><td>2,000 ints from {0..4}</td><td>no</td><td class="num">13.6×</td><td class="num">10.5–24.5×</td></tr>
+              <tr><td>Sort</td><td>2,000 ints, reverse-sorted</td><td>no</td><td class="num">3.81×</td><td class="num">2.48–5.12×</td></tr>
+              <tr><td>Sort</td><td>2,000 lists of 5 random ints</td><td>no</td><td class="num">1.07×</td><td class="num">0.73–1.17×</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>Range runs from slowest-before over fastest-after to fastest-before over slowest-after. The five-element-list result at 1.07× is not a difference the timing noise can resolve.</p>
+        <p>
+          The held-out sets also caught what the gate could not. ISqrt round 1, a binary search, ran tiny inputs (0 to 100) at 0.44× and was accepted, because tiny inputs were not a search workload. Later rounds brought that to 0.97×. Popcount rounds 1 and 2 ran inputs below 256 at 0.92× and then 0.83× against their predecessors, which ends at 0.76× against the naive start. A proof fixes behavior. It does not fix speed on every input.
+        </p>
+        <p>
+          ISqrt round 3 hard-coded a comparison tree sized to the search range, up to about 1.7×10¹⁰. It is still proven correct, but it is shaped around the benchmark.
+        </p>
+
+        <h2 id="interpretation">Interpretation and limits</h2>
+        <p>
+          No accepted change broke its contract: each one verified against the unchanged spec and matched the naive output on every workload. The speed gate never rejected a candidate. Every early stop came from verification. RLE round 2 had real proof errors, but the final attempts for popcount and sort had no errors, only time-outs. Rerun afterward with a 300 s solver limit, sort round 2 verified and popcount round 3 still had one time-out. Sort round 2 stays rejected under the fixed rules and was never timed. So part of where each run stopped reflects the harness's proof budget, not the code.
+        </p>
+        <p>Limits that affect the estimates above:</p>
+        <ul>
+          <li>Everything timed is Python compiled from Dafny, which adds runtime overhead. The final versions are still about 5× to 7000× slower than Python's built-ins (<code>math.isqrt</code>, <code>int.bit_count</code>, <code>sorted</code>) and, for RLE, <code>itertools.groupby</code>. Those run in C and show scale only.</li>
+          <li>The baselines were deliberately slow, so large speedups against them say little about real code.</li>
+          <li>One run per routine, with Claude Opus 5.5, the CLI's default model. The A/A noise floor (naive against itself) was within ±4% for ISqrt, popcount and RLE, but sort reached 0.84× on one workload, and another experiment may have been running on the same Mac.</li>
+          <li>Popcount round 2 passed on median speedups of 1.47× and 1.57×, with min–max ranges of 0.78–1.93× and 1.09–1.97×. A rule requiring the whole range above 1.0× would have rejected it.</li>
+          <li>Some ISqrt workloads now finish in microseconds, below reliable timing resolution.</li>
+          <li>"Correct" means correct against these frozen contracts, nothing broader.</li>
+        </ul>
+
+        <h2 id="next-experiment">Next experiment</h2>
+        <ul>
+          <li>Give the verifier a longer solver limit, such as the 300 s that let sort round 2 verify, and see where each routine stops.</li>
+          <li>Add small and tiny inputs to the search workloads, or a no-regression floor for them to the gate, so slowdowns like ISqrt's 0.44× are rejected rather than reported.</li>
+          <li>Require the whole min–max range above 1.0×, not just the median.</li>
+          <li>Lengthen the ISqrt workloads before running more rounds.</li>
+          <li>Repeat each routine several times, on an otherwise idle machine.</li>
+        </ul>
+
+        <h2 id="reproducibility">Reproducibility</h2>
+        <table class="repro">
+          <tbody>
+            <tr><th scope="row">Model</th><td>Claude Opus 5.5 (the CLI's default model) through the <code>claude -p</code> CLI, limited to read and edit tools (Read, Edit, Write, Glob, Grep).</td></tr>
+            <tr><th scope="row">Experiment</th><td>Dafny 4.11 verifier with a 60 s solver limit. Up to 3 proof attempts per round and 3 rounds per routine, stopping at the first rejected round. Timing: 7 interleaved repeats, each in a fresh process. Acceptance: geometric-mean speedup of at least 1.10× on search workloads, none below 0.95×.</td></tr>
+            <tr><th scope="row">Data</th><td>Four routines (ISqrt, popcount, RLE, sort), each with seeded search workloads and held-out workloads. Unit: one workload's median time over 7 repeats.</td></tr>
+            <tr><th scope="row">Status</th><td>Published 2026-09-24 · Results and code are not published. Open issue: one run per routine on a noisy machine.</td></tr>
+          </tbody>
+        </table>
+
+
+            <!-- PANES:NEXT:START -->
+    <nav class="post-next" aria-label="More research">
+      <a href="blog_diversity.html"><span>next →</span><span>A 50-step RL update reduces categorical sampling bias</span></a>
+      <a class="post-next__all" href="research.html">← all research</a>
+    </nav>
+  <!-- PANES:NEXT:END -->
+  </article>
+  </main>
+  <!-- PANES:FOOT:START -->
+    <footer class="pn-foot">
+      <p>Personal projects. Not affiliated with or endorsed by my employer. No employer data, infrastructure, or confidential information used.</p>
+    </footer>
+    </div>
+  </div>
+  <!-- PANES:FOOT:END -->
+</body>
+</html>

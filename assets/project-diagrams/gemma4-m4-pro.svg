@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" role="img" aria-labelledby="title desc">
+  <title id="title">Gemma 4 M4 Pro recipe map</title>
+  <desc id="desc">Memory budget, measured runtime, fallback path, and recipe notes for Gemma 4 on a MacBook.</desc>
+  <rect width="900" height="600" rx="28" fill="#f8f5ef"/>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2 2l8 4-8 4" fill="none" stroke="#9b8b68" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#5f5135" flood-opacity=".13"/>
+    </filter>
+  </defs>
+  <text x="76" y="76" fill="#182536" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="31" font-weight="700">gemma4-m4-pro</text>
+  <text x="76" y="112" fill="#625d53" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="18">Measured recipes for running Gemma 4 on a 24GB MacBook</text>
+  <g font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" filter="url(#shadow)">
+    <rect x="102" y="190" width="156" height="96" rx="16" fill="#fff" stroke="#e2d9c8"/>
+    <text x="180" y="229" text-anchor="middle" fill="#182536" font-size="17" font-weight="700">model</text>
+    <text x="180" y="254" text-anchor="middle" fill="#66717e" font-size="14">Gemma 4</text>
+    <rect x="372" y="166" width="156" height="96" rx="16" fill="#fff" stroke="#e2d9c8"/>
+    <text x="450" y="205" text-anchor="middle" fill="#182536" font-size="17" font-weight="700">memory</text>
+    <text x="450" y="230" text-anchor="middle" fill="#66717e" font-size="14">24GB budget</text>
+    <rect x="642" y="190" width="156" height="96" rx="16" fill="#fff" stroke="#e2d9c8"/>
+    <text x="720" y="229" text-anchor="middle" fill="#182536" font-size="17" font-weight="700">runtime</text>
+    <text x="720" y="254" text-anchor="middle" fill="#66717e" font-size="14">measured path</text>
+    <rect x="372" y="342" width="156" height="96" rx="16" fill="#fff" stroke="#e2d9c8"/>
+    <text x="450" y="381" text-anchor="middle" fill="#182536" font-size="17" font-weight="700">fallback</text>
+    <text x="450" y="406" text-anchor="middle" fill="#66717e" font-size="14">safe recipe</text>
+  </g>
+  <g stroke="#9b8b68" stroke-width="3" fill="none" marker-end="url(#arrow)">
+    <path d="M258 238c48-40 70-34 102-24"/>
+    <path d="M528 214c42-10 64 0 102 24"/>
+    <path d="M450 262v66"/>
+    <path d="M528 390c96-4 144-38 178-88" stroke-dasharray="7 8"/>
+  </g>
+  <text x="450" y="504" text-anchor="middle" fill="#625d53" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="17" font-weight="700">document what works, what stalls, and what to try next</text>
+</svg>

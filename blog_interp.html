@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hidden-state probes outperform self-reported confidence | Stephen Casella</title>
+  <meta name="description" content="On Llama 3.1 8B, a linear probe on layer-19 hidden states ranks claim correctness better than the model's self-reported confidence on MAUD legal QA and FActScore biographies. Its Brier score improves only on biographies." />
+  <meta name="author" content="Stephen Casella" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#080c0f" />
+  <link rel="canonical" href="https://casella.dev/blog_interp.html" />
+  <meta property="og:site_name" content="Stephen Casella" />
+  <meta property="og:title" content="Hidden-state probes outperform self-reported confidence" />
+  <meta property="og:description" content="A layer-19 probe on Llama 3.1 8B ranks claim correctness better than self-reported confidence on legal QA and biographies. Its Brier score improves only on biographies." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://casella.dev/blog_interp.html" />
+  <meta property="og:image" content="https://casella.dev/assets/og/blog_interp.png" />
+  <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_interp.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Share card for the write-up: Hidden-state probes outperform self-reported confidence." />
+  <meta property="article:author" content="Stephen Casella" />
+  <meta property="article:published_time" content="2026-04-25" />
+  <meta property="article:modified_time" content="2026-09-23" />
+  <meta property="article:tag" content="mechanistic interpretability" />
+  <meta property="article:tag" content="activation probes" />
+  <meta property="article:tag" content="claim-level correctness" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Hidden-state probes outperform self-reported confidence" />
+  <meta name="twitter:description" content="A layer-19 probe on Llama 3.1 8B ranks claim correctness better than self-reported confidence on legal QA and biographies. Its Brier score improves only on biographies." />
+  <meta name="twitter:image" content="https://casella.dev/assets/og/blog_interp.png" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-2RSWDWW67D');
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Hidden-state probes outperform self-reported confidence",
+      "description": "On Llama 3.1 8B, a linear probe on layer-19 hidden states ranks claim correctness better than the model's self-reported confidence on MAUD legal QA and FActScore biographies. Its Brier score improves only on biographies.",
+      "url": "https://casella.dev/blog_interp.html",
+      "mainEntityOfPage": "https://casella.dev/blog_interp.html",
+      "image": "https://casella.dev/assets/og/blog_interp.png",
+      "datePublished": "2026-04-25",
+      "dateModified": "2026-09-23",
+      "author": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/",
+        "sameAs": [
+          "https://github.com/scasella",
+          "https://www.linkedin.com/in/stevecasella/"
+        ]
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "keywords": [
+        "activation probes",
+        "mechanistic interpretability",
+        "claim-level correctness",
+        "Llama 3.1",
+        "FActScore",
+        "MAUD"
+      ],
+      "codeRepository": "https://github.com/scasella/activation-probes-claim-correctness"
+    }
+  </script>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:           #fafaf8;
+      --paper:        #ffffff;
+      --fg:           #222;
+      --fg-mute:      #555;
+      --fg-faint:     #8a8a85;
+      --rule:         #e2e2dd;
+      --hi:           #f3f2ec;
+      --link:         #1a5fb4;
+      --link-visited: #5a3aa3;
+      --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono:    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      font-size: 16.5px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: rgba(0,0,0,0.08); color: inherit; }
+
+    .site-header {
+      max-width: 720px; margin: 0 auto; padding: 28px 24px 0;
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 13px; color: var(--fg-mute);
+    }
+    .site-header a {
+      color: var(--fg-mute); text-decoration: none;
+      border-bottom: 1px dotted var(--fg-faint); padding-bottom: 1px;
+    }
+    .site-header a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+
+    article {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 24px 64px;
+    }
+    .meta, .date {
+      color: var(--fg-faint); font-size: 13px;
+      margin-bottom: 8px; text-transform: none; letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: 32px; line-height: 1.22; font-weight: 600;
+      margin: 0 0 10px; letter-spacing: -0.01em; color: #111;
+    }
+    .subtitle {
+      color: var(--fg-mute); font-size: 17px; font-weight: 400;
+      line-height: 1.5; margin: 0 0 24px;
+    }
+    h2 {
+      font-size: 22px; font-weight: 600; line-height: 1.3;
+      margin: 1.9em 0 0.5em; letter-spacing: -0.005em; color: #111;
+    }
+    h3 { font-size: 17px; font-weight: 600; margin: 1.5em 0 0.35em; }
+
+    p { margin: 0 0 0.9em; }
+    ul, ol { margin: 0 0 1em; padding-left: 1.4em; }
+    li { margin-bottom: 0.35em; }
+    li::marker { color: var(--fg-faint); }
+
+    a { color: var(--link); text-decoration: underline; text-decoration-color: rgba(26,95,180,0.4); }
+    a:visited { color: var(--link-visited); }
+    a:hover { text-decoration-color: var(--link); }
+
+    code {
+      font-family: var(--font-mono); font-size: 0.85em;
+      background: var(--hi); padding: 1px 5px; border-radius: 3px;
+    }
+    pre {
+      background: var(--hi); padding: 14px 18px; border-radius: 8px;
+      overflow-x: auto; margin: 1em 0; font-size: 13px; line-height: 1.55;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    pre code { background: none; padding: 0; border-radius: 0; font-size: inherit; }
+    strong { font-weight: 600; color: var(--fg); }
+    em { font-style: italic; }
+
+    blockquote {
+      margin: 1em 0; padding: 6px 0 6px 18px;
+      border-left: 3px solid var(--rule); color: var(--fg-mute);
+    }
+    blockquote p { font-size: 15.5px; margin: 0; }
+
+    /* Paper links / pill button */
+    .paper-links {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 18px 0 8px; flex-wrap: wrap;
+    }
+    .paper-links .btn-pill {
+      font-size: 13px; line-height: 1; color: var(--fg);
+      text-decoration: none; background: var(--paper);
+      border: 1px solid var(--rule); border-radius: 999px;
+      padding: 0.55rem 0.95rem 0.65rem;
+      transition: background 200ms ease;
+    }
+    .paper-links .btn-pill:hover { background: var(--hi); }
+
+    /* TL;DR */
+    .tldr {
+      margin: 1.2em 0 1.6em;
+      padding: 14px 18px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      font-size: 15.5px;
+    }
+    .tldr-label, .tldr .label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .tldr p { font-size: 15.5px; line-height: 1.6; color: var(--fg); margin: 0; }
+    .tldr p + p { margin-top: 0.6em; }
+
+    /* Callout */
+    .callout {
+      margin: 1.5em 0; padding: 14px 18px;
+      background: var(--hi); border-radius: 6px;
+    }
+    .callout-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-mute); margin-bottom: 8px;
+    }
+    .callout p { font-size: 15px; line-height: 1.55; color: var(--fg); margin: 0; }
+
+    /* Stat row */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0;
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+    @media (min-width: 600px) {
+      .stat-row { grid-template-columns: repeat(4, 1fr); }
+    }
+    .stat {
+      padding: 16px 18px;
+      border-right: 1px solid var(--rule);
+    }
+    .stat:first-child { padding-left: 0; }
+    .stat:last-child { border-right: 0; }
+    @media (max-width: 599px) {
+      .stat:nth-child(2n) { border-right: 0; }
+      .stat:nth-child(n+3) { border-top: 1px solid var(--rule); }
+    }
+    .stat .k {
+      display: block;
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .stat .v {
+      font-size: 22px; font-weight: 600; color: var(--fg);
+      line-height: 1.1; letter-spacing: -0.01em;
+    }
+    .stat .s {
+      font-size: 12px; color: var(--fg-faint);
+      margin-top: 6px; line-height: 1.4;
+    }
+
+    /* Mode grid */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin: 1.5em 0;
+    }
+    @media (min-width: 600px) { .mode-grid { grid-template-columns: repeat(2, 1fr); } }
+    .mode-card {
+      background: var(--paper);
+      border-radius: 8px;
+      padding: 16px 18px;
+      border: 1px solid var(--rule);
+    }
+    .mode-card .tag {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .mode-card .t {
+      display: block;
+      font-size: 16px; font-weight: 600; color: var(--fg);
+      margin-bottom: 6px; letter-spacing: -0.005em;
+    }
+    .mode-card .desc {
+      font-size: 14px; line-height: 1.5; color: var(--fg-mute);
+    }
+
+    /* Table */
+    .table-wrap { margin: 1.5em 0; }
+    .table-label {
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 10px;
+    }
+    .table-label .id { color: var(--fg); margin-right: 12px; }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+    th, td {
+      padding: 8px 12px 8px 0; text-align: left;
+      border-bottom: 1px solid var(--rule); color: var(--fg);
+    }
+    th {
+      font-weight: 600; color: var(--fg-mute);
+      font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--fg-mute);
+    }
+    td.num { text-align: right; white-space: nowrap; }
+    td.pos { color: var(--fg); }
+    td.neg { color: var(--fg-faint); }
+    tr:last-child td { border-bottom: none; }
+    tr.highlight td { background: var(--hi); }
+    tr.totals td { border-top: 1px solid var(--fg-mute); }
+
+    /* Figure / chart */
+    figure.chart, figure { margin: 1.6em 0; }
+    figure svg, figure.chart svg {
+      display: block; width: 100%; height: auto;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+    }
+    figcaption {
+      font-size: 13px; color: var(--fg-mute);
+      line-height: 1.5; margin-top: 10px;
+    }
+    figcaption strong { color: var(--fg); font-weight: 500; }
+    @media (min-width: 960px) {
+      article > figure.chart, .body-main > figure.chart {
+        width: min(1100px, calc(100vw - 3rem));
+        max-width: none;
+        margin-left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+
+    /* Neg list */
+    .neg-list {
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+    }
+    .neg-list-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin: 14px 0 6px;
+    }
+    .neg-list ul { list-style: none; padding: 0; margin: 0; }
+    .neg-list li {
+      padding: 14px 0; border-bottom: 1px solid var(--rule);
+      font-size: 15px; line-height: 1.6; color: var(--fg-mute);
+      margin-bottom: 0;
+    }
+    .neg-list li:last-child { border-bottom: 0; }
+    .neg-list li strong { color: var(--fg); font-weight: 600; }
+
+    /* Break */
+    .break {
+      display: flex; align-items: center; justify-content: center;
+      margin: 3rem 0 2.5rem;
+      color: var(--fg-faint);
+      font-size: 11px; letter-spacing: 0.6em;
+    }
+
+    /* Appendix */
+    details.appendix {
+      margin: 2.4em 0 0; border: 1px solid var(--rule); border-radius: 4px;
+      background: var(--paper);
+    }
+    details.appendix > summary {
+      cursor: pointer; padding: 10px 14px; font-size: 14px; font-weight: 600;
+      color: var(--fg-mute); list-style: none;
+    }
+    details.appendix > summary::-webkit-details-marker { display: none; }
+    details.appendix > summary::before { content: "\25B8"; display: inline-block; width: 16px; color: var(--fg-faint); }
+    details.appendix[open] > summary::before { content: "\25BE"; }
+    details.appendix[open] > summary { border-bottom: 1px solid var(--rule); }
+    details.appendix > :not(summary) { margin-left: 16px; margin-right: 16px; }
+    details.appendix > :last-child { margin-bottom: 16px; }
+
+    /* Reproducibility panel */
+    table.repro th[scope="row"] {
+      width: 8.5em; vertical-align: top; text-transform: none; letter-spacing: 0;
+      font-size: 13px; font-weight: 500; border-bottom: 1px solid var(--rule);
+    }
+    table.repro td { vertical-align: top; border-bottom: 1px solid var(--rule); overflow-wrap: anywhere; }
+
+    hr { border: 0; border-top: 1px solid var(--rule); margin: 1.8em 0; }
+    .footer { font-size: 12.5px; color: var(--fg-faint); }
+
+    @media (max-width: 480px) {
+      .site-header { padding: 22px 20px 0; }
+      article { padding: 16px 20px 56px; }
+      h1 { font-size: 28px; }
+      .subtitle { font-size: 16px; }
+      .stat-row { grid-template-columns: 1fr; }
+      .mode-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <!-- PANES:HEAD:START -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
+  <link rel="stylesheet" href="panes.css?v=4a6ced04" />
+  <script src="ascii.js?v=6f1f421a" defer></script>
+  <!-- PANES:HEAD:END -->
+</head>
+<body class="pn-body panes-post">
+  <!-- PANES:BAR:START -->
+  <div class="split split--inner">
+    <aside class="side">
+      <div class="side__pin">
+        <figure class="side__art">
+          <pre data-landscape data-rows="22" aria-hidden="true">                                                      
+                                                      
+                                                      
+                           ===                        
+                         -======                      
+                      ----========                    
+                :::::::-----========                  
+   ,::::::----::::::::::::----==========              
+    :::::-----::::::,,,,,:::--======================= 
+     ::::-----::::::,,...,,:--=====================   
+      ::::::::::::::::,...,:--===--===============    
+        :::::::::::::::::,.,<b>@</b>==------===========      
+          ,,,,,,,,::::---========-------------        
+           ,,,,,,,,,,::--========-----------          
+             ,,,,...,,::-=======---------             
+              ,,,,....,:-====---------                
+                :,,,,..,:--:::----                    
+                  :::::::::::::                       
+                     :::::                            
+                                                      
+                                                      
+                                                      </pre>
+        </figure>
+        <p class="side__name"><a href="/">Stephen<br> Casella<span class="accent">_</span></a></p>
+        <p class="side__bio">I study how language models reason and respond to training, and put AI agents to work on hard, checkable problems: formal proofs, faster code, real bugs.</p>
+        <nav class="side__nav" aria-label="Site">
+          <a href="research.html" aria-current="true">research</a>
+          <a href="projects.html">software</a>
+          <a href="/#contact">contact</a>
+        </nav>
+      </div>
+      <div class="side__links">
+        <a class="side__grid" href="blog_diversity.html" title="pick a random integer between 1 and 100." aria-label="Pick a random integer between 1 and 100. It put more than 95% of its probability on three numbers: 4, 42, and 47. Read the write-up."><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></a>
+        <a href="https://github.com/scasella" rel="me">github.com/scasella</a>
+        <a href="https://huggingface.co/scasella91" rel="me">huggingface.co/scasella91</a>
+        <a href="https://www.linkedin.com/in/stevecasella/" rel="me">linkedin</a>
+      </div>
+    </aside>
+    <div class="split__main">
+  <!-- PANES:BAR:END -->
+  <main class="post-main">
+  <article class="post">
+
+        <h1>Hidden-state probes outperform self-reported confidence</h1>
+<!-- PANES:META:START -->
+    <p class="post-byline">[ <time datetime="2026-04-25">2026-04-25</time> · updated <time datetime="2026-09-23">2026-09-23</time> ] // Llama 3.1 8B // 10 MIN READ</p>
+  <!-- PANES:META:END -->
+        <p class="subtitle">On Llama 3.1 8B, a linear probe on layer-19 hidden states ranks correct claims above incorrect ones better than the model's own stated confidence, in legal QA (MAUD) and in biographies (FActScore). Its Brier score improves only in the biography setting.</p>
+
+        <div class="paper-links">
+          <a href="https://github.com/scasella/activation-probes-claim-correctness" class="btn-pill">GitHub repo</a>
+        </div>
+
+        <div class="tldr">
+              <span class="tldr-label">TL;DR</span>
+              <p>
+                I compared two per-claim scores from Llama 3.1 8B Instruct: its stated confidence, and a linear probe trained on its hidden states. AUROC measures how well a score ranks correct claims above incorrect ones, from 0.5 (chance) to 1.0 (perfect). On MAUD, where Llama answers questions about merger agreements, self-report scored <strong>0.511</strong> and the probe <strong>0.771</strong>, a difference of 0.260 (95% interval 0.137 to 0.387). On FActScore, where Llama reads biographies written by ChatGPT, self-report scored <strong>0.541</strong> and the probe <strong>0.802</strong>, a difference of 0.262 (0.180 to 0.332, resampling whole biographies). The probe beats a base-rate constant on Brier score on FActScore but not on MAUD.
+              </p>
+              <p>
+                Each setting has its own probe, so this is the method replicating, not one probe transferring. On a third dataset, FELM, the probe was ahead but its interval includes zero, and relabeling FELM showed its labels measured reference coverage, not correctness.
+              </p>
+            </div>
+
+            <h2 id="setup">Setup</h2>
+
+            <p>
+              A long answer can be right in one sentence and wrong in the next, so the useful score is per claim. The cheapest one is to ask the model: I show Llama 3.1 8B Instruct one fixed claim and ask how confident it is, in a structured format. I call this self-report. Because the claim is given, a failure can't be blamed on vague claim boundaries.
+            </p>
+            <p>
+              The probe is deliberately plain. Llama passes a vector from each layer to the next, called the residual stream or hidden state. At layer 19, I average that vector over the claim's tokens, standardize it, and fit a logistic regression, with no feature search and no learned pooling.
+            </p>
+
+            <div class="mode-grid">
+              <div class="mode-card">
+                <span class="tag">01 &middot; MAUD</span>
+                <span class="t">Legal QA, labels from model judges</span>
+                <span class="desc">150 claims taken from Llama's own answers to questions about merger agreements, drawn from 135 source examples. GPT-5.4 labels each claim <code>true</code>, <code>partially_true</code> or <code>false</code>. Kimi K2.6 relabels the same claims as a check.</span>
+              </div>
+              <div class="mode-card">
+                <span class="tag">02 &middot; FActScore</span>
+                <span class="t">Biographies, human labels</span>
+                <span class="desc">157 biographies written by ChatGPT, with 4,886 atomic facts labeled by people. A fact almost never appears word for word, so I average over the sentence it came from.</span>
+              </div>
+              <div class="mode-card">
+                <span class="tag">03 &middot; FELM-wk</span>
+                <span class="t">General knowledge, the hard case</span>
+                <span class="desc">Human labels on segments of ChatGPT answers to general-knowledge questions. 71 test segments.</span>
+              </div>
+            </div>
+
+            <p>
+              Labels are binary. On MAUD, only <code>true</code> counts as correct, and <code>partially_true</code> counts as incorrect. On FActScore, a fact is either supported or not, and facts marked irrelevant are dropped.
+            </p>
+            <p>
+              I fitted a separate probe in each setting. MAUD has too few claims to split, so I used leave-one-out: each claim is scored by a probe trained on the other 149. FActScore is split by biography into 3,353 training, 791 tuning and 742 test claims. The tuning set picks the regularization, and the test set is scored once.
+            </p>
+            <p>
+              Intervals are 95% paired bootstrap intervals, with every method scored on the same resample. FActScore's 742 test claims come from only 24 biographies, so there I resample whole biographies (10,000 resamples). Resampling single claims instead, also 10,000 times, gives a narrower interval on the difference: 0.217 to 0.304. MAUD and FELM intervals resample single claims (1,000 resamples).
+            </p>
+
+            <h2 id="headline">A similar gap in two subject areas</h2>
+
+            <figure class="chart">
+              <svg viewBox="0 0 960 460" role="img" aria-label="Self-report versus residual probe AUROC across MAUD, FActScore, and FELM">
+                <rect x="0" y="0" width="960" height="460" fill="#ffffff" />
+                <text x="480" y="30" text-anchor="middle" fill="#3B3B39"
+                      font-family="Inter, sans-serif" font-size="18" font-weight="400">
+                  AUROC for each claim, asking the model vs the probe
+                </text>
+                <text x="480" y="54" text-anchor="middle" fill="#969592"
+                      font-family="Inter, Helvetica Neue, sans-serif" font-size="12">
+                  The probe ranks claims better on MAUD and FActScore. FELM points the same way, but its interval includes zero.
+                </text>
+
+                <line x1="90" y1="380" x2="890" y2="380" stroke="#C8C7C2" stroke-width="1" />
+                <line x1="90" y1="335" x2="890" y2="335" stroke="#E4E3DE" stroke-width="1" />
+                <line x1="90" y1="290" x2="890" y2="290" stroke="#E4E3DE" stroke-width="1" />
+                <line x1="90" y1="245" x2="890" y2="245" stroke="#E4E3DE" stroke-width="1" />
+                <line x1="90" y1="200" x2="890" y2="200" stroke="#E4E3DE" stroke-width="1" />
+                <line x1="90" y1="155" x2="890" y2="155" stroke="#E4E3DE" stroke-width="1" />
+                <line x1="90" y1="110" x2="890" y2="110" stroke="#E4E3DE" stroke-width="1" />
+
+                <text x="78" y="384" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.40</text>
+                <text x="78" y="339" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.50</text>
+                <text x="78" y="294" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.60</text>
+                <text x="78" y="249" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.70</text>
+                <text x="78" y="204" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.80</text>
+                <text x="78" y="159" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.90</text>
+                <text x="78" y="114" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">1.00</text>
+
+                <line x1="90" y1="335" x2="890" y2="335" stroke="#969592" stroke-width="1" stroke-dasharray="4 4" opacity="0.7" />
+                <text x="884" y="328" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="10">chance</text>
+
+                <!-- y = 380 - (AUROC - 0.4) * 450; whiskers are the 95% bootstrap intervals -->
+                <!-- MAUD group: center 234 -->
+                <rect x="184" y="330" width="44" height="50" fill="#969592" opacity="0.55" />
+                <line x1="206" y1="291" x2="206" y2="375" stroke="#3B3B39" stroke-width="1" opacity="0.45" />
+                <line x1="200" y1="291" x2="212" y2="291" stroke="#3B3B39" stroke-width="1" opacity="0.45" />
+                <line x1="200" y1="375" x2="212" y2="375" stroke="#3B3B39" stroke-width="1" opacity="0.45" />
+                <rect x="240" y="213" width="44" height="167" fill="#3B3B39" />
+                <line x1="262" y1="183" x2="262" y2="251" stroke="#969592" stroke-width="1" />
+                <line x1="256" y1="183" x2="268" y2="183" stroke="#969592" stroke-width="1" />
+                <line x1="256" y1="251" x2="268" y2="251" stroke="#969592" stroke-width="1" />
+
+                <!-- FActScore group: center 494 -->
+                <rect x="444" y="316" width="44" height="64" fill="#969592" opacity="0.55" />
+                <!-- FActScore whiskers: biography-grouped bootstrap (self 0.495-0.589, probe 0.748-0.848) -->
+                <line x1="466" y1="295" x2="466" y2="337" stroke="#3B3B39" stroke-width="1" opacity="0.45" />
+                <line x1="460" y1="295" x2="472" y2="295" stroke="#3B3B39" stroke-width="1" opacity="0.45" />
+                <line x1="460" y1="337" x2="472" y2="337" stroke="#3B3B39" stroke-width="1" opacity="0.45" />
+                <rect x="500" y="199" width="44" height="181" fill="#3B3B39" />
+                <line x1="522" y1="178" x2="522" y2="223" stroke="#969592" stroke-width="1" />
+                <line x1="516" y1="178" x2="528" y2="178" stroke="#969592" stroke-width="1" />
+                <line x1="516" y1="223" x2="528" y2="223" stroke="#969592" stroke-width="1" />
+
+                <!-- FELM group: center 754 -->
+                <rect x="704" y="330" width="44" height="50" fill="#969592" opacity="0.4" />
+                <line x1="726" y1="257" x2="726" y2="383" stroke="#3B3B39" stroke-width="1" opacity="0.35" />
+                <line x1="720" y1="257" x2="732" y2="257" stroke="#3B3B39" stroke-width="1" opacity="0.35" />
+                <line x1="720" y1="383" x2="732" y2="383" stroke="#3B3B39" stroke-width="1" opacity="0.35" />
+                <rect x="760" y="267" width="44" height="113" fill="#3B3B39" opacity="0.7" />
+                <line x1="782" y1="193" x2="782" y2="338" stroke="#969592" stroke-width="1" />
+                <line x1="776" y1="193" x2="788" y2="193" stroke="#969592" stroke-width="1" />
+                <line x1="776" y1="338" x2="788" y2="338" stroke="#969592" stroke-width="1" />
+
+                <!-- value labels above the upper end of each interval -->
+                <text x="206" y="284" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">.511</text>
+                <text x="262" y="176" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">.771</text>
+                <text x="466" y="288" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">.541</text>
+                <text x="522" y="171" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">.802</text>
+                <text x="726" y="250" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">.511</text>
+                <text x="782" y="186" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">.652</text>
+
+                <!-- delta annotations under bars -->
+                <text x="234" y="408" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="13">MAUD</text>
+                <text x="234" y="424" text-anchor="middle" fill="#969592" font-family="Inter, sans-serif" font-size="11">difference +0.260</text>
+                <text x="494" y="408" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="13">FActScore</text>
+                <text x="494" y="424" text-anchor="middle" fill="#969592" font-family="Inter, sans-serif" font-size="11">difference +0.262</text>
+                <text x="754" y="408" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="13">FELM-wk</text>
+                <text x="754" y="424" text-anchor="middle" fill="#969592" font-family="Inter, sans-serif" font-size="11">difference +0.141 (includes 0)</text>
+
+                <!-- legend top right -->
+                <rect x="600" y="76" width="22" height="10" fill="#969592" opacity="0.55" />
+                <text x="630" y="85" fill="#3B3B39" font-family="Inter, sans-serif" font-size="12">Asking the model</text>
+                <rect x="744" y="76" width="22" height="10" fill="#3B3B39" />
+                <text x="774" y="85" fill="#3B3B39" font-family="Inter, sans-serif" font-size="12">Probe</text>
+
+                <text x="90" y="448" fill="#969592" font-family="Inter, sans-serif" font-size="11">
+                  Thin lines show 95% bootstrap intervals.
+                </text>
+              </svg>
+              <figcaption>
+                <strong>Figure 1.</strong> AUROC of self-report and of the layer-19 probe on each dataset. FActScore intervals resample whole biographies; MAUD and FELM intervals resample single claims.
+              </figcaption>
+            </figure>
+
+            <div class="table-wrap">
+              <div class="table-label"><span class="id">Table 01</span>The probe vs asking the model, across datasets</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Dataset</th>
+                    <th>Where labels come from</th>
+                    <th>Asking the model</th>
+                    <th>Probe</th>
+                    <th>Difference</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="highlight">
+                    <td>MAUD</td>
+                    <td>GPT-5.4 as judge</td>
+                    <td class="num">0.511 [0.411, 0.597]</td>
+                    <td class="num pos">0.771 [0.687, 0.838]</td>
+                    <td class="num pos">+0.260 [0.137, 0.387]</td>
+                  </tr>
+                  <tr class="highlight">
+                    <td>FActScore</td>
+                    <td>Atomic facts labeled by people</td>
+                    <td class="num">0.541 [0.495, 0.589]</td>
+                    <td class="num pos">0.802 [0.748, 0.848]</td>
+                    <td class="num pos">+0.262 [0.180, 0.332]</td>
+                  </tr>
+                  <tr>
+                    <td>FELM-wk</td>
+                    <td>Segments labeled by people</td>
+                    <td class="num">0.511 [0.393, 0.673]</td>
+                    <td class="num">0.652 [0.493, 0.815]</td>
+                    <td class="num">+0.141 [-0.063, 0.320]</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p>
+              The two procedures differ, so what reproduces is the direction and rough size of the gap, not a precise value. On FActScore, the gap's interval excludes zero with biographies resampled, and self-report's own interval includes 0.5. The MAUD interval is about 0.25 wide, and MAUD evaluation is not grouped by source example (see <a href="#interpretation">limits</a>).
+            </p>
+
+            <h3>Ranking and Brier score</h3>
+            <p>
+              AUROC only measures ranking. The Brier score measures how close predicted probabilities are to the 0/1 labels (lower is better). The fair reference is a constant that always predicts the base rate p, which scores p(1&minus;p).
+            </p>
+            <p>
+              On the FActScore test set, 509 of 742 facts are true (68.6%). The base-rate constant scores 0.215, and always answering 0.5 scores 0.25. Self-report scores 0.298, worse than both. The probe scores 0.171, 0.044 below the constant. The interval on that difference is 0.009 to 0.075 with biographies resampled (0.024 to 0.063 with single claims resampled).
+            </p>
+            <p>
+              On MAUD, 62 of 150 claims are true (41%), so the base-rate constant scores 0.242. The probe scores 0.244, no better than the constant, and self-report scores 0.580.
+            </p>
+
+            <h2 id="judges">Checking with a second judge</h2>
+
+            <p>
+              MAUD labels come from GPT-5.4, so a probe trained on them might be learning GPT-5.4's habits. I relabeled the same 150 claims with Kimi K2.6, using the same prompt, and did not refit the probe. Under Kimi labels, the probe scores 0.707 [0.627, 0.792] and self-report scores 0.466 [0.413, 0.604]. The paired difference is 0.241 [0.075, 0.320]. The ranking of methods did not change (appendix, Figure 2). One method beats the probe under both judges: asking GPT-5.4 directly to score each claim.
+            </p>
+            <p>
+              The two judges give the same three-way label to 110 of the 150 claims (Cohen's kappa 0.572, interval 0.456 to 0.682). On those 110, the probe scores 0.793 and self-report scores 0.486. This is not independent confirmation, because on those claims Kimi's labels match the labels the probe was trained on. The subset may also be easier: 27 of the 40 claims it drops were <code>partially_true</code> under GPT-5.4.
+            </p>
+
+            <h2 id="boundary">When the labels measure the wrong thing</h2>
+
+            <p>
+              FELM-wk is the warning case. On 71 test segments, the probe reached 0.652 AUROC and self-report 0.511. The difference, 0.141, has an interval of -0.063 to 0.320.
+            </p>
+
+            <p>
+              Then I tried to fix the labels. When Llama wrote its own answers to FELM questions, its claims often went beyond FELM's short reference texts. So I added fuller reference texts pulled from the source pages, plus a fourth label, <code>not_enough_evidence</code>. On a 52-segment trial, the labels came back like this:
+            </p>
+
+            <div class="stat-row">
+              <div class="stat">
+                <span class="k">true</span>
+                <div class="v">4</div>
+                <div class="s">7.7% of the trial segments</div>
+              </div>
+              <div class="stat">
+                <span class="k">partially_true</span>
+                <div class="v">12</div>
+                <div class="s">23.1%</div>
+              </div>
+              <div class="stat">
+                <span class="k">false</span>
+                <div class="v">6</div>
+                <div class="s">11.5%. 28 of the 43 old <code>false</code> labels moved to <code>not_enough_evidence</code>.</div>
+              </div>
+              <div class="stat">
+                <span class="k">not_enough_evidence</span>
+                <div class="v">30</div>
+                <div class="s">57.7%</div>
+              </div>
+            </div>
+
+            <p>
+              A judge limited to the reference cannot decide a claim that goes beyond it, so the label records whether the reference covers the claim, not whether the claim is true. I did not scale up this FELM run.
+            </p>
+
+            <h2 id="interpretation">Interpretation and limits</h2>
+
+            <p>
+              In these two settings, Llama 3.1 8B's layer-19 hidden states carry information about which claims are correct that its structured self-report does not surface, and a linear probe fitted on each setting's labels can read it out. The Brier score improves only on FActScore. The probe ranks claims; it is not a detector of legal or factual truth.
+            </p>
+            <p>
+              The FELM investigation exposed a label-design failure: reference coverage was being used as a substitute for correctness. That limits what can be learned from a probe trained on those labels. Before fitting a probe, it helps to know what the label measures and to pool activations over the text the label describes.
+            </p>
+
+            <p><strong>Issues that affect the current estimates:</strong></p>
+            <ul>
+              <li>MAUD evaluation is not grouped by source example. The 150 claims come from 135 examples, so leave-one-out can score a claim with a probe trained on a sibling claim, and the bootstrap resamples single claims. Grouped cross-validation is untested because the per-claim MAUD features are not committed to the repo.</li>
+              <li>MAUD labels come from model judges, not lawyers. I set aside 30 claims for expert review, but they are not labeled yet.</li>
+              <li>On FActScore, Llama reads text that ChatGPT wrote, so this tests how Llama represents text it didn't write, not its uncertainty about its own output. Activations cover the fact's parent sentence, not the fact itself.</li>
+            </ul>
+
+            <p><strong>Scope:</strong> one model and one layer. Every probe uses layer 19 of Llama 3.1 8B Instruct, chosen because the Goodfire SAE used for comparison is trained there. No probe fitted on one domain was scored on the other. A fourth dataset, CUAD, failed at the claim-extraction step.</p>
+
+            <h2 id="next-experiment">Next experiment</h2>
+
+            <ul>
+              <li>Commit the MAUD per-claim features, then rerun MAUD with cross-validation and resampling grouped by source example.</li>
+              <li>Get expert labels for the 30 MAUD claims in <code>data/annotations/maud_human_audit_packet.jsonl</code>.</li>
+              <li>Score each domain's probe on the other domain.</li>
+              <li>Other layers, other model families, and text Llama wrote itself on a dataset whose references cover its claims.</li>
+            </ul>
+
+            <h2 id="related-work">Related work</h2>
+
+            <ul>
+              <li><strong>Verbal uncertainty.</strong> <a href="https://arxiv.org/abs/2205.14334">Lin, Hilton and Evans (2022)</a> trained models to express calibrated uncertainty in words. <a href="https://arxiv.org/abs/2207.05221">Kadavath et al. (2022)</a> found that models can often evaluate their own answers in the right format.</li>
+              <li><strong>Truthfulness probes.</strong> <a href="https://arxiv.org/abs/2304.13734">Azaria and Mitchell (2023)</a> trained classifiers on hidden activations to predict whether statements are true, <a href="https://arxiv.org/abs/2212.03827">Burns et al. (2023)</a> looked for latent knowledge without supervision, and <a href="https://arxiv.org/abs/2310.06824">Marks and Tegmark (2024)</a> found linear structure for true and false statements. Those works mostly use controlled statement datasets; I apply a linear readout to claims from longer answers.</li>
+              <li><strong>Semantic entropy.</strong> <a href="https://www.nature.com/articles/s41586-024-07421-0">Farquhar et al. (2024)</a> estimate uncertainty over the meanings of sampled generations. <a href="https://arxiv.org/abs/2406.15927">Kossen et al. (2024)</a> approximate that from the hidden states of a single generation. I predict the correctness of a fixed claim instead.</li>
+              <li><strong>Hallucination detection.</strong> <a href="https://arxiv.org/abs/2509.03531">Obeso et al. (2025)</a> train probes that flag hallucinated entities token by token in long-form generation, across several model families. This work is claim-level.</li>
+            </ul>
+
+            <h2 id="probemon">ProbeMon</h2>
+
+            <p>
+              The repo includes <a href="https://github.com/scasella/activation-probes-claim-correctness/tree/309b8e3c9413acd3f3c7dd09052ba62d983f700a/library">ProbeMon</a>, research software that packages the method: two pretrained layer-19 probes for Llama 3.1 8B Instruct (<code>legal-qa-llama-3.1-8b-v1</code> from MAUD, <code>biography-llama-3.1-8b-v1</code> from FActScore), a <code>fit_probe</code> function for your own labeled claims, loaders for the two datasets, and a command-line tool (<code>probemon list-probes</code>, <code>score</code>, <code>train</code>). It refuses to score a model that doesn't match the probe.
+            </p>
+
+            <h2 id="reproducibility">Reproducibility</h2>
+            <table class="repro">
+              <tbody>
+                <tr><th scope="row">Model</th><td><code>meta-llama/Llama-3.1-8B-Instruct</code>, layer-19 residual stream. The SAE comparison uses Goodfire's <code>goodfire-llama-3.1-8b-instruct</code> layer-19 SAE. MAUD judges: GPT-5.4, with Kimi K2.6 as the second judge.</td></tr>
+                <tr><th scope="row">Experiment</th><td>MAUD: standardized logistic regression, C&nbsp;=&nbsp;1.0, leave-one-out over 150 claims (<code>scripts/evaluate_probe_proxy_smoke.py</code>). FActScore: L2 logistic regression, C&nbsp;=&nbsp;0.01 chosen on the tuning split, refit on train plus tuning, scored once on test (<code>scripts/evaluate_factscore_validation.py</code>). Intervals: MAUD and FELM use a paired claim-level bootstrap, 1,000 resamples, seed 20260424 (<a href="https://github.com/scasella/activation-probes-claim-correctness/blob/309b8e3c9413acd3f3c7dd09052ba62d983f700a/docs/methods_note_bootstrap.md">methods note</a>). FActScore uses a paired bootstrap, claim-level and grouped by biography, 10,000 resamples, seed 20260424 (<a href="https://github.com/scasella/activation-probes-claim-correctness/blob/665dc2580c924a3ba53841e15f86acd35d0b7f46/scripts/grouped_bootstrap_factscore.py"><code>grouped_bootstrap_factscore.py</code></a>).</td></tr>
+                <tr><th scope="row">Data</th><td>MAUD (<code>theatticusproject/maud</code>): 150 claims from 135 examples. FActScore (ChatGPT portion): 4,886 facts, split by biography 3,353 / 791 / 742; test from 24 biographies. FELM-wk: 71 test segments. Unit: one claim; <code>partially_true</code> counts as incorrect.</td></tr>
+                <tr><th scope="row">Results</th><td><a href="https://github.com/scasella/activation-probes-claim-correctness/blob/309b8e3c9413acd3f3c7dd09052ba62d983f700a/artifacts/runs/maud_bootstrap_ci_v2.json"><code>maud_bootstrap_ci_v2.json</code></a>, <a href="https://github.com/scasella/activation-probes-claim-correctness/blob/665dc2580c924a3ba53841e15f86acd35d0b7f46/artifacts/runs/factscore_grouped_bootstrap_ci.json"><code>factscore_grouped_bootstrap_ci.json</code></a> (all FActScore intervals in this post), <a href="https://github.com/scasella/activation-probes-claim-correctness/blob/309b8e3c9413acd3f3c7dd09052ba62d983f700a/artifacts/runs/felm_wk_bootstrap_ci.json"><code>felm_wk_bootstrap_ci.json</code></a>, <a href="https://github.com/scasella/activation-probes-claim-correctness/blob/309b8e3c9413acd3f3c7dd09052ba62d983f700a/artifacts/runs/maud_judge_agreement_analysis.json"><code>maud_judge_agreement_analysis.json</code></a>. The earlier <a href="https://github.com/scasella/activation-probes-claim-correctness/blob/309b8e3c9413acd3f3c7dd09052ba62d983f700a/artifacts/runs/factscore_bootstrap_ci.json"><code>factscore_bootstrap_ci.json</code></a> (claim-level, 1,000 resamples) gives 0.219 to 0.302 for the difference.</td></tr>
+                <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/activation-probes-claim-correctness/tree/309b8e3c9413acd3f3c7dd09052ba62d983f700a">scasella/activation-probes-claim-correctness @ 309b8e3</a>; grouped FActScore bootstrap added <a href="https://github.com/scasella/activation-probes-claim-correctness/tree/665dc2580c924a3ba53841e15f86acd35d0b7f46">@ 665dc25</a></td></tr>
+                <tr><th scope="row">Status</th><td>Published 2026-04-25 · updated 2026-09-23 · Open issues: MAUD evaluation not grouped by source example; MAUD expert audit not yet labeled.</td></tr>
+              </tbody>
+            </table>
+
+            <details class="appendix">
+              <summary>Appendix: secondary diagnostics</summary>
+
+              <h3>Four MAUD methods under two judges</h3>
+              <p>
+                I scored two more MAUD methods: a probe on features from a sparse autoencoder, which splits the hidden state into many sparse features (the SAE probe), and GPT-5.4 asked directly to score each claim (the GPT-5.4 scorer).
+              </p>
+
+              <figure class="chart">
+                <svg viewBox="0 0 960 460" role="img" aria-label="MAUD method AUROC under GPT-5.4 vs Kimi K2.6 judges">
+                  <rect x="0" y="0" width="960" height="460" fill="#ffffff" />
+                  <text x="480" y="30" text-anchor="middle" fill="#3B3B39"
+                        font-family="Inter, sans-serif" font-size="18" font-weight="400">
+                    How each MAUD method does under two judges
+                  </text>
+                  <text x="480" y="54" text-anchor="middle" fill="#969592"
+                        font-family="Inter, Helvetica Neue, sans-serif" font-size="12">
+                    The order of the methods stays the same under the second judge. The GPT-5.4 scorer drops the most.
+                  </text>
+
+                  <line x1="120" y1="380" x2="880" y2="380" stroke="#C8C7C2" stroke-width="1" />
+                  <line x1="120" y1="335" x2="880" y2="335" stroke="#E4E3DE" stroke-width="1" />
+                  <line x1="120" y1="290" x2="880" y2="290" stroke="#E4E3DE" stroke-width="1" />
+                  <line x1="120" y1="245" x2="880" y2="245" stroke="#E4E3DE" stroke-width="1" />
+                  <line x1="120" y1="200" x2="880" y2="200" stroke="#E4E3DE" stroke-width="1" />
+                  <line x1="120" y1="155" x2="880" y2="155" stroke="#E4E3DE" stroke-width="1" />
+                  <line x1="120" y1="110" x2="880" y2="110" stroke="#E4E3DE" stroke-width="1" />
+
+                  <text x="108" y="384" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.40</text>
+                  <text x="108" y="339" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.50</text>
+                  <text x="108" y="294" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.60</text>
+                  <text x="108" y="249" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.70</text>
+                  <text x="108" y="204" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.80</text>
+                  <text x="108" y="159" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.90</text>
+                  <text x="108" y="114" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">1.00</text>
+
+                  <line x1="120" y1="335" x2="880" y2="335" stroke="#969592" stroke-width="1" stroke-dasharray="4 4" opacity="0.7" />
+                  <text x="874" y="328" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="10">chance</text>
+
+                  <!-- y = 380 - (AUROC - 0.4) * 450 -->
+                  <!-- Self-report -->
+                  <rect x="195" y="330" width="32" height="50" fill="#3B3B39" opacity="0.7" />
+                  <rect x="231" y="350" width="32" height="30" fill="#5C8A95" opacity="0.7" />
+                  <text x="211" y="322" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="10">.511</text>
+                  <text x="247" y="342" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="10">.466</text>
+                  <text x="229" y="402" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="13">Asking the model</text>
+                  <text x="229" y="420" text-anchor="middle" fill="#969592" font-family="Inter, sans-serif" font-size="11">&minus;0.045</text>
+
+                  <!-- SAE probe -->
+                  <rect x="385" y="255" width="32" height="125" fill="#3B3B39" opacity="0.7" />
+                  <rect x="421" y="267" width="32" height="113" fill="#5C8A95" opacity="0.7" />
+                  <text x="401" y="247" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="10">.677</text>
+                  <text x="437" y="259" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="10">.652</text>
+                  <text x="419" y="402" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="13">SAE probe</text>
+                  <text x="419" y="420" text-anchor="middle" fill="#969592" font-family="Inter, sans-serif" font-size="11">&minus;0.024</text>
+
+                  <!-- Residual probe -->
+                  <rect x="575" y="213" width="32" height="167" fill="#3B3B39" opacity="0.7" />
+                  <rect x="611" y="242" width="32" height="138" fill="#5C8A95" opacity="0.7" />
+                  <text x="591" y="205" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="10">.771</text>
+                  <text x="627" y="234" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="10">.707</text>
+                  <text x="609" y="402" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="13">Residual probe</text>
+                  <text x="609" y="420" text-anchor="middle" fill="#969592" font-family="Inter, sans-serif" font-size="11">&minus;0.064</text>
+
+                  <!-- GPT-5.4 scorer -->
+                  <rect x="775" y="135" width="32" height="245" fill="#3B3B39" />
+                  <rect x="811" y="168" width="32" height="212" fill="#5C8A95" opacity="0.85" />
+                  <text x="791" y="127" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="10">.944</text>
+                  <text x="827" y="160" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="10">.872</text>
+                  <text x="809" y="402" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="13">GPT-5.4 scorer</text>
+                  <text x="809" y="420" text-anchor="middle" fill="#969592" font-family="Inter, sans-serif" font-size="11">&minus;0.071 *</text>
+
+                  <!-- legend top right -->
+                  <rect x="500" y="76" width="22" height="10" fill="#3B3B39" opacity="0.7" />
+                  <text x="530" y="85" fill="#3B3B39" font-family="Inter, sans-serif" font-size="12">GPT-5.4 judge</text>
+                  <rect x="640" y="76" width="22" height="10" fill="#5C8A95" opacity="0.7" />
+                  <text x="670" y="85" fill="#3B3B39" font-family="Inter, sans-serif" font-size="12">Kimi K2.6 judge</text>
+
+                  <text x="120" y="448" fill="#969592" font-family="Inter, sans-serif" font-size="11">
+                    Numbers below each pair: AUROC change from GPT-5.4 labels to Kimi labels. * Paired bootstrap 95% interval for this drop: 0.019 to 0.149.
+                  </text>
+                </svg>
+                <figcaption>
+                  <strong>Figure 2.</strong> The GPT-5.4 scorer's 0.944 is likely inflated, because the scorer and the first judge are the same model. Under Kimi labels it drops by 0.071.
+                </figcaption>
+              </figure>
+
+              <div class="table-wrap">
+                <div class="table-label"><span class="id">Table 02</span>The four MAUD methods, with 95% intervals</div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Method</th>
+                      <th>AUROC, GPT-5.4 judge</th>
+                      <th>AUROC, Kimi judge</th>
+                      <th>AUROC on agreed claims</th>
+                      <th>Brier on agreed claims</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Asking the model</td>
+                      <td class="num">0.511 [0.411, 0.597]</td>
+                      <td class="num">0.466 [0.413, 0.604]</td>
+                      <td class="num">0.486 [0.392, 0.598]</td>
+                      <td class="num">0.509 [0.400, 0.600]</td>
+                    </tr>
+                    <tr class="highlight">
+                      <td>GPT-5.4 scorer</td>
+                      <td class="num pos">0.944 [0.906, 0.984]</td>
+                      <td class="num pos">0.872 [0.807, 0.926]</td>
+                      <td class="num pos">0.981 [0.931, 1.000]</td>
+                      <td class="num pos">0.101 [0.064, 0.144]</td>
+                    </tr>
+                    <tr>
+                      <td>Residual probe</td>
+                      <td class="num pos">0.771 [0.687, 0.838]</td>
+                      <td class="num pos">0.707 [0.627, 0.792]</td>
+                      <td class="num pos">0.793 [0.709, 0.870]</td>
+                      <td class="num">0.231 [0.166, 0.299]</td>
+                    </tr>
+                    <tr>
+                      <td>SAE probe</td>
+                      <td class="num">0.677 [0.582, 0.763]</td>
+                      <td class="num">0.652 [0.563, 0.735]</td>
+                      <td class="num">0.712 [0.616, 0.812]</td>
+                      <td class="num">0.268 [0.193, 0.350]</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <p>
+                The residual probe has not clearly beaten the SAE probe. The residual-minus-SAE difference is 0.094 [0.003, 0.180] under GPT-5.4 labels, 0.055 [-0.039, 0.150] under Kimi labels, and 0.081 [-0.021, 0.185] on the agreed claims.
+              </p>
+
+              <h3>Where the judges disagree</h3>
+
+              <div class="table-wrap">
+                <div class="table-label"><span class="id">Table 03</span>How often the two judges agree, split by GPT-5.4's label</div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>GPT-5.4 label</th>
+                      <th>Number of claims</th>
+                      <th>Kimi agrees</th>
+                      <th>Kimi disagrees</th>
+                      <th>Agreement rate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>true</td>
+                      <td class="num">62</td>
+                      <td class="num pos">54</td>
+                      <td class="num">8</td>
+                      <td class="num pos">0.871</td>
+                    </tr>
+                    <tr class="highlight">
+                      <td>partially_true</td>
+                      <td class="num">68</td>
+                      <td class="num">41</td>
+                      <td class="num pos">27</td>
+                      <td class="num">0.603</td>
+                    </tr>
+                    <tr>
+                      <td>false</td>
+                      <td class="num">20</td>
+                      <td class="num">15</td>
+                      <td class="num">5</td>
+                      <td class="num">0.750</td>
+                    </tr>
+                    <tr class="totals">
+                      <td>all claims</td>
+                      <td class="num">150</td>
+                      <td class="num">110</td>
+                      <td class="num">40</td>
+                      <td class="num">0.733</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              
+              <h3>FActScore across the three splits</h3>
+
+              <figure class="chart">
+                <svg viewBox="0 0 960 420" role="img" aria-label="FActScore residual probe AUROC across train, validation, and test splits">
+                  <rect x="0" y="0" width="960" height="420" fill="#ffffff" />
+                  <text x="480" y="30" text-anchor="middle" fill="#3B3B39"
+                        font-family="Inter, sans-serif" font-size="18" font-weight="400">
+                    FActScore probe across the three splits
+                  </text>
+                  <text x="480" y="54" text-anchor="middle" fill="#969592"
+                        font-family="Inter, Helvetica Neue, sans-serif" font-size="12">
+                    AUROC was 0.939 on training, 0.728 on tuning, and 0.802 on test.
+                  </text>
+
+                  <line x1="140" y1="340" x2="840" y2="340" stroke="#C8C7C2" stroke-width="1" />
+                  <line x1="140" y1="295" x2="840" y2="295" stroke="#E4E3DE" stroke-width="1" />
+                  <line x1="140" y1="250" x2="840" y2="250" stroke="#E4E3DE" stroke-width="1" />
+                  <line x1="140" y1="205" x2="840" y2="205" stroke="#E4E3DE" stroke-width="1" />
+                  <line x1="140" y1="160" x2="840" y2="160" stroke="#E4E3DE" stroke-width="1" />
+                  <line x1="140" y1="115" x2="840" y2="115" stroke="#E4E3DE" stroke-width="1" />
+
+                  <text x="128" y="344" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.40</text>
+                  <text x="128" y="299" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.50</text>
+                  <text x="128" y="254" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.60</text>
+                  <text x="128" y="209" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.70</text>
+                  <text x="128" y="164" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.80</text>
+                  <text x="128" y="119" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0.90</text>
+
+                  <!-- self-report reference at 0.541 -> y = 340 - (0.541-0.4)/0.5 * 225 = 340 - 63.45 = 276.55 -->
+                  <line x1="140" y1="277" x2="840" y2="277" stroke="#969592" stroke-width="1" stroke-dasharray="4 4" opacity="0.7" />
+                  <text x="834" y="270" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="10">asking the model .541</text>
+
+                  <!-- chance line at 0.5 -> y = 340 - 0.1/0.5 * 225 = 340 - 45 = 295 -->
+                  <line x1="140" y1="295" x2="840" y2="295" stroke="#C8C7C2" stroke-width="1" stroke-dasharray="2 4" opacity="0.6" />
+                  <text x="834" y="289" text-anchor="end" fill="#C8C7C2" font-family="Inter, sans-serif" font-size="10">chance .500</text>
+
+                  <!-- positions: train 240, val 490, test 740 -->
+                  <!-- y mapping: y = 340 - (val - 0.4) / 0.5 * 225 -->
+                  <!-- 0.939: y = 340 - 242.55 = 97.45 -->
+                  <!-- 0.728: y = 340 - 147.6 = 192.4 -->
+                  <!-- 0.802: y = 340 - 180.9 = 159.1 -->
+
+                  <polyline points="240,97 490,192 740,159"
+                            fill="none" stroke="#5C8A95" stroke-width="2.5"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                  <polygon points="240,97 490,192 740,159 740,340 240,340"
+                           fill="#5C8A95" opacity="0.06" />
+
+                  <circle cx="240" cy="97" r="5" fill="#3B3B39" />
+                  <circle cx="490" cy="192" r="4.5" fill="#5C8A95" />
+                  <circle cx="740" cy="159" r="5" fill="#3B3B39" />
+
+                  <text x="240" y="86" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">.939</text>
+                  <text x="490" y="184" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">.728</text>
+                  <text x="740" y="148" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">.802</text>
+
+                  <text x="240" y="365" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="13">train</text>
+                  <text x="240" y="382" text-anchor="middle" fill="#969592" font-family="Inter, sans-serif" font-size="11">3,353 claims</text>
+                  <text x="490" y="365" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="13">validation</text>
+                  <text x="490" y="382" text-anchor="middle" fill="#969592" font-family="Inter, sans-serif" font-size="11">791 claims</text>
+                  <text x="740" y="365" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="13">test</text>
+                  <text x="740" y="382" text-anchor="middle" fill="#969592" font-family="Inter, sans-serif" font-size="11">742 claims</text>
+
+                  <text x="140" y="408" fill="#969592" font-family="Inter, sans-serif" font-size="11">
+                    Split by biography, so facts from one biography never appear in two splits.
+                  </text>
+                </svg>
+                <figcaption>
+                  <strong>Figure 3.</strong> The FActScore probe on each split. Test above tuning is consistent with biographies varying in difficulty and in how many facts they contain.
+                </figcaption>
+              </figure>
+
+              <h3>Does the probe break down into features?</h3>
+              <p>
+                No. Projecting the MAUD probe direction onto the Goodfire layer-19 SAE features gives about the same concentration as random directions do. The signal is spread across many directions (<a href="https://github.com/scasella/activation-probes-claim-correctness/blob/309b8e3c9413acd3f3c7dd09052ba62d983f700a/docs/probe_interpretation.md">probe_interpretation.md</a>). The probe is a useful readout, not an explanation of how the model represents correctness.
+              </p>
+            </details>
+
+            <!-- PANES:NEXT:START -->
+    <nav class="post-next" aria-label="More research">
+      <a href="blog_multipersona_rl.html"><span>next →</span><span>Training on sometimes-solvable math problems: one RL run</span></a>
+      <a class="post-next__all" href="research.html">← all research</a>
+    </nav>
+  <!-- PANES:NEXT:END -->
+  </article>
+  </main>
+  <!-- PANES:FOOT:START -->
+    <footer class="pn-foot">
+      <p>Personal projects. Not affiliated with or endorsed by my employer. No employer data, infrastructure, or confidential information used.</p>
+    </footer>
+    </div>
+  </div>
+  <!-- PANES:FOOT:END -->
+</body>
+</html>

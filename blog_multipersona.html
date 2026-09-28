@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Panel-style reasoning trades accuracy for shorter completions | Stephen Casella</title>
+  <meta name="description" content="A panel-of-experts LoRA on Qwen3-30B-A3B-Base was less accurate than Qwen&#39;s thinking model on MATH500 level 5 and AIME, and its completions were several times shorter. The two models also differ in post-training." />
+  <meta name="author" content="Stephen Casella" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#080c0f" />
+  <link rel="canonical" href="https://casella.dev/blog_multipersona.html" />
+  <meta property="og:site_name" content="Stephen Casella" />
+  <meta property="og:title" content="Panel-style reasoning trades accuracy for shorter completions" />
+  <meta property="og:description" content="A panel-style Qwen adapter was less accurate than Qwen&#39;s thinking model and wrote several times shorter completions. Post-training differs as well as format." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://casella.dev/blog_multipersona.html" />
+  <meta property="og:image" content="https://casella.dev/assets/og/blog_multipersona.png" />
+  <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_multipersona.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Share card for the write-up: Panel-style reasoning trades accuracy for shorter completions." />
+  <meta property="article:author" content="Stephen Casella" />
+  <meta property="article:published_time" content="2026-04-24" />
+  <meta property="article:modified_time" content="2026-09-23" />
+  <meta property="article:tag" content="multi-persona reasoning" />
+  <meta property="article:tag" content="RLVR" />
+  <meta property="article:tag" content="Qwen3" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Panel-style reasoning trades accuracy for shorter completions" />
+  <meta name="twitter:description" content="A panel-style Qwen adapter was less accurate than Qwen&#39;s thinking model and wrote several times shorter completions." />
+  <meta name="twitter:image" content="https://casella.dev/assets/og/blog_multipersona.png" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-2RSWDWW67D');
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Panel-style reasoning trades accuracy for shorter completions",
+      "description": "A panel-of-experts LoRA on Qwen3-30B-A3B-Base compared with Qwen's production thinking model on matched samples: 31.5 points less accurate on MATH500 level 5 and 50.6 on AIME, with 2.5 to 5 times fewer completion tokens per correct answer. Post-training differs as well as format.",
+      "url": "https://casella.dev/blog_multipersona.html",
+      "mainEntityOfPage": "https://casella.dev/blog_multipersona.html",
+      "image": "https://casella.dev/assets/og/blog_multipersona.png",
+      "datePublished": "2026-04-24",
+      "dateModified": "2026-09-23",
+      "author": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/",
+        "sameAs": [
+          "https://github.com/scasella",
+          "https://www.linkedin.com/in/stevecasella/"
+        ]
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "keywords": [
+        "multi-persona reasoning",
+        "panel of experts",
+        "RLVR",
+        "Qwen3-30B-A3B",
+        "MATH500",
+        "AIME",
+        "token efficiency"
+      ],
+      "codeRepository": "https://github.com/scasella/multi-model"
+    }
+  </script>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:           #fafaf8;
+      --paper:        #ffffff;
+      --fg:           #222;
+      --fg-mute:      #555;
+      --fg-faint:     #8a8a85;
+      --rule:         #e2e2dd;
+      --hi:           #f3f2ec;
+      --link:         #1a5fb4;
+      --link-visited: #5a3aa3;
+      --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono:    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      font-size: 16.5px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: rgba(0,0,0,0.08); color: inherit; }
+
+    .site-header {
+      max-width: 720px; margin: 0 auto; padding: 28px 24px 0;
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 13px; color: var(--fg-mute);
+    }
+    .site-header a {
+      color: var(--fg-mute); text-decoration: none;
+      border-bottom: 1px dotted var(--fg-faint); padding-bottom: 1px;
+    }
+    .site-header a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+
+    article {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 24px 64px;
+    }
+    .meta, .date {
+      color: var(--fg-faint); font-size: 13px;
+      margin-bottom: 8px; text-transform: none; letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: 32px; line-height: 1.22; font-weight: 600;
+      margin: 0 0 10px; letter-spacing: -0.01em; color: #111;
+    }
+    .subtitle {
+      color: var(--fg-mute); font-size: 17px; font-weight: 400;
+      line-height: 1.5; margin: 0 0 24px;
+    }
+    h2 {
+      font-size: 22px; font-weight: 600; line-height: 1.3;
+      margin: 1.9em 0 0.5em; letter-spacing: -0.005em; color: #111;
+    }
+    h3 { font-size: 17px; font-weight: 600; margin: 1.5em 0 0.35em; }
+
+    p { margin: 0 0 0.9em; }
+    ul, ol { margin: 0 0 1em; padding-left: 1.4em; }
+    li { margin-bottom: 0.35em; }
+    li::marker { color: var(--fg-faint); }
+
+    a { color: var(--link); text-decoration: underline; text-decoration-color: rgba(26,95,180,0.4); }
+    a:visited { color: var(--link-visited); }
+    a:hover { text-decoration-color: var(--link); }
+
+    code {
+      font-family: var(--font-mono); font-size: 0.85em;
+      background: var(--hi); padding: 1px 5px; border-radius: 3px;
+    }
+    pre {
+      background: var(--hi); padding: 14px 18px; border-radius: 8px;
+      overflow-x: auto; margin: 1em 0; font-size: 13px; line-height: 1.55;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    pre code { background: none; padding: 0; border-radius: 0; font-size: inherit; }
+    strong { font-weight: 600; color: var(--fg); }
+    em { font-style: italic; }
+
+    blockquote {
+      margin: 1em 0; padding: 6px 0 6px 18px;
+      border-left: 3px solid var(--rule); color: var(--fg-mute);
+    }
+    blockquote p { font-size: 15.5px; margin: 0; }
+
+    /* Paper links / pill button */
+    .paper-links {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 18px 0 8px; flex-wrap: wrap;
+    }
+    .paper-links .btn-pill {
+      font-size: 13px; line-height: 1; color: var(--fg);
+      text-decoration: none; background: var(--paper);
+      border: 1px solid var(--rule); border-radius: 999px;
+      padding: 0.55rem 0.95rem 0.65rem;
+      transition: background 200ms ease;
+    }
+    .paper-links .btn-pill:hover { background: var(--hi); }
+
+    /* TL;DR */
+    .tldr {
+      margin: 1.2em 0 1.6em;
+      padding: 14px 18px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      font-size: 15.5px;
+    }
+    .tldr-label, .tldr .label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .tldr p { font-size: 15.5px; line-height: 1.6; color: var(--fg); margin: 0; }
+    .tldr p + p { margin-top: 0.6em; }
+
+    /* Callout */
+    .callout {
+      margin: 1.5em 0; padding: 14px 18px;
+      background: var(--hi); border-radius: 6px;
+    }
+    .callout-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-mute); margin-bottom: 8px;
+    }
+    .callout p { font-size: 15px; line-height: 1.55; color: var(--fg); margin: 0; }
+
+    /* Stat row */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0;
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+    @media (min-width: 600px) {
+      .stat-row { grid-template-columns: repeat(4, 1fr); }
+    }
+    .stat {
+      padding: 16px 18px;
+      border-right: 1px solid var(--rule);
+    }
+    .stat:first-child { padding-left: 0; }
+    .stat:last-child { border-right: 0; }
+    @media (max-width: 599px) {
+      .stat:nth-child(2n) { border-right: 0; }
+      .stat:nth-child(n+3) { border-top: 1px solid var(--rule); }
+    }
+    .stat .k {
+      display: block;
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .stat .v {
+      font-size: 22px; font-weight: 600; color: var(--fg);
+      line-height: 1.1; letter-spacing: -0.01em;
+    }
+    .stat .s {
+      font-size: 12px; color: var(--fg-faint);
+      margin-top: 6px; line-height: 1.4;
+    }
+
+    /* Mode grid */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin: 1.5em 0;
+    }
+    @media (min-width: 600px) { .mode-grid { grid-template-columns: repeat(2, 1fr); } }
+    .mode-card {
+      background: var(--paper);
+      border-radius: 8px;
+      padding: 16px 18px;
+      border: 1px solid var(--rule);
+    }
+    .mode-card .tag {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .mode-card .t {
+      display: block;
+      font-size: 16px; font-weight: 600; color: var(--fg);
+      margin-bottom: 6px; letter-spacing: -0.005em;
+    }
+    .mode-card .desc {
+      font-size: 14px; line-height: 1.5; color: var(--fg-mute);
+    }
+
+    /* Table */
+    .table-wrap { margin: 1.5em 0; }
+    .table-label {
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 10px;
+    }
+    .table-label .id { color: var(--fg); margin-right: 12px; }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+    th, td {
+      padding: 8px 12px 8px 0; text-align: left;
+      border-bottom: 1px solid var(--rule); color: var(--fg);
+    }
+    th {
+      font-weight: 600; color: var(--fg-mute);
+      font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--fg-mute);
+    }
+    td.num { text-align: right; white-space: nowrap; }
+    td.pos { color: var(--fg); }
+    td.neg { color: var(--fg-faint); }
+    tr:last-child td { border-bottom: none; }
+    tr.highlight td { background: var(--hi); }
+    tr.totals td { border-top: 1px solid var(--fg-mute); }
+
+    /* Figure / chart */
+    figure.chart, figure { margin: 1.6em 0; }
+    figure svg, figure.chart svg {
+      display: block; width: 100%; height: auto;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+    }
+    figcaption {
+      font-size: 13px; color: var(--fg-mute);
+      line-height: 1.5; margin-top: 10px;
+    }
+    figcaption strong { color: var(--fg); font-weight: 500; }
+    @media (min-width: 960px) {
+      article > figure.chart, .body-main > figure.chart {
+        width: min(1100px, calc(100vw - 3rem));
+        max-width: none;
+        margin-left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+
+    /* Neg list */
+    .neg-list {
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+    }
+    .neg-list-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin: 14px 0 6px;
+    }
+    .neg-list ul { list-style: none; padding: 0; margin: 0; }
+    .neg-list li {
+      padding: 14px 0; border-bottom: 1px solid var(--rule);
+      font-size: 15px; line-height: 1.6; color: var(--fg-mute);
+      margin-bottom: 0;
+    }
+    .neg-list li:last-child { border-bottom: 0; }
+    .neg-list li strong { color: var(--fg); font-weight: 600; }
+
+    /* Break */
+    .break {
+      display: flex; align-items: center; justify-content: center;
+      margin: 3rem 0 2.5rem;
+      color: var(--fg-faint);
+      font-size: 11px; letter-spacing: 0.6em;
+    }
+
+    hr { border: 0; border-top: 1px solid var(--rule); margin: 1.8em 0; }
+    .footer { font-size: 12.5px; color: var(--fg-faint); }
+
+    /* Reproducibility panel */
+    table.repro { margin: 1em 0 1.5em; }
+    table.repro th {
+      width: 7.5em; vertical-align: top; text-transform: none; letter-spacing: 0;
+      font-size: 13px; border-bottom: 1px solid var(--rule);
+    }
+    table.repro td { font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+    table.repro tr:last-child th { border-bottom: none; }
+
+    @media (max-width: 480px) {
+      .site-header { padding: 22px 20px 0; }
+      article { padding: 16px 20px 56px; }
+      h1 { font-size: 28px; }
+      .subtitle { font-size: 16px; }
+      .stat-row { grid-template-columns: 1fr; }
+      .mode-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <!-- PANES:HEAD:START -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
+  <link rel="stylesheet" href="panes.css?v=4a6ced04" />
+  <script src="ascii.js?v=6f1f421a" defer></script>
+  <!-- PANES:HEAD:END -->
+</head>
+<body class="pn-body panes-post">
+  <!-- PANES:BAR:START -->
+  <div class="split split--inner">
+    <aside class="side">
+      <div class="side__pin">
+        <figure class="side__art">
+          <pre data-landscape data-rows="22" aria-hidden="true">                                                      
+                                                      
+                                                      
+                           ===                        
+                         -======                      
+                      ----========                    
+                :::::::-----========                  
+   ,::::::----::::::::::::----==========              
+    :::::-----::::::,,,,,:::--======================= 
+     ::::-----::::::,,...,,:--=====================   
+      ::::::::::::::::,...,:--===--===============    
+        :::::::::::::::::,.,<b>@</b>==------===========      
+          ,,,,,,,,::::---========-------------        
+           ,,,,,,,,,,::--========-----------          
+             ,,,,...,,::-=======---------             
+              ,,,,....,:-====---------                
+                :,,,,..,:--:::----                    
+                  :::::::::::::                       
+                     :::::                            
+                                                      
+                                                      
+                                                      </pre>
+        </figure>
+        <p class="side__name"><a href="/">Stephen<br> Casella<span class="accent">_</span></a></p>
+        <p class="side__bio">I study how language models reason and respond to training, and put AI agents to work on hard, checkable problems: formal proofs, faster code, real bugs.</p>
+        <nav class="side__nav" aria-label="Site">
+          <a href="research.html" aria-current="true">research</a>
+          <a href="projects.html">software</a>
+          <a href="/#contact">contact</a>
+        </nav>
+      </div>
+      <div class="side__links">
+        <a class="side__grid" href="blog_diversity.html" title="pick a random integer between 1 and 100." aria-label="Pick a random integer between 1 and 100. It put more than 95% of its probability on three numbers: 4, 42, and 47. Read the write-up."><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></a>
+        <a href="https://github.com/scasella" rel="me">github.com/scasella</a>
+        <a href="https://huggingface.co/scasella91" rel="me">huggingface.co/scasella91</a>
+        <a href="https://www.linkedin.com/in/stevecasella/" rel="me">linkedin</a>
+      </div>
+    </aside>
+    <div class="split__main">
+  <!-- PANES:BAR:END -->
+  <main class="post-main">
+  <article class="post">
+
+        <h1>Panel-style reasoning trades accuracy for shorter completions</h1>
+<!-- PANES:META:START -->
+    <p class="post-byline">[ <time datetime="2026-04-24">2026-04-24</time> · updated <time datetime="2026-09-23">2026-09-23</time> ] // Qwen3-30B-A3B // 7 MIN READ</p>
+  <!-- PANES:META:END -->
+        <p class="subtitle">On MATH500 level 5 and AIME, a small adapter on Qwen3-30B-A3B-Base that reasons as a panel of experts was less accurate than Qwen's production thinking model, and its completions were several times shorter.</p>
+
+        <div class="paper-links">
+          <a href="https://github.com/scasella/multi-model" class="btn-pill">GitHub repo</a>
+          <a href="https://huggingface.co/scasella91/qwen3-30b-a3b-multipersona-debate-lora" class="btn-pill">LoRA adapter</a>
+        </div>
+
+        <div class="tldr">
+          <span class="tldr-label">TL;DR</span>
+          <p>I trained a LoRA adapter on Qwen3-30B-A3B-Base to reason as a panel of experts and compared it with Qwen's production thinking model. On matched samples, the panel was <strong>31.5 points less accurate</strong> on MATH500 level 5 (318 against 487 correct of 536 matched samples: 59.3% against 90.9%) and <strong>50.6 points less accurate</strong> on AIME 2024–2025 (22.5% against 73.1%). Per correct sampled answer, the thinking model used <strong>5.07×</strong> as many completion tokens on MATH500 level 5 and <strong>2.48×</strong> on AIME.</p>
+          <p>The two models differ in post-training as well as in reasoning format, so these results describe the two models, not the effect of the format alone.</p>
+        </div>
+
+        <div class="callout">
+          <span class="callout-label">Revision</span>
+          <p>The RL follow-up that used to close this post is now <a href="blog_multipersona_rl.html">its own post</a>. I removed a per-character dispersion ratio, a sensitivity check that did not test what it claimed, a training-compute estimate and my reading of the pass@k curves as evidence of wider search.</p>
+        </div>
+
+        <h2 id="setup">What was compared</h2>
+
+        <p>
+          The panel model is a rank-32 LoRA adapter on Qwen3-30B-A3B-Base, a mixture-of-experts model with 30 billion parameters, about 3 billion active per token. I trained it with reinforcement learning only, with no example answers or distillation. The prompt asks for a debate inside one tag and a final answer inside another. The reward is answer correctness, minus 0.2 when the tags are missing or malformed. Training had two stages: 128 steps on GSM8K, grade-school math word problems, then 128 steps on MATH. Each step used 16 problems with 8 samples per problem, at learning rate 5×10⁻⁶.
+        </p>
+
+<pre><code><span class="c"># Panel prompt template (used at both train and eval time)</span>
+<span class="k">A conversation between User and Multi-Persona Panel of Experts.</span>
+<span class="k">The user asks a question, and the Panel solves it. The Panel first</span>
+<span class="k">deliberates and debates the reasoning process with each other and</span>
+<span class="k">then provides the user with the answer.</span>
+
+<span class="k">User:</span> <span class="s">{problem}</span>
+<span class="k">Assistant:</span> <span class="s">&lt;mutipersonaDebate&gt; … &lt;/mutipersonaDebate&gt; &lt;answer&gt; … &lt;/answer&gt;</span></code></pre>
+
+        <p>
+          The comparison model is Qwen/Qwen3-30B-A3B, Qwen's production hybrid model, run with <code>apply_chat_template(enable_thinking=True)</code> so that it writes a <code>&lt;think&gt;</code> block before answering. It has the same architecture but went through Qwen's full post-training, not my two RL stages.
+        </p>
+
+        <p>Both models were sampled at temperature 1.0 and graded by the same answer checker. Token limits and sample counts were not the same:</p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 01</span>Evaluation settings</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Problem set</th>
+                <th>Problems</th>
+                <th>Samples per problem (panel / thinking)</th>
+                <th>Token limit (panel / thinking)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>MATH500, 10 per level, L1 to L5</td>
+                <td class="num">50</td>
+                <td class="num">4 / 4</td>
+                <td class="num">4,096 / 16,384</td>
+              </tr>
+              <tr>
+                <td>MATH500 level 5, all</td>
+                <td class="num">134</td>
+                <td class="num">8 / 4</td>
+                <td class="num">4,096 / 16,384</td>
+              </tr>
+              <tr>
+                <td>AIME 2024 + 2025</td>
+                <td class="num">20</td>
+                <td class="num">16 / 16</td>
+                <td class="num">8,192 / 16,384</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 id="accuracy">Accuracy and completion length</h2>
+
+        <p>
+          Token counts are completion tokens as the sampler recorded them. Tokens per correct sampled answer is the total over a set of samples divided by the number that were correct. Table 02 computes both accuracy and tokens on one set of matched samples: each thinking sample paired with the panel sample of the same index on the same problem. That gives 536 pairs on MATH500 level 5 (the panel's first 4 of 8 samples per problem) and 320 on AIME.
+        </p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 02</span>Accuracy and completion tokens per correct answer, matched samples</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Problem set (pairs)</th>
+                <th>Panel accuracy</th>
+                <th>Thinking accuracy</th>
+                <th>Panel tokens / correct</th>
+                <th>Thinking tokens / correct</th>
+                <th>Thinking ÷ panel</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>MATH500 level 5 (536)</td>
+                <td class="num">59.3%</td>
+                <td class="num">90.9%</td>
+                <td class="num">1,652</td>
+                <td class="num">8,376</td>
+                <td class="num">5.07×</td>
+              </tr>
+              <tr>
+                <td>AIME 2024 + 2025 (320)</td>
+                <td class="num">22.5%</td>
+                <td class="num">73.1%</td>
+                <td class="num">6,257</td>
+                <td class="num">15,491</td>
+                <td class="num">2.48×</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          The panel was right on 318 of 536 MATH500 pairs and the thinking model on 487; on AIME, 72 and 234 of 320. All-sample pass@1 differs only on MATH500 level 5, where it adds the panel's other 4 samples per problem: 58.4% against 90.9%, a 32.5-point gap. On AIME every sample is in the matched set.
+        </p>
+
+        <p>The length difference holds pair by pair, not just on average:</p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 03</span>Completion tokens, matched by problem and sample index</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Group</th>
+                <th>Pairs</th>
+                <th>Panel tokens (median)</th>
+                <th>Thinking tokens (median)</th>
+                <th>Median ratio</th>
+                <th>Thinking longer in</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>MATH500 L5, both correct</td>
+                <td class="num">306</td>
+                <td class="num">652</td>
+                <td class="num">4,958</td>
+                <td class="num">6.91×</td>
+                <td class="num">306 / 306</td>
+              </tr>
+              <tr>
+                <td>MATH500 L5, panel-only correct</td>
+                <td class="num">12</td>
+                <td class="num">825</td>
+                <td class="num">10,013</td>
+                <td class="num">14.17×</td>
+                <td class="num">12 / 12</td>
+              </tr>
+              <tr>
+                <td>MATH500 L5, all pairs</td>
+                <td class="num">536</td>
+                <td class="num">786</td>
+                <td class="num">6,634</td>
+                <td class="num">7.65×</td>
+                <td class="num">534 / 536</td>
+              </tr>
+              <tr class="highlight">
+                <td>AIME 24+25, both correct</td>
+                <td class="num">68</td>
+                <td class="num">1,034</td>
+                <td class="num">5,510</td>
+                <td class="num">5.89×</td>
+                <td class="num">67 / 68</td>
+              </tr>
+              <tr>
+                <td>AIME 24+25, panel-only correct</td>
+                <td class="num">4</td>
+                <td class="num">1,116</td>
+                <td class="num">16,384</td>
+                <td class="num">14.95×</td>
+                <td class="num">4 / 4</td>
+              </tr>
+              <tr>
+                <td>AIME 24+25, all pairs</td>
+                <td class="num">320</td>
+                <td class="num">1,069</td>
+                <td class="num">11,977</td>
+                <td class="num">9.85×</td>
+                <td class="num">319 / 320</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          On AIME the mean completion was 1,408 tokens for the panel and 11,328 for the thinking model, about one-eighth as many.
+        </p>
+
+        <div class="callout">
+          <span class="callout-label">Token limits affect tokens per correct</span>
+          <p>Many thinking samples that ended wrong stopped at the 16,384-token limit: the median is 16,384 tokens for pairs where neither model was right, on both sets. Those cut-off samples add tokens and no correct answers, which raises the thinking model's tokens per correct. The both-correct medians (4,958 and 5,510) are well below the limit, so the 5.89× to 6.91× length ratios come from finished answers.</p>
+        </div>
+
+        <h2 id="passk">Pass@k</h2>
+
+        <p>
+          Pass@k, the chance that at least one of k samples is correct, uses all samples. The panel is below the thinking model at every k I measured, and the gap narrows as k grows.
+        </p>
+
+            <figure class="chart">
+              <svg viewBox="0 0 960 460" role="img" aria-label="Matched pass@k, panel vs thinking on AIME 2024+2025 at n=16">
+                <rect x="0" y="0" width="960" height="460" fill="#ffffff" />
+
+                <text x="480" y="30" text-anchor="middle" fill="#3B3B39"
+                      font-family="Inter, sans-serif" font-size="18" font-weight="400">
+                  Pass@k on AIME 2024 and 2025 (16 attempts on each of 20 problems)
+                </text>
+                <text x="480" y="54" text-anchor="middle" fill="#969592"
+                      font-family="Inter, Helvetica Neue, sans-serif" font-size="12" font-weight="400">
+                  The panel is behind at every k. The gap narrows from 50.6 to 35.0 points between k=1 and k=16.
+                </text>
+
+                <line x1="370" y1="78" x2="402" y2="78" stroke="#3B3B39" stroke-width="2" />
+                <text x="408" y="82" fill="#3B3B39"
+                      font-family="Inter, Helvetica Neue, sans-serif" font-size="12">panel</text>
+                <line x1="498" y1="78" x2="530" y2="78" stroke="#969592" stroke-width="2" stroke-dasharray="4 3" />
+                <text x="536" y="82" fill="#3B3B39"
+                      font-family="Inter, Helvetica Neue, sans-serif" font-size="12">Qwen3 thinking</text>
+
+                <line x1="80" y1="380"   x2="880" y2="380"   stroke="#C8C7C2" stroke-width="1" />
+                <line x1="80" y1="312.5" x2="880" y2="312.5" stroke="#E4E3DE" stroke-width="1" />
+                <line x1="80" y1="245"   x2="880" y2="245"   stroke="#E4E3DE" stroke-width="1" />
+                <line x1="80" y1="177.5" x2="880" y2="177.5" stroke="#E4E3DE" stroke-width="1" />
+                <line x1="80" y1="110"   x2="880" y2="110"   stroke="#E4E3DE" stroke-width="1" />
+
+                <text x="72" y="384" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0%</text>
+                <text x="72" y="316" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">25%</text>
+                <text x="72" y="249" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">50%</text>
+                <text x="72" y="181" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">75%</text>
+                <text x="72" y="114" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">100%</text>
+
+                <polyline points="180,319.25 380,271.46 580,249.59 780,231.5"
+                          fill="none" stroke="#3B3B39" stroke-width="2.5"
+                          stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="180" cy="319.25" r="4" fill="#3B3B39" />
+                <circle cx="380" cy="271.46" r="4" fill="#3B3B39" />
+                <circle cx="580" cy="249.59" r="4" fill="#3B3B39" />
+                <circle cx="780" cy="231.5"  r="4" fill="#3B3B39" />
+
+                <polyline points="180,182.63 380,151.04 580,144.29 780,137.0"
+                          fill="none" stroke="#969592" stroke-width="2"
+                          stroke-dasharray="5 4" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="180" cy="182.63" r="3.5" fill="#fff" stroke="#969592" stroke-width="1.5" />
+                <circle cx="380" cy="151.04" r="3.5" fill="#fff" stroke="#969592" stroke-width="1.5" />
+                <circle cx="580" cy="144.29" r="3.5" fill="#fff" stroke="#969592" stroke-width="1.5" />
+                <circle cx="780" cy="137.0"  r="3.5" fill="#fff" stroke="#969592" stroke-width="1.5" />
+
+                <text x="180" y="338" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">.225</text>
+                <text x="380" y="290" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">.402</text>
+                <text x="580" y="269" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">.483</text>
+                <text x="780" y="251" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">.550</text>
+
+                <text x="180" y="404" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="12">k = 1</text>
+                <text x="380" y="404" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="12">k = 4</text>
+                <text x="580" y="404" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="12">k = 8</text>
+                <text x="780" y="404" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="12">k = 16</text>
+
+                <text x="180" y="424" text-anchor="middle" fill="#969592" font-family="Inter, sans-serif" font-size="11">gap −50.6 points</text>
+                <text x="380" y="424" text-anchor="middle" fill="#969592" font-family="Inter, sans-serif" font-size="11">gap −44.6 points</text>
+                <text x="580" y="424" text-anchor="middle" fill="#969592" font-family="Inter, sans-serif" font-size="11">gap −39.0 points</text>
+                <text x="780" y="424" text-anchor="middle" fill="#969592" font-family="Inter, sans-serif" font-size="11">gap −35.0 points</text>
+
+                <text x="80" y="448" fill="#969592" font-family="Inter, sans-serif" font-size="11">
+                  Thinking: .731 at k=1, .900 at k=16. Independent sampling alone can narrow the gap (see text).
+                </text>
+              </svg>
+              <figcaption>
+                <strong>Figure 1.</strong> Pass@k on AIME 2024 and 2025: 16 samples per model on each of 20 problems, scored with the unbiased pass@k estimator from the Codex paper. The panel is below the thinking model at every k, and the gap narrows from 50.6 to 35.0 points.
+              </figcaption>
+            </figure>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 04</span>Pass@k gap (panel minus thinking) on three problem sets</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Problem set</th>
+                <th>Range of k</th>
+                <th>Gap at k=1</th>
+                <th>Gap at the largest k</th>
+                <th>Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>MATH500 L1 to L5</td>
+                <td class="num">1 to 4</td>
+                <td class="num neg">−16.5 points</td>
+                <td class="num neg">−10.0 points</td>
+                <td class="num">+6.5 points</td>
+              </tr>
+              <tr>
+                <td>MATH500 level 5, all</td>
+                <td class="num">1 to 4</td>
+                <td class="num neg">−32.5 points</td>
+                <td class="num neg">−17.8 points</td>
+                <td class="num">+14.7 points</td>
+              </tr>
+              <tr class="highlight">
+                <td>AIME 2024+2025</td>
+                <td class="num">1 to 16</td>
+                <td class="num neg">−50.6 points</td>
+                <td class="num neg">−35.0 points</td>
+                <td class="num">+15.6 points</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          A narrowing pass@k gap can arise under independent sampling without any difference in search strategy, so the narrowing here does not by itself identify a diversity mechanism. For example, on a problem the panel solves half the time and the thinking model 90% of the time, the gap is 0.40 at k = 1 and about 0.06 at k = 4 (0.9375 against 0.9999). On the 50-problem MATH500 set the thinking model also reaches the ceiling: its pass@3 is 1.0, so from k = 3 the gap can only shrink. On AIME, the panel solved 11 of the 20 problems at least once in 16 samples and the thinking model 18, and no problem was solved only by the panel.
+        </p>
+
+        <h2 id="interpretation">Interpretation and limits</h2>
+
+        <p>
+          On these problem sets, the panel adapter is less accurate per sample than Qwen's thinking model and uses fewer completion tokens per correct sampled answer. The comparison does not isolate the reasoning format. The panel is my base-model LoRA after 256 RL steps; the thinking model went through Qwen's full post-training. Either difference could produce the accuracy and length gaps. Separating them takes the matched-format control below.
+        </p>
+
+        <p>Three things affect the estimates themselves:</p>
+        <ul>
+          <li>Token limits and sample counts differ (Table 01). Truncated thinking samples raise its tokens per correct, and I did not count how many panel samples hit their lower limits.</li>
+          <li>The sets are small: 20 AIME problems, 134 MATH500 level-5 problems and a 50-problem MATH500 slice.</li>
+          <li>Each training stage is a single run with one seed.</li>
+        </ul>
+
+        <h2 id="next-experiment">Next experiment</h2>
+        <ul>
+          <li>A matched-format control: a thinking-format arm trained from the same base with the same recipe (RL only, same reward, 128 GSM8K and 128 MATH steps, same LoRA rank), with both arms evaluated at the same token limit and sample count.</li>
+          <li>Count how many panel samples stop at their token limit, and extend pass@k beyond 16 samples.</li>
+          <li>Rerun the appendix's dispersion measure with persona names stripped, on fixed-length chunks of the full trace, and add a blinded annotation that counts distinct solution approaches per problem.</li>
+        </ul>
+
+        <h2 id="reproducibility">Reproducibility</h2>
+        <table class="repro">
+          <tbody>
+            <tr><th scope="row">Model</th><td>Panel: <code>Qwen/Qwen3-30B-A3B-Base</code> + rank-32 LoRA after 128 GSM8K and 128 MATH RL steps (Tinker session <code>44722365…</code>), published as <a href="https://huggingface.co/scasella91/qwen3-30b-a3b-multipersona-debate-lora">scasella91/qwen3-30b-a3b-multipersona-debate-lora</a>. Thinking: <code>Qwen/Qwen3-30B-A3B</code> with <code>enable_thinking=True</code>.</td></tr>
+            <tr><th scope="row">Experiment</th><td>Training: <code>scripts/rl_multipersona_gsm8k.py</code>, <code>scripts/rl_multipersona_math.py</code> (seed 20260423). Evaluation: <code>scripts/eval_math500_vibecheck.py</code>, <code>scripts/eval_aime_vibecheck.py</code>, <code>scripts/eval_math500_thinking_ceiling.py</code>, <code>scripts/eval_aime_thinking_ceiling.py</code>. Analysis: <code>scripts/analyze_token_efficiency.py</code>, <code>scripts/analyze_diversity.py</code>, <code>scripts/pass_at_k_crossover.py</code>, <code>scripts/pass_at_k_aime.py</code>.</td></tr>
+            <tr><th scope="row">Data</th><td>MATH500: a 50-problem slice with 10 per level, and all 134 level-5 problems. AIME 2024 + 2025: 20 problems. Unit: one sampled completion. Tests are paired by problem, or by problem and sample index.</td></tr>
+            <tr><th scope="row">Results</th><td><a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/token_efficiency/summary.json">token_efficiency/summary.json</a> (Tables 02 and 03; matched accuracy from its correctness buckets), <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/pass_at_k_crossover/results.json">pass_at_k_crossover/results.json</a>, <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/pass_at_k_aime/results.json">pass_at_k_aime/results.json</a>, <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/diversity_analysis/summary.json">diversity_analysis/summary.json</a>, <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/diversity_analysis_aime/summary.json">diversity_analysis_aime/summary.json</a>, and per-run settings in <a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/eval_math500_vibecheck">eval_math500_vibecheck/</a> and <a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/eval_aime_vibecheck">eval_aime_vibecheck/</a>. Training logs are not published.</td></tr>
+            <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7">scasella/multi-model @ a1ebbfc</a></td></tr>
+            <tr><th scope="row">Status</th><td>Published 2026-04-24 · updated 2026-09-23 · Open issues: the repo README lists 80 GSM8K steps, while the training logs show 128.</td></tr>
+          </tbody>
+        </table>
+
+        <h2 id="appendix-dispersion">Appendix: between-trace embedding dispersion</h2>
+
+        <p>
+          This exploratory measure asks how different a model's samples on one problem are from each other. I embedded the reasoning text inside the debate or think tag with all-mpnet-base-v2, a standard sentence-embedding model, and averaged the cosine distance over all pairs of samples from the same model on each problem. A paired t-test over problems compares the two models.
+        </p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table A1</span>Between-trace embedding dispersion, same problems</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Problem set</th>
+                <th>Panel</th>
+                <th>Thinking</th>
+                <th>Difference</th>
+                <th>t</th>
+                <th>df</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>MATH500 L1 to L5 (50 problems, 4 samples each)</td>
+                <td class="num">0.095</td>
+                <td class="num">0.053</td>
+                <td class="num">+0.042 (+78%)</td>
+                <td class="num">5.91</td>
+                <td class="num">49</td>
+              </tr>
+              <tr>
+                <td>AIME 2024+2025 (20 problems, 16 samples each)</td>
+                <td class="num">0.119</td>
+                <td class="num">0.068</td>
+                <td class="num">+0.051 (+76%)</td>
+                <td class="num">4.72</td>
+                <td class="num">19</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>Three things limit what this number can mean:</p>
+        <ul>
+          <li><strong>It sees only the opening.</strong> The embedding model reads about 384 word pieces and drops the rest. Most thinking traces, and many panel traces, are longer.</li>
+          <li><strong>The persona names are included.</strong> Panel samples name their speakers differently ("Expert 1", "Persona 2", invented names). Part of the distance can come from names, phrasing and formatting rather than from different strategies.</li>
+          <li><strong>It compares samples within one model.</strong> It does not show whether the panel reaches ideas the thinking model does not.</li>
+        </ul>
+
+        <p>
+          The MATH training stage lowered the panel's dispersion on the same 50 problems from 0.174 to 0.095 (t = −7.95, df = 49). At the clustering threshold I used (DBSCAN, eps 0.25), almost every problem's samples formed a single cluster for both models.
+        </p>
+
+
+            <!-- PANES:NEXT:START -->
+    <nav class="post-next" aria-label="More research">
+      <a href="blog_certified_narrowing.html"><span>next →</span><span>Agents turned a one-kernel Lean proof into a checker that certified 25 PyTorch kernels</span></a>
+      <a class="post-next__all" href="research.html">← all research</a>
+    </nav>
+  <!-- PANES:NEXT:END -->
+  </article>
+  </main>
+  <!-- PANES:FOOT:START -->
+    <footer class="pn-foot">
+      <p>Personal projects. Not affiliated with or endorsed by my employer. No employer data, infrastructure, or confidential information used.</p>
+    </footer>
+    </div>
+  </div>
+  <!-- PANES:FOOT:END -->
+</body>
+</html>

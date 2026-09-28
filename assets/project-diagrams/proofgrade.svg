@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" role="img" aria-labelledby="title desc">
+  <title id="title">Proofgrade grading pipeline</title>
+  <desc id="desc">Proof, rubric, model judge, calibration, and reproducible score flow.</desc>
+  <rect width="900" height="600" rx="28" fill="#f5fbf5"/>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2 2l8 4-8 4" fill="none" stroke="#7ba88d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#355940" flood-opacity=".12"/>
+    </filter>
+  </defs>
+  <text x="76" y="76" fill="#142236" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="31" font-weight="700">Proofgrade</text>
+  <text x="76" y="112" fill="#5a675d" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="18">Reproducible proof grading for Olympiad-style math</text>
+  <g font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" filter="url(#shadow)">
+    <rect x="80" y="202" width="154" height="100" rx="16" fill="#fff" stroke="#d7e3d7"/>
+    <text x="157" y="245" text-anchor="middle" fill="#142236" font-size="18" font-weight="700">proof</text>
+    <text x="157" y="270" text-anchor="middle" fill="#66717e" font-size="14">student answer</text>
+    <rect x="294" y="202" width="154" height="100" rx="16" fill="#fff" stroke="#d7e3d7"/>
+    <text x="371" y="245" text-anchor="middle" fill="#142236" font-size="18" font-weight="700">rubric</text>
+    <text x="371" y="270" text-anchor="middle" fill="#66717e" font-size="14">criteria</text>
+    <rect x="508" y="202" width="154" height="100" rx="16" fill="#fff" stroke="#d7e3d7"/>
+    <text x="585" y="245" text-anchor="middle" fill="#142236" font-size="18" font-weight="700">judge</text>
+    <text x="585" y="270" text-anchor="middle" fill="#66717e" font-size="14">LLM checks</text>
+    <rect x="722" y="202" width="98" height="100" rx="16" fill="#fff" stroke="#d7e3d7"/>
+    <text x="771" y="242" text-anchor="middle" fill="#1a714d" font-size="25" font-weight="800">85</text>
+    <text x="771" y="270" text-anchor="middle" fill="#66717e" font-size="14">score</text>
+  </g>
+  <g stroke="#7ba88d" stroke-width="3" fill="none" marker-end="url(#arrow)">
+    <path d="M234 252h46"/>
+    <path d="M448 252h46"/>
+    <path d="M662 252h46"/>
+  </g>
+  <g font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif">
+    <rect x="190" y="398" width="520" height="78" rx="20" fill="#ffffff" stroke="#d7e3d7"/>
+    <circle cx="250" cy="437" r="13" fill="#2aa772"/>
+    <circle cx="396" cy="437" r="13" fill="#2aa772"/>
+    <circle cx="542" cy="437" r="13" fill="#2aa772"/>
+    <text x="278" y="443" fill="#445044" font-size="17" font-weight="700">calibrate</text>
+    <text x="424" y="443" fill="#445044" font-size="17" font-weight="700">re-run</text>
+    <text x="570" y="443" fill="#445044" font-size="17" font-weight="700">audit</text>
+  </g>
+</svg>

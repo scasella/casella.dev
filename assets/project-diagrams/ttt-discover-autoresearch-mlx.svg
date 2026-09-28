@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" role="img" aria-labelledby="title desc">
+  <title id="title">TTT Discover AutoResearch MLX loop</title>
+  <desc id="desc">Question decomposition, search, synthesis, iteration, and local MLX report generation.</desc>
+  <rect width="900" height="600" rx="28" fill="#f3f7fa"/>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2 2l8 4-8 4" fill="none" stroke="#769ac7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#2d4865" flood-opacity=".12"/>
+    </filter>
+  </defs>
+  <text x="76" y="76" fill="#142236" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="30" font-weight="700">ttt-discover-autoresearch-mlx</text>
+  <text x="76" y="112" fill="#596674" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="18">RL-driven autoresearch, local-first on Apple Silicon</text>
+  <g font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" filter="url(#shadow)">
+    <rect x="76" y="204" width="120" height="82" rx="15" fill="#fff" stroke="#d7e2ed"/>
+    <text x="136" y="252" text-anchor="middle" fill="#142236" font-size="16" font-weight="700">question</text>
+    <rect x="258" y="204" width="120" height="82" rx="15" fill="#fff" stroke="#d7e2ed"/>
+    <text x="318" y="241" text-anchor="middle" fill="#142236" font-size="16" font-weight="700">search</text>
+    <text x="318" y="263" text-anchor="middle" fill="#66717e" font-size="13">read</text>
+    <rect x="440" y="204" width="120" height="82" rx="15" fill="#fff" stroke="#d7e2ed"/>
+    <text x="500" y="241" text-anchor="middle" fill="#142236" font-size="16" font-weight="700">synthesize</text>
+    <text x="500" y="263" text-anchor="middle" fill="#66717e" font-size="13">claims</text>
+    <rect x="622" y="204" width="120" height="82" rx="15" fill="#fff" stroke="#d7e2ed"/>
+    <text x="682" y="241" text-anchor="middle" fill="#142236" font-size="16" font-weight="700">iterate</text>
+    <text x="682" y="263" text-anchor="middle" fill="#66717e" font-size="13">reward</text>
+  </g>
+  <g stroke="#769ac7" stroke-width="3" fill="none" marker-end="url(#arrow)">
+    <path d="M196 245h48"/>
+    <path d="M378 245h48"/>
+    <path d="M560 245h48"/>
+    <path d="M682 286v68H318v-54" stroke-dasharray="7 8"/>
+  </g>
+  <g font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif">
+    <rect x="220" y="386" width="460" height="74" rx="22" fill="#ffffff" stroke="#d7e2ed"/>
+    <text x="450" y="418" text-anchor="middle" fill="#142236" font-size="18" font-weight="700">MLX local report generation</text>
+    <text x="450" y="444" text-anchor="middle" fill="#5d6b7a" font-size="15">run memory + agentic review + final finding</text>
+  </g>
+</svg>

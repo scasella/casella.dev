@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Training on sometimes-solvable math problems: one RL run | Stephen Casella</title>
+  <meta name="description" content="A panel-of-experts Qwen3-30B-A3B-Base adapter was trained with RL on competition problems it solved on some sampled attempts. In one run its held-out score rose from 14% to 29%; the thinking-model run was not completed." />
+  <meta name="author" content="Stephen Casella" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#080c0f" />
+  <link rel="canonical" href="https://casella.dev/blog_multipersona_rl.html" />
+  <meta property="og:site_name" content="Stephen Casella" />
+  <meta property="og:title" content="Training on sometimes-solvable math problems: one RL run" />
+  <meta property="og:description" content="One RL run on the problems a panel-style Qwen adapter solved on some sampled attempts raised its held-out score from 14% to 29%. The thinking-model run was not completed." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://casella.dev/blog_multipersona_rl.html" />
+  <meta property="og:image" content="https://casella.dev/assets/og/blog_multipersona_rl.png" />
+  <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_multipersona_rl.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Share card for the write-up: Training on sometimes-solvable math problems: one RL run." />
+  <meta property="article:author" content="Stephen Casella" />
+  <meta property="article:published_time" content="2026-04-25" />
+  <meta property="article:modified_time" content="2026-09-23" />
+  <meta property="article:tag" content="multi-persona reasoning" />
+  <meta property="article:tag" content="RLVR" />
+  <meta property="article:tag" content="Qwen3" />
+  <meta property="article:tag" content="GRPO" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Training on sometimes-solvable math problems: one RL run" />
+  <meta name="twitter:description" content="One RL run on the problems a panel-style Qwen adapter solved on some sampled attempts raised its held-out score from 14% to 29%. The thinking-model run was not completed." />
+  <meta name="twitter:image" content="https://casella.dev/assets/og/blog_multipersona_rl.png" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-2RSWDWW67D');
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "Training on sometimes-solvable math problems: one RL run",
+      "description": "A panel-of-experts Qwen3-30B-A3B-Base adapter was trained with RL on competition problems it solved on some sampled attempts. In one run its held-out score rose from 14% to 29%; the thinking-model run was not completed.",
+      "url": "https://casella.dev/blog_multipersona_rl.html",
+      "mainEntityOfPage": "https://casella.dev/blog_multipersona_rl.html",
+      "image": "https://casella.dev/assets/og/blog_multipersona_rl.png",
+      "datePublished": "2026-04-25",
+      "dateModified": "2026-09-23",
+      "author": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/",
+        "sameAs": [
+          "https://github.com/scasella",
+          "https://www.linkedin.com/in/stevecasella/"
+        ]
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "keywords": [
+        "multi-persona reasoning",
+        "panel of experts",
+        "RLVR",
+        "Qwen3-30B-A3B",
+        "GRPO",
+        "olympiad math",
+        "learning frontier"
+      ],
+      "codeRepository": "https://github.com/scasella/multi-model"
+    }
+  </script>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:           #fafaf8;
+      --paper:        #ffffff;
+      --fg:           #222;
+      --fg-mute:      #555;
+      --fg-faint:     #8a8a85;
+      --rule:         #e2e2dd;
+      --hi:           #f3f2ec;
+      --link:         #1a5fb4;
+      --link-visited: #5a3aa3;
+      --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono:    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      font-size: 16.5px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: rgba(0,0,0,0.08); color: inherit; }
+
+    .site-header {
+      max-width: 720px; margin: 0 auto; padding: 28px 24px 0;
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 13px; color: var(--fg-mute);
+    }
+    .site-header a {
+      color: var(--fg-mute); text-decoration: none;
+      border-bottom: 1px dotted var(--fg-faint); padding-bottom: 1px;
+    }
+    .site-header a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+
+    article {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 24px 64px;
+    }
+    .meta, .date {
+      color: var(--fg-faint); font-size: 13px;
+      margin-bottom: 8px; text-transform: none; letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: 32px; line-height: 1.22; font-weight: 600;
+      margin: 0 0 10px; letter-spacing: -0.01em; color: #111;
+    }
+    .subtitle {
+      color: var(--fg-mute); font-size: 17px; font-weight: 400;
+      line-height: 1.5; margin: 0 0 24px;
+    }
+    h2 {
+      font-size: 22px; font-weight: 600; line-height: 1.3;
+      margin: 1.9em 0 0.5em; letter-spacing: -0.005em; color: #111;
+    }
+    h3 { font-size: 17px; font-weight: 600; margin: 1.5em 0 0.35em; }
+
+    p { margin: 0 0 0.9em; }
+    ul, ol { margin: 0 0 1em; padding-left: 1.4em; }
+    li { margin-bottom: 0.35em; }
+    li::marker { color: var(--fg-faint); }
+
+    a { color: var(--link); text-decoration: underline; text-decoration-color: rgba(26,95,180,0.4); }
+    a:visited { color: var(--link-visited); }
+    a:hover { text-decoration-color: var(--link); }
+
+    code {
+      font-family: var(--font-mono); font-size: 0.85em;
+      background: var(--hi); padding: 1px 5px; border-radius: 3px;
+    }
+    pre {
+      background: var(--hi); padding: 14px 18px; border-radius: 8px;
+      overflow-x: auto; margin: 1em 0; font-size: 13px; line-height: 1.55;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    pre code { background: none; padding: 0; border-radius: 0; font-size: inherit; }
+    strong { font-weight: 600; color: var(--fg); }
+    em { font-style: italic; }
+
+    blockquote {
+      margin: 1em 0; padding: 6px 0 6px 18px;
+      border-left: 3px solid var(--rule); color: var(--fg-mute);
+    }
+    blockquote p { font-size: 15.5px; margin: 0; }
+
+    /* Paper links / pill button */
+    .paper-links {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 18px 0 8px; flex-wrap: wrap;
+    }
+    .paper-links .btn-pill {
+      font-size: 13px; line-height: 1; color: var(--fg);
+      text-decoration: none; background: var(--paper);
+      border: 1px solid var(--rule); border-radius: 999px;
+      padding: 0.55rem 0.95rem 0.65rem;
+      transition: background 200ms ease;
+    }
+    .paper-links .btn-pill:hover { background: var(--hi); }
+
+    /* TL;DR */
+    .tldr {
+      margin: 1.2em 0 1.6em;
+      padding: 14px 18px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      font-size: 15.5px;
+    }
+    .tldr-label, .tldr .label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .tldr p { font-size: 15.5px; line-height: 1.6; color: var(--fg); margin: 0; }
+    .tldr p + p { margin-top: 0.6em; }
+
+    /* Callout */
+    .callout {
+      margin: 1.5em 0; padding: 14px 18px;
+      background: var(--hi); border-radius: 6px;
+    }
+    .callout-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-mute); margin-bottom: 8px;
+    }
+    .callout p { font-size: 15px; line-height: 1.55; color: var(--fg); margin: 0; }
+
+    /* Stat row */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0;
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+    @media (min-width: 600px) {
+      .stat-row { grid-template-columns: repeat(4, 1fr); }
+    }
+    .stat {
+      padding: 16px 18px;
+      border-right: 1px solid var(--rule);
+    }
+    .stat:first-child { padding-left: 0; }
+    .stat:last-child { border-right: 0; }
+    @media (max-width: 599px) {
+      .stat:nth-child(2n) { border-right: 0; }
+      .stat:nth-child(n+3) { border-top: 1px solid var(--rule); }
+    }
+    .stat .k {
+      display: block;
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .stat .v {
+      font-size: 22px; font-weight: 600; color: var(--fg);
+      line-height: 1.1; letter-spacing: -0.01em;
+    }
+    .stat .s {
+      font-size: 12px; color: var(--fg-faint);
+      margin-top: 6px; line-height: 1.4;
+    }
+
+    /* Mode grid */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin: 1.5em 0;
+    }
+    @media (min-width: 600px) { .mode-grid { grid-template-columns: repeat(2, 1fr); } }
+    .mode-card {
+      background: var(--paper);
+      border-radius: 8px;
+      padding: 16px 18px;
+      border: 1px solid var(--rule);
+    }
+    .mode-card .tag {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .mode-card .t {
+      display: block;
+      font-size: 16px; font-weight: 600; color: var(--fg);
+      margin-bottom: 6px; letter-spacing: -0.005em;
+    }
+    .mode-card .desc {
+      font-size: 14px; line-height: 1.5; color: var(--fg-mute);
+    }
+
+    /* Table */
+    .table-wrap { margin: 1.5em 0; }
+    .table-label {
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 10px;
+    }
+    .table-label .id { color: var(--fg); margin-right: 12px; }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+    th, td {
+      padding: 8px 12px 8px 0; text-align: left;
+      border-bottom: 1px solid var(--rule); color: var(--fg);
+    }
+    th {
+      font-weight: 600; color: var(--fg-mute);
+      font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--fg-mute);
+    }
+    td.num { text-align: right; white-space: nowrap; }
+    td.pos { color: var(--fg); }
+    td.neg { color: var(--fg-faint); }
+    tr:last-child td { border-bottom: none; }
+    tr.highlight td { background: var(--hi); }
+    tr.totals td { border-top: 1px solid var(--fg-mute); }
+
+    /* Figure / chart */
+    figure.chart, figure { margin: 1.6em 0; }
+    figure svg, figure.chart svg {
+      display: block; width: 100%; height: auto;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+    }
+    figcaption {
+      font-size: 13px; color: var(--fg-mute);
+      line-height: 1.5; margin-top: 10px;
+    }
+    figcaption strong { color: var(--fg); font-weight: 500; }
+    @media (min-width: 960px) {
+      article > figure.chart, .body-main > figure.chart {
+        width: min(1100px, calc(100vw - 3rem));
+        max-width: none;
+        margin-left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+
+    /* Neg list */
+    .neg-list {
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+    }
+    .neg-list-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin: 14px 0 6px;
+    }
+    .neg-list ul { list-style: none; padding: 0; margin: 0; }
+    .neg-list li {
+      padding: 14px 0; border-bottom: 1px solid var(--rule);
+      font-size: 15px; line-height: 1.6; color: var(--fg-mute);
+      margin-bottom: 0;
+    }
+    .neg-list li:last-child { border-bottom: 0; }
+    .neg-list li strong { color: var(--fg); font-weight: 600; }
+
+    /* Break */
+    .break {
+      display: flex; align-items: center; justify-content: center;
+      margin: 3rem 0 2.5rem;
+      color: var(--fg-faint);
+      font-size: 11px; letter-spacing: 0.6em;
+    }
+
+    hr { border: 0; border-top: 1px solid var(--rule); margin: 1.8em 0; }
+    .footer { font-size: 12.5px; color: var(--fg-faint); }
+
+    /* Reproducibility panel */
+    table.repro { margin: 1em 0 1.5em; }
+    table.repro th {
+      width: 7.5em; vertical-align: top; text-transform: none; letter-spacing: 0;
+      font-size: 13px; border-bottom: 1px solid var(--rule);
+    }
+    table.repro td { font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+    table.repro tr:last-child th { border-bottom: none; }
+
+    @media (max-width: 480px) {
+      .site-header { padding: 22px 20px 0; }
+      article { padding: 16px 20px 56px; }
+      h1 { font-size: 28px; }
+      .subtitle { font-size: 16px; }
+      .stat-row { grid-template-columns: 1fr; }
+      .mode-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <!-- PANES:HEAD:START -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
+  <link rel="stylesheet" href="panes.css?v=4a6ced04" />
+  <script src="ascii.js?v=6f1f421a" defer></script>
+  <!-- PANES:HEAD:END -->
+</head>
+<body class="pn-body panes-post">
+  <!-- PANES:BAR:START -->
+  <div class="split split--inner">
+    <aside class="side">
+      <div class="side__pin">
+        <figure class="side__art">
+          <pre data-landscape data-rows="22" aria-hidden="true">                                                      
+                                                      
+                                                      
+                           ===                        
+                         -======                      
+                      ----========                    
+                :::::::-----========                  
+   ,::::::----::::::::::::----==========              
+    :::::-----::::::,,,,,:::--======================= 
+     ::::-----::::::,,...,,:--=====================   
+      ::::::::::::::::,...,:--===--===============    
+        :::::::::::::::::,.,<b>@</b>==------===========      
+          ,,,,,,,,::::---========-------------        
+           ,,,,,,,,,,::--========-----------          
+             ,,,,...,,::-=======---------             
+              ,,,,....,:-====---------                
+                :,,,,..,:--:::----                    
+                  :::::::::::::                       
+                     :::::                            
+                                                      
+                                                      
+                                                      </pre>
+        </figure>
+        <p class="side__name"><a href="/">Stephen<br> Casella<span class="accent">_</span></a></p>
+        <p class="side__bio">I study how language models reason and respond to training, and put AI agents to work on hard, checkable problems: formal proofs, faster code, real bugs.</p>
+        <nav class="side__nav" aria-label="Site">
+          <a href="research.html" aria-current="true">research</a>
+          <a href="projects.html">software</a>
+          <a href="/#contact">contact</a>
+        </nav>
+      </div>
+      <div class="side__links">
+        <a class="side__grid" href="blog_diversity.html" title="pick a random integer between 1 and 100." aria-label="Pick a random integer between 1 and 100. It put more than 95% of its probability on three numbers: 4, 42, and 47. Read the write-up."><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></a>
+        <a href="https://github.com/scasella" rel="me">github.com/scasella</a>
+        <a href="https://huggingface.co/scasella91" rel="me">huggingface.co/scasella91</a>
+        <a href="https://www.linkedin.com/in/stevecasella/" rel="me">linkedin</a>
+      </div>
+    </aside>
+    <div class="split__main">
+  <!-- PANES:BAR:END -->
+  <main class="post-main">
+  <article class="post">
+
+        <h1>Training on sometimes-solvable math problems: one RL run</h1>
+<!-- PANES:META:START -->
+    <p class="post-byline">[ <time datetime="2026-04-25">2026-04-25</time> · updated <time datetime="2026-09-23">2026-09-23</time> ] // Qwen3-30B-A3B // 6 MIN READ</p>
+  <!-- PANES:META:END -->
+        <p class="subtitle">A panel-of-experts adapter on Qwen3-30B-A3B-Base was trained with RL on the competition problems it solved on some but not all sampled attempts. In a single run, its held-out score rose from 14% to 29%. The matching run for Qwen's thinking model was not completed.</p>
+
+        <div class="paper-links">
+          <a href="https://github.com/scasella/multi-model" class="btn-pill">GitHub repo</a>
+        </div>
+
+        <div class="tldr">
+          <span class="tldr-label">TL;DR</span>
+          <p>I sampled each of 877 competition math problems 8 times from each model and counted the problems with mixed outcomes, where 1 to 7 of the 8 samples were right. The panel had 382 such problems and the thinking model 209. Only 72 were mixed for both. On 280 of the panel's mixed problems, the thinking model answered all 8 sampled attempts correctly.</p>
+          <p>One RL run on the panel's mixed problems raised its score on 100 held-out problems from 14% to 29%. The thinking model scored 54% to 61% on the same held-out set before any RL. Its RL run was not completed, so there is no curve to compare against.</p>
+        </div>
+
+        <div class="callout">
+          <span class="callout-label">Revision</span>
+          <p>This first appeared as the second half of the <a href="blog_multipersona.html">panel-reasoning post</a>. That version read the band counts as evidence that the panel explores more widely. They do not show that, and this version drops that reading.</p>
+        </div>
+
+        <h2 id="setup">Setup</h2>
+
+        <p>
+          The two models are described in the <a href="blog_multipersona.html">main post</a>: a rank-32 LoRA adapter on Qwen3-30B-A3B-Base that reasons as a panel of experts, and Qwen's production Qwen3-30B-A3B with thinking turned on. The run logs and band summary show that this work used the panel adapter from after the GSM8K stage (Tinker session <code>e1a9b8bf…</code>), not the post-MATH adapter evaluated in the main post, although the repo's write-up calls it the post-MATH adapter.
+        </p>
+        <p>
+          The pool has 877 problems: HMMT February 2024 and 2025 (60), AIME 2024 and 2025 (60), the English text-only math competition set from OlympiadBench (674), and AMC (83). I sampled each problem 8 times from each model at temperature 1.0, with a limit of 8,192 tokens for both. Each problem then falls into one of three bands: <code>all_zero</code> (0 of 8 correct), <code>variance_band</code> (1 to 7 of 8 correct, which I call mixed) and <code>all_one</code> (8 of 8 correct).
+        </p>
+        <p>
+          Mixed problems matter because group-relative RL methods such as GRPO score each sample against the other samples on the same problem. The reward in this run is 1 for a correct answer, minus 0.2 when the answer tags are missing or malformed. If every sample in a group gets the same correctness score, the correctness term gives each sample zero advantage relative to the group. The tag penalty can still differ within such a group, so a small format signal remains.
+        </p>
+
+        <h2 id="bands">Where each model's mixed problems sit</h2>
+
+        <div class="stat-row">
+          <div class="stat">
+            <span class="k">Panel mixed</span>
+            <div class="v">382</div>
+            <div class="s">43.6% of the pool</div>
+          </div>
+          <div class="stat">
+            <span class="k">Thinking mixed</span>
+            <div class="v">209</div>
+            <div class="s">23.8% of the pool</div>
+          </div>
+          <div class="stat">
+            <span class="k">Mixed for both</span>
+            <div class="v">72</div>
+            <div class="s">19% of the panel's, 34% of the thinking model's</div>
+          </div>
+          <div class="stat">
+            <span class="k">Panel mixed, thinking 8/8</span>
+            <div class="v">280</div>
+            <div class="s">Thinking model answered all 8 sampled attempts correctly</div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 01</span>Bands for the two models on the same 877 problems (rows: panel, columns: thinking)</div>
+          <table>
+            <thead>
+              <tr>
+                <th>panel \ thinking</th>
+                <th>all_zero</th>
+                <th>variance_band</th>
+                <th>all_one</th>
+                <th>row total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>all_zero</td>
+                <td class="num">232</td>
+                <td class="num">137</td>
+                <td class="num">108</td>
+                <td class="num">477</td>
+              </tr>
+              <tr class="highlight">
+                <td>variance_band</td>
+                <td class="num">30</td>
+                <td class="num">72</td>
+                <td class="num">280</td>
+                <td class="num">382</td>
+              </tr>
+              <tr>
+                <td>all_one</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+                <td class="num">18</td>
+                <td class="num">18</td>
+              </tr>
+              <tr class="totals">
+                <td>column total</td>
+                <td class="num">262</td>
+                <td class="num">209</td>
+                <td class="num">406</td>
+                <td class="num">877</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          Having more mixed problems is not the same as exploring more. If a model solves a problem with probability p on each independent sample, a group of G samples is mixed with probability 1 − p<sup>G</sup> − (1 − p)<sup>G</sup>, highest at p = 0.5. With G = 8, a problem at p = 0.5 is mixed 99% of the time, one at p = 0.9 57% of the time, and one at p = 0.05 34% of the time. A model gets many mixed problems when many problems sit near the middle of its ability.
+        </p>
+        <p>
+          Table 01 fits that reading. Most of the panel's mixed problems (280 of 382) are ones where the thinking model got 8 of 8. The thinking model's largest group of mixed problems (137) are ones where the panel got 0 of 8. The counts locate each model's frontier on this pool. They do not show that either model searches more widely.
+        </p>
+        <p>
+          Two details make these counts approximate. The bands were set with 8 samples, but the RL run below used groups of 16, so a problem at 0 of 8 can still give mixed groups of 16 and a mixed problem can give a group with no correct sample. And the 8,192-token limit was tighter for the thinking model: in the RL logs, at a 12,288-token limit, its samples averaged about 11,100 tokens at the first step against the panel's 586, so the band sweep likely cut off many thinking samples before an answer.
+        </p>
+
+        <h2 id="rl">One RL run on the panel's mixed problems</h2>
+
+        <p>
+          I held out 100 problems from the pool, 25 from each source, and removed them from both models' training sets. That left 354 mixed problems for the panel and 180 for the thinking model. Settings: LoRA rank 32, learning rate 5×10⁻⁶, groups of 16 samples, 8 problems per step, temperature 1.0, a 12,288-token limit and 100 steps. I evaluated every 10 steps with one sample per held-out problem.
+        </p>
+
+            <figure class="chart">
+              <svg viewBox="0 0 960 460" role="img" aria-label="Panel held-out pass@1 vs RL step on the 100-problem stratified held-out">
+                <rect x="0" y="0" width="960" height="460" fill="#ffffff" />
+
+                <text x="480" y="30" text-anchor="middle" fill="#3B3B39"
+                      font-family="Inter, sans-serif" font-size="18" font-weight="400">
+                  Panel's test score over 100 training steps
+                </text>
+                <text x="480" y="54" text-anchor="middle" fill="#969592"
+                      font-family="Inter, Helvetica Neue, sans-serif" font-size="12">
+                  Held-out score rose from 14% to 29%, training on the panel's 354 mixed-outcome problems
+                </text>
+
+                <line x1="350" y1="78" x2="382" y2="78" stroke="#5C8A95" stroke-width="2.5" />
+                <text x="388" y="82" fill="#3B3B39" font-family="Inter, sans-serif" font-size="12">test score (100 problems)</text>
+                <line x1="568" y1="78" x2="600" y2="78" stroke="#969592" stroke-width="1.5" stroke-dasharray="4 4" />
+                <text x="606" y="82" fill="#3B3B39" font-family="Inter, sans-serif" font-size="12">starting score</text>
+
+                <line x1="80" y1="380" x2="880" y2="380" stroke="#C8C7C2" stroke-width="1" />
+                <line x1="80" y1="303" x2="880" y2="303" stroke="#E4E3DE" stroke-width="1" />
+                <line x1="80" y1="226" x2="880" y2="226" stroke="#E4E3DE" stroke-width="1" />
+                <line x1="80" y1="149" x2="880" y2="149" stroke="#E4E3DE" stroke-width="1" />
+
+                <text x="72" y="384" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">0%</text>
+                <text x="72" y="307" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">10%</text>
+                <text x="72" y="230" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">20%</text>
+                <text x="72" y="153" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="11">30%</text>
+
+                <line x1="80" y1="272" x2="880" y2="272" stroke="#969592" stroke-width="1" stroke-dasharray="4 4" opacity="0.7" />
+
+                <polyline points="130,272 210,287.43 290,272 370,256.57 450,233.43 530,218 610,233.43 690,156.29 770,171.71 850,156.29"
+                          fill="none" stroke="#5C8A95" stroke-width="2.5"
+                          stroke-linecap="round" stroke-linejoin="round" />
+
+                <polygon points="130,272 210,287.43 290,272 370,256.57 450,233.43 530,218 610,233.43 690,156.29 770,171.71 850,156.29 850,380 130,380"
+                         fill="#5C8A95" opacity="0.08" />
+
+                <circle cx="130" cy="272"     r="4" fill="#5C8A95" />
+                <circle cx="210" cy="287.43"  r="4" fill="#5C8A95" />
+                <circle cx="290" cy="272"     r="4" fill="#5C8A95" />
+                <circle cx="370" cy="256.57"  r="4" fill="#5C8A95" />
+                <circle cx="450" cy="233.43"  r="4" fill="#5C8A95" />
+                <circle cx="530" cy="218"     r="4" fill="#5C8A95" />
+                <circle cx="610" cy="233.43"  r="4" fill="#5C8A95" />
+                <circle cx="690" cy="156.29"  r="5" fill="#3B3B39" />
+                <circle cx="770" cy="171.71"  r="4" fill="#5C8A95" />
+                <circle cx="850" cy="156.29"  r="5" fill="#3B3B39" />
+
+                <text x="130" y="266" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">.140</text>
+                <text x="690" y="148" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">.290</text>
+                <text x="850" y="148" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">.290</text>
+
+                <text x="876" y="268" text-anchor="end" fill="#969592" font-family="Inter, sans-serif" font-size="10">start = .140</text>
+
+                <text x="130" y="402" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">0</text>
+                <text x="210" y="402" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">10</text>
+                <text x="290" y="402" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">20</text>
+                <text x="370" y="402" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">30</text>
+                <text x="450" y="402" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">40</text>
+                <text x="530" y="402" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">50</text>
+                <text x="610" y="402" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">60</text>
+                <text x="690" y="402" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">70</text>
+                <text x="770" y="402" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">80</text>
+                <text x="850" y="402" text-anchor="middle" fill="#3B3B39" font-family="Inter, sans-serif" font-size="11">90</text>
+
+                <text x="480" y="426" text-anchor="middle" fill="#969592" font-family="Inter, sans-serif" font-size="11">RL step</text>
+
+                <text x="80" y="448" fill="#969592" font-family="Inter, sans-serif" font-size="11">
+                  One sample per held-out problem, evaluated every 10 steps. One problem is 1 point overall and 4 points within a source.
+                </text>
+              </svg>
+              <figcaption>
+                <strong>Figure 1.</strong> The panel's held-out score over one 100-step RL run. The last evaluation was at step 90. The thinking model's pre-RL score (54% to 61%) is above the top of this chart.
+              </figcaption>
+            </figure>
+
+        <p>
+          The score dipped at step 10, rose to 21% by step 50 and reached 29% at step 70. It was 27% at step 80 and 29% at step 90, the last evaluation.
+        </p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 02</span>Held-out score by source, against each source's share of the panel's training set</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Share of training</th>
+                <th>Step 0</th>
+                <th>Step 90</th>
+                <th>Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="highlight">
+                <td>OlympiadBench</td>
+                <td class="num">88% (311/354)</td>
+                <td class="num">20%</td>
+                <td class="num">44%</td>
+                <td class="num">+24 points</td>
+              </tr>
+              <tr>
+                <td>AMC</td>
+                <td class="num">10% (35/354)</td>
+                <td class="num">32%</td>
+                <td class="num">52%</td>
+                <td class="num">+20 points</td>
+              </tr>
+              <tr>
+                <td>AIME</td>
+                <td class="num">2% (6/354)</td>
+                <td class="num">4%</td>
+                <td class="num">16%</td>
+                <td class="num">+12 points</td>
+              </tr>
+              <tr>
+                <td>HMMT</td>
+                <td class="num">0.6% (2/354)</td>
+                <td class="num">0%</td>
+                <td class="num">4%</td>
+                <td class="num">+4 points</td>
+              </tr>
+              <tr class="totals">
+                <td>All (100 problems)</td>
+                <td class="num">100%</td>
+                <td class="num">14%</td>
+                <td class="num">29%</td>
+                <td class="num">+15 points</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          All four sources went up, most on OlympiadBench, which made up 88% of training. Each source has 25 held-out problems, so the AIME gain is 3 problems and the HMMT gain is 1.
+        </p>
+
+        <p>Two rough signals of how varied the panel's samples stayed during training:</p>
+
+        <div class="stat-row">
+          <div class="stat">
+            <span class="k">Token entropy, steps 0–9</span>
+            <div class="v">0.591</div>
+            <div class="s">Mean over the window</div>
+          </div>
+          <div class="stat">
+            <span class="k">Token entropy, steps 90–99</span>
+            <div class="v">0.158</div>
+            <div class="s">Down 73%</div>
+          </div>
+          <div class="stat">
+            <span class="k">Length spread, step 0</span>
+            <div class="v">0.36</div>
+            <div class="s">Coefficient of variation within a group of 16</div>
+          </div>
+          <div class="stat">
+            <span class="k">Length spread, step 90</span>
+            <div class="v">0.66</div>
+            <div class="s">Up 83%</div>
+          </div>
+        </div>
+
+        <p>
+          Length spread says nothing about content.
+        </p>
+
+        <h2 id="thinking-arm">The thinking arm</h2>
+        <p>
+          I started the matching run on the thinking model's 180 mixed problems three times, with the same settings, and stopped each within its first three steps when I ran out of budget; its samples were about 19 times as long as the panel's. With no thinking-model training curve, this post cannot say which model improves faster under RL.
+        </p>
+
+        <h2 id="interpretation">Interpretation and limits</h2>
+        <p>
+          On this pool, the two models are sometimes right on different problems: the panel mostly where the thinking model got 8 of 8, and the thinking model mostly where the panel got 0 of 8. One RL run on the panel's mixed problems raised its held-out score from 14% to 29%, still below the thinking model's score before RL.
+        </p>
+        <ul>
+          <li>The 15-point gain comes from one run with one seed, scored with one sample per held-out problem, and has no confidence interval.</li>
+          <li>The two models differ in post-training as well as in reasoning format (see the main post), so the band comparison is between these two models, not between formats.</li>
+        </ul>
+
+        <h2 id="next-experiment">Next experiment</h2>
+        <ul>
+          <li>Run the thinking arm: 100 steps on its 180 mixed problems (<code>data/olympiad_pool/thinking_train.jsonl</code>) with the same settings, and plot both models on the same held-out set.</li>
+          <li>First, recompute both models' bands with 16 samples per problem and a token limit that fits the thinking model's traces.</li>
+          <li>Repeat the panel run with a second seed, and once from the post-MATH adapter used in the main post.</li>
+          <li>Measure the panel's embedding dispersion after RL.</li>
+        </ul>
+
+        <h2 id="reproducibility">Reproducibility</h2>
+        <table class="repro">
+          <tbody>
+            <tr><th scope="row">Model</th><td>Panel: <code>Qwen/Qwen3-30B-A3B-Base</code> + rank-32 LoRA after the 128-step GSM8K stage (Tinker session <code>e1a9b8bf…</code>, named in the band summary and the RL log). Thinking: <code>Qwen/Qwen3-30B-A3B</code> with <code>enable_thinking=True</code>.</td></tr>
+            <tr><th scope="row">Experiment</th><td><code>scripts/build_olympiad_pool.py</code>, <code>scripts/filter_variance_band.py</code> (8 samples, 8,192 tokens), <code>scripts/build_per_arm_splits.py</code> (seed 20260424), <code>scripts/rl_panel_olympiad.py</code> (seed 20260424, <code>tag_coef</code> 0.2, one completed run). <code>scripts/rl_thinking_olympiad.py</code> was started and not completed.</td></tr>
+            <tr><th scope="row">Data</th><td><code>data/olympiad_pool/all.jsonl</code> (877 problems), <code>panel_train.jsonl</code> (354), <code>thinking_train.jsonl</code> (180), <code>heldout_eval.jsonl</code> (100, 25 per source). Unit: a problem for the bands; one sample per held-out problem for evaluation.</td></tr>
+            <tr><th scope="row">Results</th><td><a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/variance_band">variance_band/</a> (<code>panel_g8</code>, <code>thinking_g8</code>), <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/data/olympiad_pool/split_summary.json">split_summary.json</a> (Table 01), <a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/olympiad_panel_only">olympiad_panel_only/</a> (held-out trajectory, per-step training metrics, length spread). Training logs, including the thinking model's first held-out scores, are not published.</td></tr>
+            <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7">scasella/multi-model @ a1ebbfc</a></td></tr>
+            <tr><th scope="row">Status</th><td>Published 2026-04-25 · updated 2026-09-23 · Open issues: thinking arm not completed; the repo write-up misnames the starting adapter (see Setup).</td></tr>
+          </tbody>
+        </table>
+
+
+            <!-- PANES:NEXT:START -->
+    <nav class="post-next" aria-label="More research">
+      <a href="blog_multipersona.html"><span>next →</span><span>Panel-style reasoning trades accuracy for shorter completions</span></a>
+      <a class="post-next__all" href="research.html">← all research</a>
+    </nav>
+  <!-- PANES:NEXT:END -->
+  </article>
+  </main>
+  <!-- PANES:FOOT:START -->
+    <footer class="pn-foot">
+      <p>Personal projects. Not affiliated with or endorsed by my employer. No employer data, infrastructure, or confidential information used.</p>
+    </footer>
+    </div>
+  </div>
+  <!-- PANES:FOOT:END -->
+</body>
+</html>

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agents find 25 bugs in free-threaded CPython | Stephen Casella</title>
+  <meta name="description" content="Claude Opus 5.5 agents confirmed 25 bugs in CPython's no-GIL build, with no earlier report found for 18, plus 92 more in a call-site sweep. A proof of the locking model held; real runs showed where CPython differs." />
+  <meta name="author" content="Stephen Casella" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#080c0f" />
+  <link rel="canonical" href="https://casella.dev/blog_cpython_ft.html" />
+  <meta property="og:site_name" content="Stephen Casella" />
+  <meta property="og:title" content="25 bugs in free-threaded CPython, found by agents" />
+  <meta property="og:description" content="25 confirmed bugs, 92 sweep findings, and TLAPS and Lean proofs of the locking model that held up under audit, and replays of real runs that showed five places where CPython leaves the model." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://casella.dev/blog_cpython_ft.html" />
+  <meta property="og:image" content="https://casella.dev/assets/og/blog_cpython_ft.png" />
+  <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_cpython_ft.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Share card for the write-up: 25 bugs in free-threaded CPython, found by agents." />
+  <meta property="article:author" content="Stephen Casella" />
+  <meta property="article:published_time" content="2026-09-25" />
+  <meta property="article:modified_time" content="2026-09-25" />
+  <meta property="article:tag" content="formal verification" />
+  <meta property="article:tag" content="CPython" />
+  <meta property="article:tag" content="free-threading" />
+  <meta property="article:tag" content="TLA+" />
+  <meta property="article:tag" content="Lean" />
+  <meta property="article:tag" content="AI agents" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="25 bugs in free-threaded CPython, found by agents" />
+  <meta name="twitter:description" content="25 confirmed bugs, 92 sweep findings, and TLAPS and Lean proofs of the locking model that held up under audit, and replays of real runs that showed five places where CPython leaves the model." />
+  <meta name="twitter:image" content="https://casella.dev/assets/og/blog_cpython_ft.png" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-2RSWDWW67D');
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "25 bugs in free-threaded CPython, found by agents",
+      "description": "Claude Opus 5.5 agents confirmed 25 bugs in CPython's no-GIL build, with no earlier report found for 18, plus 92 more in a call-site sweep. A proof of the locking model held; real runs showed where CPython differs.",
+      "url": "https://casella.dev/blog_cpython_ft.html",
+      "mainEntityOfPage": "https://casella.dev/blog_cpython_ft.html",
+      "image": "https://casella.dev/assets/og/blog_cpython_ft.png",
+      "datePublished": "2026-09-25",
+      "dateModified": "2026-09-25",
+      "author": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/",
+        "sameAs": [
+          "https://github.com/scasella",
+          "https://www.linkedin.com/in/stevecasella/"
+        ]
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "keywords": [
+        "formal verification",
+        "CPython",
+        "free-threading",
+        "no-GIL",
+        "TLA+",
+        "TLAPS",
+        "Lean 4",
+        "AI agents",
+        "Claude Opus 5.5",
+        "concurrency bugs"
+      ]
+    }
+  </script>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:           #fafaf8;
+      --paper:        #ffffff;
+      --fg:           #222;
+      --fg-mute:      #555;
+      --fg-faint:     #8a8a85;
+      --rule:         #e2e2dd;
+      --hi:           #f3f2ec;
+      --link:         #1a5fb4;
+      --link-visited: #5a3aa3;
+      --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono:    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      font-size: 16.5px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: rgba(0,0,0,0.08); color: inherit; }
+
+    .site-header {
+      max-width: 720px; margin: 0 auto; padding: 28px 24px 0;
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 13px; color: var(--fg-mute);
+    }
+    .site-header a {
+      color: var(--fg-mute); text-decoration: none;
+      border-bottom: 1px dotted var(--fg-faint); padding-bottom: 1px;
+    }
+    .site-header a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+
+    article {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 24px 64px;
+    }
+    .meta, .date {
+      color: var(--fg-faint); font-size: 13px;
+      margin-bottom: 8px; text-transform: none; letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: 32px; line-height: 1.22; font-weight: 600;
+      margin: 0 0 10px; letter-spacing: -0.01em; color: #111;
+    }
+    .subtitle {
+      color: var(--fg-mute); font-size: 17px; font-weight: 400;
+      line-height: 1.5; margin: 0 0 24px;
+    }
+    h2 {
+      font-size: 22px; font-weight: 600; line-height: 1.3;
+      margin: 1.9em 0 0.5em; letter-spacing: -0.005em; color: #111;
+    }
+    h3 { font-size: 17px; font-weight: 600; margin: 1.5em 0 0.35em; }
+
+    p { margin: 0 0 0.9em; }
+    ul, ol { margin: 0 0 1em; padding-left: 1.4em; }
+    li { margin-bottom: 0.35em; }
+    li::marker { color: var(--fg-faint); }
+
+    a { color: var(--link); text-decoration: underline; text-decoration-color: rgba(26,95,180,0.4); }
+    a:visited { color: var(--link-visited); }
+    a:hover { text-decoration-color: var(--link); }
+
+    code {
+      font-family: var(--font-mono); font-size: 0.85em;
+      background: var(--hi); padding: 1px 5px; border-radius: 3px;
+    }
+    pre {
+      background: var(--hi); padding: 14px 18px; border-radius: 8px;
+      overflow-x: auto; margin: 1em 0; font-size: 13px; line-height: 1.55;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    pre code { background: none; padding: 0; border-radius: 0; font-size: inherit; }
+    strong { font-weight: 600; color: var(--fg); }
+    em { font-style: italic; }
+
+    blockquote {
+      margin: 1em 0; padding: 6px 0 6px 18px;
+      border-left: 3px solid var(--rule); color: var(--fg-mute);
+    }
+    blockquote p { font-size: 15.5px; margin: 0; }
+
+    /* Paper links / pill button */
+    .paper-links {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 18px 0 8px; flex-wrap: wrap;
+    }
+    .paper-links .btn-pill {
+      font-size: 13px; line-height: 1; color: var(--fg);
+      text-decoration: none; background: var(--paper);
+      border: 1px solid var(--rule); border-radius: 999px;
+      padding: 0.55rem 0.95rem 0.65rem;
+      transition: background 200ms ease;
+    }
+    .paper-links .btn-pill:hover { background: var(--hi); }
+
+    /* TL;DR */
+    .tldr {
+      margin: 1.2em 0 1.6em;
+      padding: 14px 18px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      font-size: 15.5px;
+    }
+    .tldr-label, .tldr .label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .tldr p { font-size: 15.5px; line-height: 1.6; color: var(--fg); margin: 0; }
+    .tldr p + p { margin-top: 0.6em; }
+
+    /* Callout */
+    .callout {
+      margin: 1.5em 0; padding: 14px 18px;
+      background: var(--hi); border-radius: 6px;
+    }
+    .callout-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-mute); margin-bottom: 8px;
+    }
+    .callout p { font-size: 15px; line-height: 1.55; color: var(--fg); margin: 0; }
+
+    /* Stat row */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0;
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+    @media (min-width: 600px) {
+      .stat-row { grid-template-columns: repeat(4, 1fr); }
+    }
+    .stat {
+      padding: 16px 18px;
+      border-right: 1px solid var(--rule);
+    }
+    .stat:first-child { padding-left: 0; }
+    .stat:last-child { border-right: 0; }
+    @media (max-width: 599px) {
+      .stat:nth-child(2n) { border-right: 0; }
+      .stat:nth-child(n+3) { border-top: 1px solid var(--rule); }
+    }
+    .stat .k {
+      display: block;
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .stat .v {
+      font-size: 22px; font-weight: 600; color: var(--fg);
+      line-height: 1.1; letter-spacing: -0.01em;
+    }
+    .stat .s {
+      font-size: 12px; color: var(--fg-faint);
+      margin-top: 6px; line-height: 1.4;
+    }
+
+    /* Mode grid */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin: 1.5em 0;
+    }
+    @media (min-width: 600px) { .mode-grid { grid-template-columns: repeat(2, 1fr); } }
+    .mode-card {
+      background: var(--paper);
+      border-radius: 8px;
+      padding: 16px 18px;
+      border: 1px solid var(--rule);
+    }
+    .mode-card .tag {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .mode-card .t {
+      display: block;
+      font-size: 16px; font-weight: 600; color: var(--fg);
+      margin-bottom: 6px; letter-spacing: -0.005em;
+    }
+    .mode-card .desc {
+      font-size: 14px; line-height: 1.5; color: var(--fg-mute);
+    }
+
+    /* Table */
+    .table-wrap { margin: 1.5em 0; }
+    .table-label {
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 10px;
+    }
+    .table-label .id { color: var(--fg); margin-right: 12px; }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+    th, td {
+      padding: 8px 12px 8px 0; text-align: left;
+      border-bottom: 1px solid var(--rule); color: var(--fg);
+    }
+    th {
+      font-weight: 600; color: var(--fg-mute);
+      font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--fg-mute);
+    }
+    td.num { text-align: right; white-space: nowrap; }
+    td.pos { color: var(--fg); }
+    td.neg { color: var(--fg-faint); }
+    tr:last-child td { border-bottom: none; }
+    tr.highlight td { background: var(--hi); }
+    tr.totals td { border-top: 1px solid var(--fg-mute); }
+
+    /* Figure / chart */
+    figure.chart, figure { margin: 1.6em 0; }
+    figure svg, figure.chart svg {
+      display: block; width: 100%; height: auto;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+    }
+    figcaption {
+      font-size: 13px; color: var(--fg-mute);
+      line-height: 1.5; margin-top: 10px;
+    }
+    figcaption strong { color: var(--fg); font-weight: 500; }
+    @media (min-width: 960px) {
+      article > figure.chart, .body-main > figure.chart {
+        width: min(1100px, calc(100vw - 3rem));
+        max-width: none;
+        margin-left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+
+    /* Neg list */
+    .neg-list {
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+    }
+    .neg-list-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin: 14px 0 6px;
+    }
+    .neg-list ul { list-style: none; padding: 0; margin: 0; }
+    .neg-list li {
+      padding: 14px 0; border-bottom: 1px solid var(--rule);
+      font-size: 15px; line-height: 1.6; color: var(--fg-mute);
+      margin-bottom: 0;
+    }
+    .neg-list li:last-child { border-bottom: 0; }
+    .neg-list li strong { color: var(--fg); font-weight: 600; }
+
+    /* Break */
+    .break {
+      display: flex; align-items: center; justify-content: center;
+      margin: 3rem 0 2.5rem;
+      color: var(--fg-faint);
+      font-size: 11px; letter-spacing: 0.6em;
+    }
+
+    hr { border: 0; border-top: 1px solid var(--rule); margin: 1.8em 0; }
+    .footer { font-size: 12.5px; color: var(--fg-faint); }
+
+    /* Reproducibility panel */
+    table.repro { margin: 1em 0 1.5em; }
+    table.repro th {
+      width: 7.5em; vertical-align: top; text-transform: none; letter-spacing: 0;
+      font-size: 13px; border-bottom: 1px solid var(--rule);
+    }
+    table.repro td { font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+    table.repro tr:last-child th { border-bottom: none; }
+
+    @media (max-width: 480px) {
+      .site-header { padding: 22px 20px 0; }
+      article { padding: 16px 20px 56px; }
+      h1 { font-size: 28px; }
+      .subtitle { font-size: 16px; }
+      .stat-row { grid-template-columns: 1fr; }
+      .mode-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+    <!-- PANES:HEAD:START -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
+  <link rel="stylesheet" href="panes.css?v=4a6ced04" />
+  <script src="ascii.js?v=6f1f421a" defer></script>
+  <!-- PANES:HEAD:END -->
+</head>
+<body class="pn-body panes-post">
+  <!-- PANES:BAR:START -->
+  <div class="split split--inner">
+    <aside class="side">
+      <div class="side__pin">
+        <figure class="side__art">
+          <pre data-landscape data-rows="22" aria-hidden="true">                                                      
+                                                      
+                                                      
+                           ===                        
+                         -======                      
+                      ----========                    
+                :::::::-----========                  
+   ,::::::----::::::::::::----==========              
+    :::::-----::::::,,,,,:::--======================= 
+     ::::-----::::::,,...,,:--=====================   
+      ::::::::::::::::,...,:--===--===============    
+        :::::::::::::::::,.,<b>@</b>==------===========      
+          ,,,,,,,,::::---========-------------        
+           ,,,,,,,,,,::--========-----------          
+             ,,,,...,,::-=======---------             
+              ,,,,....,:-====---------                
+                :,,,,..,:--:::----                    
+                  :::::::::::::                       
+                     :::::                            
+                                                      
+                                                      
+                                                      </pre>
+        </figure>
+        <p class="side__name"><a href="/">Stephen<br> Casella<span class="accent">_</span></a></p>
+        <p class="side__bio">I study how language models reason and respond to training, and put AI agents to work on hard, checkable problems: formal proofs, faster code, real bugs.</p>
+        <nav class="side__nav" aria-label="Site">
+          <a href="research.html" aria-current="true">research</a>
+          <a href="projects.html">software</a>
+          <a href="/#contact">contact</a>
+        </nav>
+      </div>
+      <div class="side__links">
+        <a class="side__grid" href="blog_diversity.html" title="pick a random integer between 1 and 100." aria-label="Pick a random integer between 1 and 100. It put more than 95% of its probability on three numbers: 4, 42, and 47. Read the write-up."><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></a>
+        <a href="https://github.com/scasella" rel="me">github.com/scasella</a>
+        <a href="https://huggingface.co/scasella91" rel="me">huggingface.co/scasella91</a>
+        <a href="https://www.linkedin.com/in/stevecasella/" rel="me">linkedin</a>
+      </div>
+    </aside>
+    <div class="split__main">
+  <!-- PANES:BAR:END -->
+  <main class="post-main">
+  <article class="post">
+
+<h1>25 bugs in free-threaded CPython, found by agents</h1>
+<!-- PANES:META:START -->
+    <p class="post-byline">[ <time datetime="2026-09-25">2026-09-25</time> ] // Claude Opus 5.5 · TLA+ · Lean 4 // 10 MIN READ</p>
+  <!-- PANES:META:END -->
+        <p class="subtitle">Claude Opus 5.5 agents confirmed 25 bugs in CPython's build without the Global Interpreter Lock, each on an unmodified interpreter. A tracker search found no earlier report for 18 of them. A later sweep of 1,805 call sites confirmed 92 more findings. Two independent provers also proved the locking model's safety invariant. Checking that proof against real runs showed five places where CPython doesn't behave like the model.</p>
+
+        <div class="tldr">
+          <span class="tldr-label">TL;DR</span>
+          <p>I pointed Claude Opus 5.5 agents at the free-threaded (no-GIL) build of CPython <code>main</code>, 3.15 and 3.14 on macOS. A finding counted only if a trigger misbehaved on a stock build. Independent agents then had to reproduce it and fail to refute it. The hunt confirmed 25 bugs, 16 of which I'd file now. A sweep of call sites confirmed 92 more; about half also affect the regular GIL build. A TLA+ spec of the locking protocol predicted one deadlock path, and a real build then hit it. Its safety invariant was proved in TLAPS and in Lean. An audit showed those proofs are genuine. Replays of real runs showed CPython departs from the model in five places. The bugs came from agents reading C and running triggers. The formal work checked the locking model and mapped where it and the code disagree.</p>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat">
+            <span class="k">Bugs confirmed</span>
+            <div class="v">25</div>
+            <div class="s">No earlier report found for 18</div>
+          </div>
+          <div class="stat">
+            <span class="k">Sweep findings</span>
+            <div class="v">92</div>
+            <div class="s">From 1,805 call sites; 47 also hit the GIL build</div>
+          </div>
+          <div class="stat">
+            <span class="k">Broken specs caught</span>
+            <div class="v">63 / 63</div>
+            <div class="s">Each made a proof fail; 8 of 8 planted cheats rejected</div>
+          </div>
+          <div class="stat">
+            <span class="k">Model gaps found</span>
+            <div class="v">5</div>
+            <div class="s">Where real CPython leaves the proved model</div>
+          </div>
+        </div>
+
+        <div class="callout">
+          <span class="callout-label">Filing status</span>
+          <p>Five of these bugs are now filed with CPython, with repros and proposed fixes: <a href="https://github.com/python/cpython/issues/158194">gh-158194</a>, <a href="https://github.com/python/cpython/issues/158195">gh-158195</a>, <a href="https://github.com/python/cpython/issues/158196">gh-158196</a>, <a href="https://github.com/python/cpython/issues/158197">gh-158197</a> and <a href="https://github.com/python/cpython/issues/158198">gh-158198</a>. The rest are described here by class and count only. No function names, triggers or repros until they're filed. I'll add each link here.</p>
+        </div>
+
+        <h2 id="setup">Setup</h2>
+        <p>
+          PEP 703 made CPython's Global Interpreter Lock optional. 3.14 is the first release where the free-threaded build is officially supported. Removing the lock took new machinery. Per-object locks called <em>critical sections</em> are quietly released when their thread blocks. <em>Stop-the-world</em> pauses park every other thread. Dicts and lists get lock-free reads. Bugs tend to live where two of these meet, or in older code that assumed nothing else could run while it did.
+        </p>
+        <p>I tested free-threaded debug builds of main (6757482), 3.15.0rc2+ (2dafe2a) and 3.14 (1d8c9f8). I also used release and ThreadSanitizer builds of main, and a python.org 3.14 GIL build for comparison. Claude Code directed every agent, all of them Claude Opus 5.5. The ground rules:</p>
+        <ul>
+          <li>A bug counts only if a trigger misbehaves on an unmodified build. A model or a code reading alone is never enough.</li>
+          <li>Findings are checked by separate agents: one writes its own repro from the description, one tries to refute the finding, and one searches the tracker for earlier reports.</li>
+          <li>GitHub is read-only. No agent filed, commented or posted anything.</li>
+          <li>Every run has a hard timeout, and patches go into isolated copies of the source.</li>
+        </ul>
+
+        <h2 id="bugs">The bugs</h2>
+        <p>
+          The hunt ran in three rounds: 221 agents, about 22 million tokens, about 13 hours. One agent owned each subsystem. Later stages reproduced, attacked, fixed and reviewed what it found. A critic ended each round and listed the gaps for the next one.
+        </p>
+        <p>
+          It ended with 25 bugs: 16 I'd file now and 9 at low priority. They include whole-interpreter deadlocks, heap corruption, NULL dereferences in lock-free iteration and use-after-frees. Most affect the 3.14 branch as well as 3.15 and main. Eight also hit the regular GIL build. Most need only public Python APIs to trigger. A few need a private module, API misuse or a C-API callback.
+        </p>
+        <p>
+          After an outside reviewer pushed on novelty, a second systematic search of the tracker found no earlier report for 18 of the 25. Three of those have no related report at all. The other 15 have related work on the same components only. Six others partly overlap an earlier report. One was already described upstream but is still unfixed. 19 of the 25 have a filing packet: a minimal repro, fix diffs for each branch, a regression test that fails before the fix and passes after, and a model check of the fix. The packets need another round of fixes before filing. Eight have blocking errors, including a fix that must be restructured to link on 3.14 and Windows, and several wrong repros or claims. Four of the 25 are filed so far, all from packets without blocking errors: two deadlocks in type locking (<a href="https://github.com/python/cpython/issues/158194">gh-158194</a>, <a href="https://github.com/python/cpython/issues/158195">gh-158195</a>), a heap double free in <code>FileIO</code> (<a href="https://github.com/python/cpython/issues/158196">gh-158196</a>) and a NULL dereference in instance-dict iteration (<a href="https://github.com/python/cpython/issues/158197">gh-158197</a>).
+        </p>
+
+        <h3 id="sweep">A second pass: the call-site sweep</h3>
+        <p>
+          Writing the spec (below) surfaced five rules for code that calls these primitives. Two of them: "don't use a borrowed pointer after anything that can run Python" and "don't act on an unlocked read". The rules came from gaps auditors found, not from the model itself. Agents then checked 1,805 call sites in 114 files against them. 252 candidates merged into 101 findings, and every finding got the three independent checks. 92 are confirmed, 8 are duplicates and 1 was refuted.
+        </p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 01</span>The 92 confirmed sweep findings</div>
+          <table>
+            <thead>
+              <tr><th>Class</th><th>Count</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Crash, use-after-free or heap corruption</td><td class="num">56</td></tr>
+              <tr><td>Hang or deadlock</td><td class="num">16</td></tr>
+              <tr><td>Wrong result or leak</td><td class="num">9</td></tr>
+              <tr><td>Assertion failure</td><td class="num">7</td></tr>
+              <tr><td>Race visible only to ThreadSanitizer</td><td class="num">4</td></tr>
+              <tr class="totals"><td>Also on the GIL build / free-threaded only / not determined</td><td class="num">47 / 24 / 21</td></tr>
+              <tr><td>Need two threads mutating the same object</td><td class="num">11</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>So these are not 92 free-threading bugs. About half are general CPython bugs that the rules happened to lead to. The 11 same-object races are a class upstream has closed as "not planned" before. The build-scope split is a heuristic from the checkers' notes. A shortlist of 10 is ranked for filing. It has not had a maintainer-style review yet.</p>
+
+        <h2 id="spec">What the spec did</h2>
+        <p>Midway through, I tried letting the formal side lead. Agents wrote the locking protocol down before looking for bugs. The spec says how critical sections, pinning and stop-the-world pauses are supposed to interact, in 698 lines of TLA+ with 13 contracts and 12 rules for callers. Then they checked code against it.</p>
+        <ul>
+          <li><strong>Blind recall.</strong> Checked against six known bugs it had never been told about, the pilot rediscovered five.</li>
+          <li><strong>One confirmed prediction.</strong> The model predicted a path into a stop-the-world deadlock. An instrumented build then hung 5 times out of 5. It is a new entry point into an already-known deadlock, not a new bug.</li>
+          <li><strong>A named root cause.</strong> The spec had to state an assumption the code never documents, and deadlock freedom depends on it. Audits of the code and replays of real runs showed that shipping CPython breaks it. It is the root of that deadlock family.</li>
+          <li><strong>New bugs.</strong> Checking call sites against the rules found three. The best is a use-after-free that aborts debug builds on main, 3.15 and 3.14. ThreadSanitizer flags it as a data race on freed and reused memory. It has a one-hunk fix and a stress test that fails 5 of 5 runs before it, and it is filed as <a href="https://github.com/python/cpython/issues/158198">gh-158198</a>. The second is a free-threaded hang. The third turned out to be a GIL-build bug.</li>
+        </ul>
+
+        <h2 id="proofs">The proof held; the model didn't match CPython</h2>
+        <p>
+          Next I asked for real proofs, not bounded checks. The spec's safety invariant has 24 parts and implies 11 safety properties, such as "no lock is leaked". It was proved twice, for any number of threads and any nesting depth:
+        </p>
+        <ul>
+          <li><strong>TLAPS</strong>, the TLA+ proof system, by a lead agent and five helpers: 4,430 of 4,430 proof obligations, and 4,455 of 4,455 for a version with any number of locks.</li>
+          <li><strong>Lean 4</strong>, by one agent that wrote a fresh encoding of about 5,000 lines without reading the TLAPS proof. It uses only Lean's three standard axioms, with no <code>sorry</code> and no <code>native_decide</code>.</li>
+        </ul>
+
+        <h3 id="audit">Are the proofs real?</h3>
+        <p>Agents are good at making a proof look finished, so an audit tried to catch the proofs cheating or proving nothing:</p>
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 02</span>Proof audit</div>
+          <table>
+            <thead>
+              <tr><th>Check</th><th>Question</th><th>Result</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Planted cheats</td><td>Would a hidden <code>sorry</code> or extra axiom get through?</td><td>8 of 8 rejected; Lean's own kernel replay passes on all 24 modules</td></tr>
+              <tr><td>Frozen statements</td><td>Is the theorem text as written?</td><td>15 of 16 theorems, byte-for-byte</td></tr>
+              <tr class="highlight"><td>Broken specs</td><td>Does a broken spec fail a proof?</td><td>all 63 defects caught: 109 of 109 runs across TLAPS and Lean</td></tr>
+              <tr><td>Two encodings</td><td>Same system in both encodings?</td><td>identical state counts at 10 configurations; 0 disagreements over 37 predicates on 21,487 states</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          A broken spec here has one deliberate defect, such as a deleted guard or a lock left held. The model checker first confirmed that each defect actually matters. A proof that still passed on one would be proving nothing, and none did. Some of those failures are shallow: the proof just restates a setting that was changed. The any-number-of-locks version was not mutation-tested. So the answer is yes: within the model, these are real proofs.
+        </p>
+        <p>
+          They are safety proofs only. Deadlock freedom is not just unproved. Under CPython's documented settings it fails in the model, with a 13-state trace. That trace is the deadlock path the spec predicted and a real build then hit.
+        </p>
+
+        <h3 id="grounding">Is the model CPython?</h3>
+        <p>
+          A proof is only as useful as its model, so the last step checked the model against the real interpreter. First, the audit added one behaviour the spec had left out: a thread woken from a wait re-attaches before it retries the lock. With that added, the proved invariant becomes false after four steps. The 11 safety properties themselves still held in every bounded check, up to 23.5 million states with three threads.
+        </p>
+        <p>
+          Then a checker replayed recorded runs of an instrumented build: 36.1 million events from 44 logs. It evaluated the invariant on every state it reconstructed. The original invariant failed at every stop-the-world wake-up it tallied, as the audit predicted. Ordinary lock-wait wake-ups did not break it. The checker also found four more places where CPython does something the model forbids:
+        </p>
+        <ul>
+          <li>a critical section taken on the fast path inside a stop-the-world pause;</li>
+          <li>critical sections inside global pauses;</li>
+          <li>brief, uncontended raw holds of the type lock;</li>
+          <li>the world restarted before the pause's own lock is released.</li>
+        </ul>
+        <p>
+          On the states the checker classed as ordinary, all 10 safety properties it could evaluate held. That class excludes global pauses, forked children, finalization and the raw type-lock holds. The one property that failed anywhere was the no-leaked-lock rule, on those raw holds. Each gap has a proposed spec fix that passes bounded checks. None has been re-proved yet.
+        </p>
+        <p>
+          So the proof holds, but it is about a cleaner protocol than the one CPython runs. The audit found five of the places where the two differ. Without the check against real runs, the proof would have been a correct theorem about the wrong system.
+        </p>
+
+        <h2 id="control">Did the rules help find bugs? A control run</h2>
+        <p>I re-audited 8 of the sweep's areas with a plain "find free-threading bugs" prompt. The model, tools and builds were the same, and the agents were told not to read the earlier work.</p>
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 03</span>Same 8 areas, two prompts</div>
+          <table>
+            <thead>
+              <tr><th></th><th>With the five rules</th><th>Plain prompt</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>New bugs</td><td>16 confirmed (three checks each)</td><td>11 of those 16, plus about 9 other candidates (repro check only, novelty unchecked)</td></tr>
+              <tr><td>Found only by this prompt</td><td class="num">5</td><td>about 9</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          The rules reached a subtle class the plain prompt missed: five re-entrancy chains. Their output was also cleaner, but it had been through more checking. They did not find more bugs overall. What I'd recommend is a plain audit for breadth, then the rules as a checklist, with independent checks on every candidate.
+        </p>
+
+        <h2 id="interpretation">Interpretation and limits</h2>
+        <p>Agents with a strict repro harness found real, mostly new bugs in mature, heavily reviewed code. The TLA+ spec made one prediction that came true, named a root cause and produced a checklist. The unbounded proofs found no bugs. They showed the modelled protocol, at its default settings, meets its 11 safety properties. Checking them against real runs showed where CPython's actual protocol differs.</p>
+        <ul>
+          <li>"No earlier report found" means a systematic search came up empty, not that no one has ever seen the bug.</li>
+          <li>Six of the 25 have no packet yet, and 8 packets have blocking errors to fix before filing.</li>
+          <li>The proofs cover safety only. One of the 16 theorems is established by neither prover: that a reduced core of the invariant, without its three extra conjuncts, is inductive by itself.</li>
+          <li>The replays cover 44 of 72 logs and 16 of 38 workloads, with no data writes, so one property went unchecked. Some known kinds of divergence never occurred in them, so there may be more gaps than the five found.</li>
+          <li>The models assume sequential consistency.</li>
+          <li>The control used 8 areas, and the same model helped write the rules, so rule-style thinking may have leaked into the plain run.</li>
+          <li>Everything ran on one macOS arm64 machine. Linux, Windows and 3.13 are untested.</li>
+        </ul>
+
+        <h2 id="next-experiment">Next experiment</h2>
+        <ul>
+          <li>File the remaining packets upstream and link them here.</li>
+          <li>Check the roughly 9 candidates only the plain prompt found.</li>
+          <li>Fold the five spec fixes into one model and re-prove it in both provers.</li>
+          <li>Replay the remaining 28 logs, with data writes recorded.</li>
+          <li>Repeat the hunt on Linux.</li>
+        </ul>
+
+        <h2 id="reproducibility">Reproducibility</h2>
+        <table class="repro">
+          <tbody>
+            <tr><th scope="row">Model</th><td>Claude Opus 5.5 for every agent, directed from Claude Code.</td></tr>
+            <tr><th scope="row">Experiment</th><td>Free-threaded CPython main @6757482, 3.15 @2dafe2a, 3.14 @1d8c9f8 on macOS arm64. TLA+ tools 1.7.4, TLAPS 1.6.0-pre (strict), Lean 4.34 without Mathlib. Hunt: 221 agents, ~22M tokens, ~13 h. Sweep: 343 agents, plus 175 to re-check findings. Control: 80 agents, 5.5M tokens.</td></tr>
+            <tr><th scope="row">Data</th><td>Unit for bugs: a trigger that misbehaves on an unmodified build, confirmed by independent repro, refutation and novelty checks. Replays: 44 of 72 logs, 36,064,311 events.</td></tr>
+            <tr><th scope="row">Status</th><td>Published 2026-09-25 · Five bugs filed upstream (<a href="https://github.com/python/cpython/issues/158194">gh-158194</a> to <a href="https://github.com/python/cpython/issues/158198">gh-158198</a>), with repros and patches attached; details of the rest withheld until they're filed. Other results and code are not published.</td></tr>
+          </tbody>
+        </table>
+
+
+            <!-- PANES:NEXT:START -->
+    <nav class="post-next" aria-label="More research">
+      <a href="blog_proof_optimizer.html"><span>next →</span><span>I used formal verification and agents to make an algorithm 105× faster and prove it behaves the same</span></a>
+      <a class="post-next__all" href="research.html">← all research</a>
+    </nav>
+  <!-- PANES:NEXT:END -->
+  </article>
+  </main>
+  <!-- PANES:FOOT:START -->
+    <footer class="pn-foot">
+      <p>Personal projects. Not affiliated with or endorsed by my employer. No employer data, infrastructure, or confidential information used.</p>
+    </footer>
+    </div>
+  </div>
+  <!-- PANES:FOOT:END -->
+</body>
+</html>
