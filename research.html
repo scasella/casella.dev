@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Research | Stephen Casella</title>
-    <meta name="description" content="8 write-ups by Stephen Casella on language-model confidence, sampling bias and reasoning formats, and on AI agents doing formal verification and bug hunting, each with its setup and limitations.">
+    <meta name="description" content="9 write-ups by Stephen Casella on language-model confidence, sampling bias and reasoning formats, and on AI agents doing formal verification and bug hunting, each with its setup and limitations.">
     <meta name="author" content="Stephen Casella">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#080c0f">
@@ -13,7 +13,7 @@
     <meta property="og:site_name" content="Stephen Casella">
     <meta property="og:type" content="website">
     <meta property="og:title" content="~/research | Stephen Casella">
-    <meta property="og:description" content="8 LLM and agent experiment write-ups: what each measured, and what it did not show.">
+    <meta property="og:description" content="9 LLM and agent experiment write-ups: what each measured, and what it did not show.">
     <meta property="og:url" content="https://casella.dev/research.html">
     <meta property="og:image" content="https://casella.dev/assets/og/home.png">
     <meta property="og:image:secure_url" content="https://casella.dev/assets/og/home.png">
@@ -22,7 +22,7 @@
     <meta property="og:image:alt" content="Stephen Casella's research write-ups, newest first">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="~/research | Stephen Casella">
-    <meta name="twitter:description" content="8 LLM and agent experiment write-ups: what each measured, and what it did not show.">
+    <meta name="twitter:description" content="9 LLM and agent experiment write-ups: what each measured, and what it did not show.">
     <meta name="twitter:image" content="https://casella.dev/assets/og/home.png">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
     <script>
@@ -76,6 +76,16 @@
               "@id": "https://casella.dev/#person"
             },
             "hasPart": [
+              {
+                "@type": "BlogPosting",
+                "headline": "Verified once, reused three times: agents carried proofs of shipped OpenSSL code into new callers",
+                "url": "https://casella.dev/blog_reusable_binary_assurance.html",
+                "datePublished": "2026-10-05",
+                "dateModified": "2026-10-05",
+                "author": {
+                  "@id": "https://casella.dev/#person"
+                }
+              },
               {
                 "@type": "BlogPosting",
                 "headline": "Agents turned a one-kernel Lean proof into a checker that certified 25 PyTorch kernels",
@@ -215,11 +225,19 @@
       <main class="flow">
         <div class="proj-head">
           <h1>~/research</h1>
-          <p>[ 8 write-ups ] each lists its model, data, code, and open issues</p>
+          <p>[ 9 write-ups ] each lists its model, data, code, and open issues</p>
         </div>
         <section aria-labelledby="writing">
           <h2 class="visually-hidden" id="writing">write-ups</h2>
           <ul class="posts">
+            <li>
+              <a href="blog_reusable_binary_assurance.html">
+                <span class="posts__kicker">2026-10-05 — agents / formal verification</span>
+                <span class="posts__title">Verified once, reused three times: agents carried proofs of shipped OpenSSL code into new callers</span>
+                <span class="posts__dek">Machine-checked contracts for two unchanged Debian OpenSSL routines verified three experimental callers through their actual linkage. The held-out caller missed its three-hour cap, then completed in a recorded successor.</span>
+                <span class="posts__scope">Pinned x86-64 model in HOL Light; loaded image, instruction model and extraction trusted; human review pending; not all of OpenSSL.</span>
+              </a>
+            </li>
             <li>
               <a href="blog_certified_narrowing.html">
                 <span class="posts__kicker">2026-09-27 — agents / formal verification</span>
