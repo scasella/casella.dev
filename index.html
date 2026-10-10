@@ -253,8 +253,37 @@
         </section>
 
         <section aria-labelledby="software">
-          <h2 class="label" id="software"><span>selected software</span><a class="label__aside" href="projects.html">all 25 →</a></h2>
+          <h2 class="label" id="software"><span>selected software</span><a class="label__aside" href="projects.html">all 28 →</a></h2>
           <ul class="feats">
+          <li class="feat">
+            <p class="feat__name"><a href="https://github.com/scasella/hn-formal">HN, formally</a></p>
+            <div class="feat__body">
+              <p class="feat__desc">The Hacker News front page and its 30 threads, rendered by a Lean 4 program proven to render every API input correctly, and redesigned every night by an LLM loop that releases without human review whenever a candidate passes. Structure, data fidelity and the no-injection property are proven; contrast, reflow and accessibility are checked per release in a browser and never called proven.</p>
+              <p class="feat__meta">Needs: Nothing to install: hosted on GitHub Pages, refreshed every 15 minutes · Lean 4.34 and Node 22 to build · the loop runs claude-haiku-5-5 on GitHub Actions under spend caps</p>
+              <p class="feat__meta">Sends: The pages have no JavaScript and no external origins. The redesign loop sends the spec, the renderer, Lean’s errors and screenshots to an Anthropic-hosted model.</p>
+              <p class="feat__meta">Unofficial and read-only; not affiliated with Y Combinator. Data from the HN Firebase API.</p>
+              <p class="feat__actions"><a href="https://scasella.github.io/hn-formal/">live site</a><span aria-hidden="true"> · </span><a href="https://scasella.github.io/hn-formal/loop/">every generation</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/hn-formal/releases/latest">latest release</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/hn-formal">source</a></p>
+            </div>
+          </li>
+          <li class="feat">
+            <p class="feat__name"><a href="https://github.com/scasella/faithful">Faithful</a></p>
+            <div class="feat__body">
+              <p class="feat__desc">Make one TypeScript function faster and see exactly how much of “it still does the same thing” was checked. Each rewrite must compile, stay pure, match the original on generated inputs, survive a bounded Z3 search and benchmark faster; one that is significantly faster is then proved in Lean 4 against a spec agreed in plain words. Every result carries one of five labels. Early: the translator accepts 39 of 74 corpus functions and 0 of 20 sampled from real libraries; in the launch campaign, 3 of 130 candidate rewrites were accepted with a proof and 72 were faster but not proved.</p>
+              <p class="feat__meta">Needs: Node 22.12+ · pnpm · Codex CLI · Lean 4 and Mathlib (about 12 GB) for proofs · Z3 optional · install from source, 0.1.0</p>
+              <p class="feat__meta">Sends: Model calls go through the Codex CLI to an OpenAI-hosted model, and the UI shows each prompt verbatim. The browser showcase replays recorded sessions and sends nothing.</p>
+              <p class="feat__meta">A proof is about a Lean model of the function and the agreed spec, never the TypeScript on every input.</p>
+              <p class="feat__actions"><a href="https://scasella.github.io/faithful/">try it in your browser</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/faithful/blob/main/docs/LAUNCH.md">launch report</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/faithful">source</a></p>
+            </div>
+          </li>
+          <li class="feat">
+            <p class="feat__name"><a href="https://github.com/scasella/undefined">Undefined</a></p>
+            <div class="feat__body">
+              <p class="feat__desc">A live program that grows the functions you call but haven’t written. Bring a spreadsheet export and ask a question: a model drafts the calculation and the checks it must pass, asks what the question leaves open, and you approve the checks before anything counts. A strict TypeScript compiler, unit and property tests, and purity and time-limit gates then decide what is accepted, and only an answer that passes them all is shown; a mutation check reports which bugs those checks would miss. The same engine runs as a CLI and a GitHub Action that certify TypeScript from any source.</p>
+              <p class="feat__meta">Needs: Nothing to install for the demo (recorded gpt-6-luna answers, live checks) · a local copy needs Node 20.19+ and the Codex CLI · install from source, 0.1.0</p>
+              <p class="feat__meta">Sends: In the demo, nothing about your program leaves the browser. Live mode sends each prompt through the Codex CLI to an OpenAI-hosted model: the signature, the doc, the names of your tests (never their bodies) and, if you share them, sample rows. Neither sandbox is a security boundary.</p>
+              <p class="feat__actions"><a href="https://scasella.github.io/undefined/#/zen">try it in your browser</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/undefined/blob/main/docs/EXAMPLES.md">how the checks are measured</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/undefined">source</a></p>
+            </div>
+          </li>
           <li class="feat">
             <p class="feat__name"><a href="https://github.com/scasella/claude-dynamic-workflows-codex">Dynamic Workflows on Codex</a></p>
             <div class="feat__body">
@@ -273,25 +302,6 @@
               <p class="feat__meta">Needs: Apple Silicon · MLX · uv, v0.2.0 release</p>
               <p class="feat__meta">An MLX port of Karpathy’s nanochat.</p>
               <p class="feat__actions"><a href="https://github.com/scasella/nanochat-mlx#quick-start">quick start</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/nanochat-mlx/releases/latest">release v0.2.0</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/nanochat-mlx">source</a></p>
-            </div>
-          </li>
-          <li class="feat">
-            <p class="feat__name"><a href="https://github.com/scasella/TabPilot">TabPilot</a></p>
-            <div class="feat__body">
-              <p class="feat__desc">Find duplicate and stale Safari tabs, search open pages, and group tabs by domain.</p>
-              <p class="feat__why">Why I built it: I had 80+ Safari tabs open and no way to make sense of them.</p>
-              <p class="feat__meta">Needs: macOS 14+ · Codex optional · Homebrew cask</p>
-              <p class="feat__meta">Sends: With optional AI grouping on, tab titles and URLs go through a Codex app server to an OpenAI-hosted model.</p>
-              <p class="feat__actions"><code>brew install --cask scasella/tap/tabpilot</code><span aria-hidden="true"> · </span><a href="https://github.com/scasella/TabPilot">source</a></p>
-            </div>
-          </li>
-          <li class="feat">
-            <p class="feat__name"><a href="https://github.com/scasella/SunShift">SunShift</a></p>
-            <div class="feat__body">
-              <p class="feat__desc">Adjust Night Shift warmth directly from the menu bar.</p>
-              <p class="feat__why">Why I built it: Night Shift warmth is one of the few display settings I actually want to tweak throughout the day, but Apple hides it behind too many clicks.</p>
-              <p class="feat__meta">Needs: macOS 26+ · uses a private macOS API · Homebrew cask</p>
-              <p class="feat__actions"><code>brew install --cask scasella/tap/sunshift</code><span aria-hidden="true"> · </span><a href="https://github.com/scasella/SunShift">source</a></p>
             </div>
           </li>
           </ul>
