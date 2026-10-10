@@ -14,7 +14,7 @@
   --pn-raise: oklch(0.19 0.012 250);
   --pn-plate: #f6f5f1;
   --pn-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --pn-side: 440px;
+  --pn-side: 360px;
   --pn-top: 96px;
   color-scheme: dark;
 }
@@ -50,7 +50,7 @@
 }
 
 .side {
-  padding: var(--pn-top) 48px 48px 64px;
+  padding: var(--pn-top) 40px 48px 48px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -67,13 +67,13 @@
 }
 .side__name {
   margin: 0;
-  font-size: 40px;
+  font-size: 34px;
   line-height: 1.1;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 .side__name a { text-decoration: none; }
-.side__bio { margin: 0; font-size: 16px; text-wrap: pretty; }
+.side__bio { margin: 0; font-size: 15px; text-wrap: pretty; }
 .side__nav { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
 .side__nav a { text-decoration: none; }
 .side__nav a::before { content: '\00a0\00a0'; }
@@ -141,12 +141,12 @@
 
 .split__main {
   min-width: 0;
-  padding: var(--pn-top) 64px 56px;
+  padding: var(--pn-top) 56px 56px 48px;
   display: flex;
   flex-direction: column;
-  gap: 80px;
+  gap: 56px;
 }
-.flow { display: flex; flex-direction: column; gap: 80px; min-width: 0; }
+.flow { display: flex; flex-direction: column; gap: 56px; min-width: 0; }
 .flow > section { display: flex; flex-direction: column; min-width: 0; max-width: 800px; }
 
 /* Quiet section label: `models`, or `projects ... all 22 →` */
@@ -217,6 +217,27 @@
 .feat__actions { margin-top: 4px !important; font-size: 13px; color: var(--pn-quiet); }
 .feat__actions a { color: var(--pn-accent); text-decoration: none; }
 .posts--quiet .posts__title { font-size: 17px; }
+
+/* Home: selected research and selected software side by side, so the first
+   software entries are on the first screen. Each column is about 450px at
+   1440, so the post title steps down and the repo card flattens to one
+   column with its Needs line and actions; Sends and credits stay on
+   projects.html. Below 1100px the columns stack, software first. */
+.home-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px; align-items: start; }
+.home-cols > section { max-width: none; }
+.home-cols .posts { gap: 28px; }
+.home-cols .posts a { gap: 6px; }
+.home-cols .posts__kicker { font-size: 12px; }
+.home-cols .posts__title { font-size: 19px; }
+.home-cols .posts__dek { font-size: 13px; line-height: 1.6; }
+.home-cols .feats { gap: 22px; }
+.home-cols .feat { display: flex; flex-direction: column; gap: 4px; }
+.home-cols .feat__desc { font-size: 13px; }
+.home-cols .feat__actions { margin-top: 0 !important; font-size: 12px; }
+@media (max-width: 1100px) {
+  .home-cols { grid-template-columns: minmax(0, 1fr); gap: 56px; }
+  .home-cols > .home-cols__software { order: -1; }
+}
 .posts--quiet .posts__kicker { color: var(--pn-quiet); }
 
 /* ── contact (home) ─────────────────────────────────────────────────────── */
@@ -377,10 +398,8 @@
 
 /* ── responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 1200px) {
-  :root { --pn-side: 360px; }
-  .side { padding-left: 48px; padding-right: 36px; }
-  .split__main { padding-left: 48px; padding-right: 48px; }
-  .side__name { font-size: 34px; }
+  .side { padding-right: 36px; }
+  .split__main { padding-right: 48px; }
 }
 
 /* On short screens the pinned column (figure, name, bio, nav, now) would run
