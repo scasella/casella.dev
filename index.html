@@ -254,8 +254,16 @@
         </section>
 
         <section aria-labelledby="software" class="home-cols__software">
-          <h2 class="label" id="software"><span>selected software</span><a class="label__aside" href="projects.html">all 29 →</a></h2>
+          <h2 class="label" id="software"><span>selected software</span><a class="label__aside" href="projects.html">all 30 →</a></h2>
           <ul class="feats">
+          <li class="feat">
+            <p class="feat__name"><a href="https://github.com/scasella/Pith">Pith</a></p>
+            <div class="feat__body">
+              <p class="feat__desc">A formally verified application core that a coding agent builds an application around, with a judge that says exactly which properties of the result are proved, model-checked, tested, or awaiting human review. The seed holds a Dafny-proven authorization-and-reservation kernel, the obligations every surrounding layer must satisfy (TLA+ invariants, black-box harnesses, a UI contract), and an evaluator that runs the candidate as a separate process and never trusts its output. Research prototype: four external reviews and one unassisted agent build so far, and a green result does not mean the application is correct.</p>
+              <p class="feat__meta">Needs: Dafny 4.11 · TLC · Python with Hypothesis and Playwright, installed by bootstrap.sh · v0.4.1 release</p>
+              <p class="feat__actions"><a href="https://github.com/scasella/Pith/blob/main/AGENT.md">agent contract</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/Pith/blob/main/docs/VALIDATION.md">validation record</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/Pith/releases/latest">release v0.4.1</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/Pith">source</a></p>
+            </div>
+          </li>
           <li class="feat">
             <p class="feat__name"><a href="https://github.com/scasella/hn-formal">HN, formally</a></p>
             <div class="feat__body">
