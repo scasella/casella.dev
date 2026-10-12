@@ -259,23 +259,23 @@
           <li class="feat">
             <p class="feat__name"><a href="https://github.com/scasella/Pith">Pith</a></p>
             <div class="feat__body">
-              <p class="feat__desc">A formally verified application core that a coding agent builds an application around, with a judge that says exactly which properties of the result are proved, model-checked, tested, or awaiting human review. The seed holds a Dafny-proven authorization-and-reservation kernel, the obligations every surrounding layer must satisfy (TLA+ invariants, black-box harnesses, a UI contract), and an evaluator that runs the candidate as a separate process and never trusts its output. Research prototype: four external reviews and one unassisted agent build so far, and a green result does not mean the application is correct.</p>
-              <p class="feat__meta">Needs: Dafny 4.11 · TLC · Python with Hypothesis and Playwright, installed by bootstrap.sh · v0.4.1 release</p>
+              <p class="feat__desc">A Dafny-verified application core that a coding agent builds an application around, with a judge that says which properties of the result are proved, model-checked, tested, or awaiting human review. Research prototype.</p>
+              <p class="feat__meta">Needs: Dafny 4.11 · TLC · Python, installed by bootstrap.sh · v0.4.1 release</p>
               <p class="feat__actions"><a href="https://github.com/scasella/Pith/blob/main/AGENT.md">agent contract</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/Pith/blob/main/docs/VALIDATION.md">validation record</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/Pith/releases/latest">release v0.4.1</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/Pith">source</a></p>
             </div>
           </li>
           <li class="feat">
             <p class="feat__name"><a href="https://github.com/scasella/hn-formal">HN, formally</a></p>
             <div class="feat__body">
-              <p class="feat__desc">The Hacker News front page and its 30 threads, rendered by a Lean 4 program proven to render every API input correctly, and redesigned every night by an LLM loop that releases without human review whenever a candidate passes. Structure, data fidelity and the no-injection property are proven; contrast, reflow and accessibility are checked per release in a browser and never called proven.</p>
-              <p class="feat__meta">Needs: Nothing to install: hosted on GitHub Pages, refreshed every 15 minutes · Lean 4.34 and Node 22 to build · the loop runs claude-haiku-5-5 on GitHub Actions under spend caps</p>
+              <p class="feat__desc">The Hacker News front page, rendered by a Lean 4 program proven to render every API input correctly and redesigned every night by an LLM loop that ships without human review. Layout and accessibility are checked per release, never called proven.</p>
+              <p class="feat__meta">Needs: Nothing to install: hosted on GitHub Pages · Lean 4.34 and Node 22 to build</p>
               <p class="feat__actions"><a href="https://scasella.github.io/hn-formal/">live site</a><span aria-hidden="true"> · </span><a href="https://scasella.github.io/hn-formal/loop/">every generation</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/hn-formal/releases/latest">latest release</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/hn-formal">source</a></p>
             </div>
           </li>
           <li class="feat">
             <p class="feat__name"><a href="https://github.com/scasella/faithful">Faithful</a></p>
             <div class="feat__body">
-              <p class="feat__desc">Make one TypeScript function faster and see exactly how much of “it still does the same thing” was checked. Each rewrite must compile, stay pure, match the original on generated inputs, survive a bounded Z3 search and benchmark faster; one that is significantly faster is then proved in Lean 4 against a spec agreed in plain words. Every result carries one of five labels. Early: the translator accepts 39 of 74 corpus functions and 0 of 20 sampled from real libraries; in the launch campaign, 3 of 130 candidate rewrites were accepted with a proof and 72 were faster but not proved.</p>
+              <p class="feat__desc">Make one TypeScript function faster and see exactly how much of “it still does the same thing” was checked: compile, purity, differential tests, a bounded Z3 search, a benchmark, then a Lean 4 proof against an agreed spec. In the launch campaign, 3 of 130 candidate rewrites were accepted with a proof.</p>
               <p class="feat__meta">Needs: Node 22.12+ · pnpm · Codex CLI · Lean 4 and Mathlib (about 12 GB) for proofs · Z3 optional · install from source, 0.1.0</p>
               <p class="feat__actions"><a href="https://scasella.github.io/faithful/">try it in your browser</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/faithful/blob/main/docs/LAUNCH.md">launch report</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/faithful">source</a></p>
             </div>
@@ -283,7 +283,7 @@
           <li class="feat">
             <p class="feat__name"><a href="https://github.com/scasella/undefined">Undefined</a></p>
             <div class="feat__body">
-              <p class="feat__desc">A live program that grows the functions you call but haven’t written. Bring a spreadsheet export and ask a question: a model drafts the calculation and the checks it must pass, asks what the question leaves open, and you approve the checks before anything counts. A strict TypeScript compiler, unit and property tests, and purity and time-limit gates then decide what is accepted, and only an answer that passes them all is shown; a mutation check reports which bugs those checks would miss. The same engine runs as a CLI and a GitHub Action that certify TypeScript from any source.</p>
+              <p class="feat__desc">Ask a question of a spreadsheet export. A model drafts the calculation and the checks it must pass, you approve the checks, and only an answer that clears a strict TypeScript compiler, unit and property tests, and purity and time-limit gates is shown. Also a CLI and GitHub Action that certify TypeScript from any source.</p>
               <p class="feat__meta">Needs: Nothing to install for the demo (recorded gpt-6-luna answers, live checks) · a local copy needs Node 20.19+ and the Codex CLI · install from source, 0.1.0</p>
               <p class="feat__actions"><a href="https://scasella.github.io/undefined/#/zen">try it in your browser</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/undefined/blob/main/docs/EXAMPLES.md">how the checks are measured</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/undefined">source</a></p>
             </div>
@@ -291,7 +291,7 @@
           <li class="feat">
             <p class="feat__name"><a href="https://github.com/scasella/claude-dynamic-workflows-codex">Dynamic Workflows on Codex</a></p>
             <div class="feat__body">
-              <p class="feat__desc">A Claude Code skill: describe a task, and Claude writes a multi-agent workflow script, runs it on Codex agents instead of Claude subagents, and shows the run as a live map. Agents edit files without asking unless the run is read-only.</p>
+              <p class="feat__desc">A Claude Code skill that writes a multi-agent workflow script, runs it on Codex agents instead of Claude subagents, and shows the run as a live map. Agents edit files without asking unless the run is read-only.</p>
               <p class="feat__meta">Needs: Node 18+ · logged-in Codex CLI · Claude Code plugin or standalone CLI, v0.2.0 release</p>
               <p class="feat__actions"><a href="https://github.com/scasella/claude-dynamic-workflows-codex#install">install</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/claude-dynamic-workflows-codex#see-it-now-no-codex-required">offline demo</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/claude-dynamic-workflows-codex/releases/latest">release v0.2.0</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/claude-dynamic-workflows-codex">source</a></p>
             </div>
@@ -299,7 +299,7 @@
           <li class="feat">
             <p class="feat__name"><a href="https://github.com/scasella/claude-flightdeck">Flightdeck</a></p>
             <div class="feat__body">
-              <p class="feat__desc">A Claude Code mod that puts a live agent dashboard in your terminal: context and cost, an advisor timeline, every permission check, and your subagents as cards or swimlanes. It only watches: every hook passes its event on unchanged, and it never denies, rewrites or delays a tool call.</p>
+              <p class="feat__desc">A Claude Code mod that puts a live agent dashboard in your terminal: context and cost, every permission check, your subagents as cards or swimlanes. It only watches.</p>
               <p class="feat__meta">Needs: Claude Code 2.1.287+ · install as a plugin · v0.3.2 release</p>
               <p class="feat__actions"><a href="https://github.com/scasella/claude-flightdeck#install">install</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/claude-flightdeck#what-it-can-reach">what it can reach</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/claude-flightdeck/releases/latest">release v0.3.2</a><span aria-hidden="true"> · </span><a href="https://github.com/scasella/claude-flightdeck">source</a></p>
             </div>
