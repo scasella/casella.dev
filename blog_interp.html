@@ -21,7 +21,7 @@
   <meta property="og:image:alt" content="Share card for the write-up: Hidden-state probes outperform self-reported confidence." />
   <meta property="article:author" content="Stephen Casella" />
   <meta property="article:published_time" content="2026-04-25" />
-  <meta property="article:modified_time" content="2026-09-23" />
+  <meta property="article:modified_time" content="2026-10-18" />
   <meta property="article:tag" content="mechanistic interpretability" />
   <meta property="article:tag" content="activation probes" />
   <meta property="article:tag" content="claim-level correctness" />
@@ -48,7 +48,7 @@
       "mainEntityOfPage": "https://casella.dev/blog_interp.html",
       "image": "https://casella.dev/assets/og/blog_interp.png",
       "datePublished": "2026-04-25",
-      "dateModified": "2026-09-23",
+      "dateModified": "2026-10-18",
       "author": {
         "@type": "Person",
         "name": "Stephen Casella",
@@ -446,7 +446,7 @@
 
         <h1>Hidden-state probes outperform self-reported confidence</h1>
 <!-- PANES:META:START -->
-    <p class="post-byline">[ <time datetime="2026-04-25">2026-04-25</time> · updated <time datetime="2026-09-23">2026-09-23</time> ] // Llama 3.1 8B // 10 MIN READ</p>
+    <p class="post-byline">[ <time datetime="2026-04-25">2026-04-25</time> · updated <time datetime="2026-10-18">2026-10-18</time> ] // Llama 3.1 8B // 10 MIN READ</p>
   <!-- PANES:META:END -->
         <p class="subtitle">On Llama 3.1 8B, a linear probe on layer-19 hidden states ranks correct claims above incorrect ones better than the model's own stated confidence, in legal QA (MAUD) and in biographies (FActScore). Its Brier score improves only in the biography setting.</p>
 
@@ -468,6 +468,9 @@
 
             <p>
               A long answer can be right in one sentence and wrong in the next, so the useful score is per claim. The cheapest one is to ask the model: I show Llama 3.1 8B Instruct one fixed claim and ask how confident it is, in a structured format. I call this self-report. Because the claim is given, a failure can't be blamed on vague claim boundaries.
+            </p>
+            <p>
+              <strong>Correction (2026-10-18).</strong> On FActScore this baseline showed Llama the whole ChatGPT biography and up to 20 claims at once, not one claim. Llama did not write those biographies, so there it measures Llama verifying another model’s claims, not self-report. The <a href="blog_fact_probe.html">follow-up</a> calls it the stated probability and compares the probe with a stronger read of Llama’s confidence, P(True).
             </p>
             <p>
               The probe is deliberately plain. Llama passes a vector from each layer to the next, called the residual stream or hidden state. At layer 19, I average that vector over the claim's tokens, standardize it, and fit a logistic regression, with no feature search and no learned pooling.

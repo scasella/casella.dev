@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Where a claim-correctness probe’s signal lives in Llama 3.1 8B | Stephen Casella</title>
+  <meta name="description" content="A follow-up on Llama 3.1 8B: a layer-19 probe ranks FActScore claims better than the model's stated confidence and combines with P(True) in an exploratory test, and a preregistered decomposition finds its signal spread over attention heads and thousands of neurons. With an interactive explorer." />
+  <meta name="author" content="Stephen Casella" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#080c0f" />
+  <link rel="canonical" href="https://casella.dev/blog_fact_probe.html" />
+  <meta property="og:site_name" content="Stephen Casella" />
+  <meta property="og:title" content="A probe on Llama’s hidden states beats its stated confidence, and the signal is spread across the network" />
+  <meta property="og:description" content="On 742 held-out claims a layer-19 probe reaches AUROC 0.802 against 0.541 for Llama’s stated confidence. Attention heads carry 79% of its position-residualized signal, and the top 50 of 286,720 neurons hold 1.25% of the neurons’ positive mass." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://casella.dev/blog_fact_probe.html" />
+  <meta property="og:image" content="https://casella.dev/assets/og/blog_fact_probe.png" />
+  <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_fact_probe.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Share card for the write-up: A probe on Llama’s hidden states beats its stated confidence, and the signal is spread across the network." />
+  <meta property="article:author" content="Stephen Casella" />
+  <meta property="article:published_time" content="2026-10-18" />
+  <meta property="article:modified_time" content="2026-10-18" />
+  <meta property="article:tag" content="interpretability" />
+  <meta property="article:tag" content="probing" />
+  <meta property="article:tag" content="Llama 3.1 8B" />
+  <meta property="article:tag" content="FActScore" />
+  <meta property="article:tag" content="calibration" />
+  <meta property="article:tag" content="preregistration" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="A probe on Llama’s hidden states beats its stated confidence, and the signal is spread across the network" />
+  <meta name="twitter:description" content="On 742 held-out claims a layer-19 probe reaches AUROC 0.802 against 0.541 for Llama’s stated confidence. Attention heads carry 79% of its position-residualized signal, and the top 50 of 286,720 neurons hold 1.25% of the neurons’ positive mass." />
+  <meta name="twitter:image" content="https://casella.dev/assets/og/blog_fact_probe.png" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-2RSWDWW67D');
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "A probe on Llama’s hidden states beats its stated confidence, and the signal is spread across the network",
+      "description": "A follow-up on Llama 3.1 8B: a layer-19 probe ranks FActScore claims better than the model's stated confidence and combines with P(True) in an exploratory test, and a preregistered decomposition finds its signal spread over attention heads and thousands of neurons. With an interactive explorer.",
+      "url": "https://casella.dev/blog_fact_probe.html",
+      "mainEntityOfPage": "https://casella.dev/blog_fact_probe.html",
+      "image": "https://casella.dev/assets/og/blog_fact_probe.png",
+      "datePublished": "2026-10-18",
+      "dateModified": "2026-10-18",
+      "author": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/",
+        "sameAs": [
+          "https://github.com/scasella",
+          "https://www.linkedin.com/in/stevecasella/"
+        ]
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "keywords": [
+        "linear probe",
+        "activation probe",
+        "claim correctness",
+        "FActScore",
+        "P(True)",
+        "stated confidence",
+        "Llama 3.1 8B Instruct",
+        "direct-effect decomposition",
+        "attention heads",
+        "MLP neurons",
+        "mean ablation",
+        "preregistration",
+        "interpretability"
+      ],
+      "codeRepository": "https://github.com/scasella/activation-probes-claim-correctness"
+    }
+  </script>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:           #fafaf8;
+      --paper:        #ffffff;
+      --fg:           #222;
+      --fg-mute:      #555;
+      --fg-faint:     #8a8a85;
+      --rule:         #e2e2dd;
+      --hi:           #f3f2ec;
+      --link:         #1a5fb4;
+      --link-visited: #5a3aa3;
+      --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono:    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      font-size: 16.5px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: rgba(0,0,0,0.08); color: inherit; }
+
+    .site-header {
+      max-width: 720px; margin: 0 auto; padding: 28px 24px 0;
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 13px; color: var(--fg-mute);
+    }
+    .site-header a {
+      color: var(--fg-mute); text-decoration: none;
+      border-bottom: 1px dotted var(--fg-faint); padding-bottom: 1px;
+    }
+    .site-header a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+
+    article {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 24px 64px;
+    }
+    .meta, .date {
+      color: var(--fg-faint); font-size: 13px;
+      margin-bottom: 8px; text-transform: none; letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: 32px; line-height: 1.22; font-weight: 600;
+      margin: 0 0 10px; letter-spacing: -0.01em; color: #111;
+    }
+    .subtitle {
+      color: var(--fg-mute); font-size: 17px; font-weight: 400;
+      line-height: 1.5; margin: 0 0 24px;
+    }
+    h2 {
+      font-size: 22px; font-weight: 600; line-height: 1.3;
+      margin: 1.9em 0 0.5em; letter-spacing: -0.005em; color: #111;
+    }
+    h3 { font-size: 17px; font-weight: 600; margin: 1.5em 0 0.35em; }
+
+    p { margin: 0 0 0.9em; }
+    ul, ol { margin: 0 0 1em; padding-left: 1.4em; }
+    li { margin-bottom: 0.35em; }
+    li::marker { color: var(--fg-faint); }
+
+    a { color: var(--link); text-decoration: underline; text-decoration-color: rgba(26,95,180,0.4); }
+    a:visited { color: var(--link-visited); }
+    a:hover { text-decoration-color: var(--link); }
+
+    code {
+      font-family: var(--font-mono); font-size: 0.85em;
+      background: var(--hi); padding: 1px 5px; border-radius: 3px;
+    }
+    pre {
+      background: var(--hi); padding: 14px 18px; border-radius: 8px;
+      overflow-x: auto; margin: 1em 0; font-size: 13px; line-height: 1.55;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    pre code { background: none; padding: 0; border-radius: 0; font-size: inherit; }
+    strong { font-weight: 600; color: var(--fg); }
+    em { font-style: italic; }
+
+    blockquote {
+      margin: 1em 0; padding: 6px 0 6px 18px;
+      border-left: 3px solid var(--rule); color: var(--fg-mute);
+    }
+    blockquote p { font-size: 15.5px; margin: 0; }
+
+    /* Paper links / pill button */
+    .paper-links {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 18px 0 8px; flex-wrap: wrap;
+    }
+    .paper-links .btn-pill {
+      font-size: 13px; line-height: 1; color: var(--fg);
+      text-decoration: none; background: var(--paper);
+      border: 1px solid var(--rule); border-radius: 999px;
+      padding: 0.55rem 0.95rem 0.65rem;
+      transition: background 200ms ease;
+    }
+    .paper-links .btn-pill:hover { background: var(--hi); }
+
+    /* TL;DR */
+    .tldr {
+      margin: 1.2em 0 1.6em;
+      padding: 14px 18px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      font-size: 15.5px;
+    }
+    .tldr-label, .tldr .label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .tldr p { font-size: 15.5px; line-height: 1.6; color: var(--fg); margin: 0; }
+    .tldr p + p { margin-top: 0.6em; }
+
+    /* Callout */
+    .callout {
+      margin: 1.5em 0; padding: 14px 18px;
+      background: var(--hi); border-radius: 6px;
+    }
+    .callout-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-mute); margin-bottom: 8px;
+    }
+    .callout p { font-size: 15px; line-height: 1.55; color: var(--fg); margin: 0; }
+
+    /* Stat row */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0;
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+    @media (min-width: 600px) {
+      .stat-row { grid-template-columns: repeat(4, 1fr); }
+    }
+    .stat {
+      padding: 16px 18px;
+      border-right: 1px solid var(--rule);
+    }
+    .stat:first-child { padding-left: 0; }
+    .stat:last-child { border-right: 0; }
+    @media (max-width: 599px) {
+      .stat:nth-child(2n) { border-right: 0; }
+      .stat:nth-child(n+3) { border-top: 1px solid var(--rule); }
+    }
+    .stat .k {
+      display: block;
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .stat .v {
+      font-size: 22px; font-weight: 600; color: var(--fg);
+      line-height: 1.1; letter-spacing: -0.01em;
+    }
+    .stat .s {
+      font-size: 12px; color: var(--fg-faint);
+      margin-top: 6px; line-height: 1.4;
+    }
+
+    /* Mode grid */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin: 1.5em 0;
+    }
+    @media (min-width: 600px) { .mode-grid { grid-template-columns: repeat(2, 1fr); } }
+    .mode-card {
+      background: var(--paper);
+      border-radius: 8px;
+      padding: 16px 18px;
+      border: 1px solid var(--rule);
+    }
+    .mode-card .tag {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .mode-card .t {
+      display: block;
+      font-size: 16px; font-weight: 600; color: var(--fg);
+      margin-bottom: 6px; letter-spacing: -0.005em;
+    }
+    .mode-card .desc {
+      font-size: 14px; line-height: 1.5; color: var(--fg-mute);
+    }
+
+    /* Table */
+    .table-wrap { margin: 1.5em 0; }
+    .table-label {
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 10px;
+    }
+    .table-label .id { color: var(--fg); margin-right: 12px; }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+    th, td {
+      padding: 8px 12px 8px 0; text-align: left;
+      border-bottom: 1px solid var(--rule); color: var(--fg);
+    }
+    th {
+      font-weight: 600; color: var(--fg-mute);
+      font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--fg-mute);
+    }
+    td.num { text-align: right; white-space: nowrap; }
+    td.pos { color: var(--fg); }
+    td.neg { color: var(--fg-faint); }
+    tr:last-child td { border-bottom: none; }
+    tr.highlight td { background: var(--hi); }
+    tr.totals td { border-top: 1px solid var(--fg-mute); }
+
+    /* Figure / chart */
+    figure.chart, figure { margin: 1.6em 0; }
+    figure svg, figure.chart svg {
+      display: block; width: 100%; height: auto;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+    }
+    figcaption {
+      font-size: 13px; color: var(--fg-mute);
+      line-height: 1.5; margin-top: 10px;
+    }
+    figcaption strong { color: var(--fg); font-weight: 500; }
+    @media (min-width: 960px) {
+      article > figure.chart, .body-main > figure.chart {
+        width: min(1100px, calc(100vw - 3rem));
+        max-width: none;
+        margin-left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+
+    /* Neg list */
+    .neg-list {
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+    }
+    .neg-list-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin: 14px 0 6px;
+    }
+    .neg-list ul { list-style: none; padding: 0; margin: 0; }
+    .neg-list li {
+      padding: 14px 0; border-bottom: 1px solid var(--rule);
+      font-size: 15px; line-height: 1.6; color: var(--fg-mute);
+      margin-bottom: 0;
+    }
+    .neg-list li:last-child { border-bottom: 0; }
+    .neg-list li strong { color: var(--fg); font-weight: 600; }
+
+    /* Break */
+    .break {
+      display: flex; align-items: center; justify-content: center;
+      margin: 3rem 0 2.5rem;
+      color: var(--fg-faint);
+      font-size: 11px; letter-spacing: 0.6em;
+    }
+
+    hr { border: 0; border-top: 1px solid var(--rule); margin: 1.8em 0; }
+    .footer { font-size: 12.5px; color: var(--fg-faint); }
+
+    /* Reproducibility panel */
+    table.repro { margin: 1em 0 1.5em; }
+    table.repro th {
+      width: 7.5em; vertical-align: top; text-transform: none; letter-spacing: 0;
+      font-size: 13px; border-bottom: 1px solid var(--rule);
+    }
+    table.repro td { font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+    table.repro tr:last-child th { border-bottom: none; }
+
+    @media (max-width: 480px) {
+      .site-header { padding: 22px 20px 0; }
+      article { padding: 16px 20px 56px; }
+      h1 { font-size: 28px; }
+      .subtitle { font-size: 16px; }
+      .stat-row { grid-template-columns: 1fr; }
+      .mode-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+    <!-- PANES:HEAD:START -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
+  <link rel="stylesheet" href="panes.css?v=bbd7cc12" />
+  <script src="ascii.js?v=6f1f421a" defer></script>
+  <!-- PANES:HEAD:END -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..650;1,8..60,400..500&display=swap" />
+  <link rel="stylesheet" href="explorer/fact-probe/embed/embed.css?v=c6f739a8" />
+  <style>details.fx-numbers { margin: 0 0 24px; } details.fx-numbers > summary { cursor: pointer; font-size: 13px; color: var(--pn-quiet); } details.fx-numbers[open] > summary { margin-bottom: 4px; }</style>
+  <noscript><style>[data-fx] { display: none !important; }</style></noscript>
+  <script defer src="explorer/fact-probe/embed/embed.js?v=8045209f"></script>
+</head>
+<body class="pn-body panes-post">
+  <!-- PANES:BAR:START -->
+  <div class="split split--inner">
+    <aside class="side">
+      <div class="side__pin">
+        <figure class="side__art">
+          <pre data-landscape data-rows="22" aria-hidden="true">                                             
+                                             
+                                             
+                                             
+                       ==                    
+                    -======                  
+                 :----=======                
+          ::::::::::----=======              
+   :::::----:::::,,,:::--=================   
+    :::-----:::::,..,,:--==================  
+     :::::::::::::,...,:-===-============    
+       ::::::::::::::,,<b>@</b><b>@</b>------========      
+         ,,,,,,,:::--======----------        
+           ,,,..,,::-======-------           
+             ,,...,:-====------              
+              :::,,,::::---                  
+                 ::::::                      
+                                             
+                                             
+                                             
+                                             
+                                             </pre>
+        </figure>
+        <p class="side__name"><a href="/">Stephen<br> Casella<span class="accent">_</span></a></p>
+        <p class="side__bio">I study how language models reason and respond to training, and put AI agents to work on hard, checkable problems: formal proofs, faster code, real bugs.</p>
+        <nav class="side__nav" aria-label="Site">
+          <a href="research.html" aria-current="true">research</a>
+          <a href="projects.html">software</a>
+          <a href="/#contact">contact</a>
+        </nav>
+      </div>
+      <div class="side__links">
+        <a class="side__grid" href="blog_diversity.html" title="pick a random integer between 1 and 100." aria-label="Pick a random integer between 1 and 100. It put more than 95% of its probability on three numbers: 4, 42, and 47. Read the write-up."><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></a>
+        <a href="https://github.com/scasella" rel="me">github.com/scasella</a>
+        <a href="https://huggingface.co/scasella91" rel="me">huggingface.co/scasella91</a>
+        <a href="https://www.linkedin.com/in/stevecasella/" rel="me">linkedin</a>
+      </div>
+    </aside>
+    <div class="split__main">
+  <!-- PANES:BAR:END -->
+  <main class="post-main">
+  <article class="post">
+<h1>A probe on Llama’s hidden states beats its stated confidence, and the signal is spread across the network</h1>
+<!-- PANES:META:START -->
+    <p class="post-byline">[ <time datetime="2026-10-18">2026-10-18</time> ] // Llama 3.1 8B // 13 MIN READ</p>
+  <!-- PANES:META:END -->
+        <p class="subtitle">In April I <a href="blog_interp.html">reported</a> that a linear probe on Llama 3.1 8B’s hidden states ranks factual claims better than the model’s own stated confidence. This follow-up tests that result against a stronger way of reading the model’s confidence and against two confounds, then asks, in a preregistered analysis, where in the network the probe’s signal comes from. The data behind it can be explored in an interactive page.</p>
+        <div class="tldr">
+          <span class="tldr-label">TL;DR</span>
+          <p>On 742 held-out claims from 24 FActScore biographies, the probe reaches AUROC 0.802. Llama’s stated probability reaches 0.541, because it gives exactly 1.0 to 650 of the 742 claims. The probe’s lead over the stated probability holds when only claims about the same person are compared, which keeps subject popularity fixed. Reading the probability that Llama answers “True” about one claim at a time (P(True)) is a much stronger baseline, at 0.735, and in an exploratory test a two-weight combination of the probe and P(True) beats both. Removing what sentence position and year mentions explain leaves 0.645 within biographies, cross-fitted over all 157, which passed a 0.60 bar set before the analysis was run.</p>
+          <p>A preregistered, exact decomposition puts 79% of the position-residualized probe’s within-biography signal in attention heads. The neuron part is dense: the 50 most important of 286,720 neurons hold 1.25% of the neurons’ positive contribution. Knocking out the top 200 neurons hurt the probe more than knocking out random ones, but by 0.026, short of the preregistered 0.03. An LLM rater found the top neurons legible, and no more so than matched random neurons.</p>
+        </div>
+        <div class="stat-row">
+          <div class="stat">
+            <span class="k">Probe vs. stated</span>
+            <div class="v">0.802 / 0.541</div>
+            <div class="s">AUROC on 742 held-out claims</div>
+          </div>
+          <div class="stat">
+            <span class="k">Stated exactly 1.0</span>
+            <div class="v">650 / 742</div>
+            <div class="s">Claims Llama called certain</div>
+          </div>
+          <div class="stat">
+            <span class="k">Probe + P(True)</span>
+            <div class="v">0.745</div>
+            <div class="s">Within-biography AUROC, all 157 (exploratory)</div>
+          </div>
+          <div class="stat">
+            <span class="k">Heads’ share</span>
+            <div class="v">79%</div>
+            <div class="s">Of the residualized probe’s signal; the top 50 neurons hold 1.25% of the neurons’ positive mass</div>
+          </div>
+        </div>
+        <div class="paper-links">
+          <a href="explorer/fact-probe/" class="btn-pill">Open the interactive explorer</a>
+          <a href="blog_interp.html" class="btn-pill">The April write-up</a>
+        </div>
+        <div class="callout">
+          <span class="callout-label">Status</span>
+          <p>The decomposition, the knockout test and the neuron ratings were preregistered. The plan, its first three amendments and the plans for the exploratory analyses were each committed before the data they cover; a fourth amendment records a data error found after all results. The earlier comparisons with the stated probability, P(True), popularity and position were not part of the preregistration. A workshop paper is in draft and not peer reviewed. The code and results are on a branch of <a href="https://github.com/scasella/activation-probes-claim-correctness">scasella/activation-probes-claim-correctness</a> that is not public yet.</p>
+        </div>
+
+        <h2 id="setup">Setup</h2>
+        <p>FActScore (Min et al., 2023) has 157 biographies written by ChatGPT, split into 4,886 atomic facts that annotators marked as supported or not. Llama 3.1 8B Instruct reads each biography. For each fact, I average Llama’s layer-19 residual stream over the fact’s source sentence and fit an L2 logistic regression on 133 biographies. The probe is then scored once on the 24 held-out biographies, 742 facts, of which 233 are wrong.</p>
+        <p>I compare it with two ways of reading Llama’s own confidence:</p>
+        <ul>
+          <li><strong>Stated probability.</strong> Llama sees the biography and the facts, in chunks of up to 20, and gives a probability that each is correct. In April I called this self-report and described it as one claim at a time; on FActScore it actually saw the whole biography and up to 20 claims at once. Llama did not write these biographies, so this measures Llama verifying someone else’s claims. The explorer calls it Llama-as-verifier.</li>
+          <li><strong>P(True).</strong> Llama sees one fact at a time, with the subject named, and I read the probability that its first answer token is “True”.</li>
+        </ul>
+        <p>The scores are AUROC: the chance that a randomly chosen correct claim is scored above a randomly chosen incorrect one, where 0.5 is a coin flip and 1.0 is perfect. Within-biography AUROC compares only claims about the same person. Brackets are 95% bootstrap intervals, resampling claims or whole biographies as stated.</p>
+        <p>This is not the first probe of its kind. <a href="https://doi.org/10.18653/v1/2025.findings-emnlp.880">Han et al. (2025)</a> trained claim-level probes on Llama hidden states, tested them on FActScore and compared them with verbalized confidence and P(True). What this study adds is a paired comparison with stated and token-probability confidence on human labels, popularity and position controls, the probe–P(True) combination, and the decomposition.</p>
+
+        <h2 id="stated">The model calls almost every claim certain</h2>
+        <div class="fx" data-fx data-fx-build="c545644ee271">
+<div class="panel scoreboard">
+    <div class="chart" id="scoreboard" role="img" aria-label="AUROC of each signal on the 742 test claims"></div>
+    <p class="caption">All four scores rank the same 742 claims from 24 biographies held out from probe training; intervals resample claims. With only 24 biographies, resampling whole biographies gives the probe a wider [0.748, 0.848]. Probe + P(True) is exploratory.</p>
+  </div>
+<p class="fx-wait">Loading the interactive figure…</p>
+<p class="fx-fail caption">This interactive figure could not load. The same view is in the <a href="explorer/fact-probe/">explorer</a>.</p>
+</div>
+<details class="fx-numbers" open>
+<summary>Table 01 as numbers</summary>
+<div class="table-wrap">
+          <div class="table-label"><span class="id">Table 01</span>Test split: 742 claims from 24 held-out biographies</div>
+          <table>
+            <thead>
+              <tr><th>Signal</th><th class="num">AUROC (claims resampled)</th><th class="num">Within biography (biographies resampled)</th></tr>
+            </thead>
+            <tbody>
+              <tr class="highlight"><td>Probe on layer-19 activations</td><td class="num">0.802 [0.769, 0.833]</td><td class="num">0.723 [0.632, 0.793]</td></tr>
+              <tr><td>P(True), one claim at a time</td><td class="num">0.735 [0.696, 0.772]</td><td class="num">0.655 [0.603, 0.704]</td></tr>
+              <tr><td>Stated probability</td><td class="num">0.541 [0.514, 0.570]</td><td class="num">0.568 [0.505, 0.632]</td></tr>
+              <tr><td>Subject’s Wikipedia pageviews (no model)</td><td class="num">0.740 [0.701, 0.780]</td><td class="num">constant within a biography</td></tr>
+              <tr><td>Sentence position, earlier is safer (no model)</td><td class="num">0.582 [0.534, 0.626]</td><td class="num">0.624 [0.547, 0.688]</td></tr>
+            </tbody>
+          </table>
+        </div>
+</details>
+
+        <p>The stated probability fails by saturating: 650 of the 742 claims get exactly 1.0 and 39 get exactly 0.0. The probe leads it by +0.262 [0.180, 0.332] with whole biographies resampled, and by +0.155 [0.057, 0.244] when only claims about the same person are compared.</p>
+<div class="fx" data-fx data-fx-build="c545644ee271" id="reader">
+<div class="status"><span class="chip">Test split</span><span class="chip">Human labels</span></div>
+<div class="panel" style="display:grid; gap:16px">
+    <div class="controls">
+      <div class="ctl">
+        <label for="bioSel">Biography</label>
+        <button class="btn" id="bioPrev" aria-label="Previous biography">←</button>
+        <select id="bioSel"></select>
+        <button class="btn" id="bioNext" aria-label="Next biography">→</button>
+      </div>
+      <div class="ctl"><span class="lbl">Signal</span><div class="seg" id="sigSeg" role="group" aria-label="Signal"></div></div>
+      <div class="ctl">
+        <label for="flagPct">Flag least-trusted</label>
+        <input type="range" id="flagPct" min="5" max="60" step="1">
+        <span class="num" id="flagPctOut"></span>
+      </div>
+    </div>
+    <div class="reader-summary" id="readerSummary" aria-live="polite"></div>
+    <div class="reader">
+      <div style="min-width:0">
+        <div class="bio-head"><h3 id="bioName"></h3><span class="kv" id="bioMeta"></span></div>
+        <div class="bio-text" id="bioText"></div>
+        <div class="legend-inline" style="margin-top:12px">
+          <span><i style="background: color-mix(in srgb, var(--flag) 48%, transparent)"></i>flagged by the signal</span>
+          <span><span style="text-decoration: underline dotted; text-underline-offset: 4px">dotted</span>&nbsp;contains an incorrect claim (superscript: how many)</span>
+        </div>
+      </div>
+      <div style="min-width:0; display:grid; gap:10px">
+        <div class="stat-row" id="bioStats"></div>
+        <div class="facts-scroll"><table class="facts" id="factTable"></table></div>
+        <p class="caption">Click a sentence to find its claims. The probe reads whole sentences, so claims from one sentence share its score. Llama-as-verifier saw the whole biography and the claims in chunks of up to 20; P(True) saw one claim at a time with the subject named.</p>
+      </div>
+    </div>
+    <p class="caption" id="defaultNote"></p>
+  </div>
+<p class="fx-wait">Loading the interactive figure…</p>
+<p class="fx-fail caption">This interactive figure could not load. The same view is in the <a href="explorer/fact-probe/#reader">explorer</a>.</p>
+</div>
+
+        <p>Popularity is the obvious confound. Facts about obscure people are wrong more often, and a probe could rank claims by how familiar the subject is without reading anything about the claim. A free pageview lookup reaches 0.740, and across the whole test set the probe’s lead over it, +0.062 [−0.017, 0.155] with biographies resampled, cannot be told from zero. Within a biography the subject is fixed, so the within-biography column is the cleaner test, and there the probe’s lead over the stated probability holds.</p>
+<div class="fx" data-fx data-fx-build="c545644ee271" id="ranking">
+<div class="status"><span class="chip">Test split</span><span class="chip">742 claims · 233 incorrect</span></div>
+<div class="cols">
+    <div class="panel">
+      <h3>Errors caught as more claims are flagged</h3>
+      <div class="legend" id="gainLegend" style="margin:6px 0 4px"></div>
+      <div class="chart" id="gainChart"></div>
+      <p class="caption">Ties are drawn as straight segments, the average over random tie-breaking. Llama-as-verifier's long flat-to-diagonal run is the 650 claims it scored exactly 1.0.</p>
+    </div>
+    <div class="panel" style="display:grid; gap:12px">
+      <h3>Within one biography</h3>
+      <p class="caption">Pooled over all claims, popularity alone does well: a subject's Wikipedia pageviews reach 0.740 [0.701, 0.780], and the probe's margin over them, +0.062 [−0.017, 0.155] with whole biographies resampled, cannot be told from zero. Comparing only claims about the same person holds popularity fixed.</p>
+      <div class="chart" id="withinChart"></div>
+      <p class="caption">Within-biography AUROC on the 24 test biographies, with whole biographies resampled. The probe leads Llama-as-verifier by +0.155 [0.057, 0.244]. Sentence position scores earlier sentences as more likely correct; it needs no model and, unlike popularity, varies within a biography.</p>
+    </div>
+  </div>
+<div class="panel">
+    <h3>All 24 test biographies</h3>
+    <p class="caption" style="margin:4px 0 10px">Within-biography AUROC for each one, sorted by the probe. Some biographies have few incorrect claims, so single-biography scores are noisy. Click a name to read it.</p>
+    <div class="legend" style="margin-bottom:8px"><span><span class="swatch" style="background:var(--c-probe)"></span>Probe</span><span><span class="swatch" style="background:var(--c-ptrue)"></span>P(True)</span><span><span class="swatch" style="background:var(--c-verifier)"></span>Llama-as-verifier</span><span class="muted mono" style="font-size:.75rem">axis 0 → 1, line at 0.5</span></div>
+    <div class="bio-strip" id="bioStrip"></div>
+  </div>
+<p class="fx-wait">Loading the interactive figure…</p>
+<p class="fx-fail caption">This interactive figure could not load. The same view is in the <a href="explorer/fact-probe/#ranking">explorer</a>.</p>
+</div>
+
+
+        <h2 id="position">Position is a confound too, and the signal survives it</h2>
+        <p>Later sentences in a biography are wrong more often, and the probe partly encodes that. Cross-fitted over all 157 biographies in five folds, position alone reaches 0.654 within biographies, against 0.689 for the probe. A gate fixed before it was run removed the probe’s linear dependence on sentence position and year mentions, using slopes fitted on the other folds. The residualized score still reaches 0.645 [0.614, 0.675], above the gate’s 0.60 bar, and passing it licensed the preregistered analysis below. This is the claim-level signal I can defend, and the score that the decomposition and the knockouts below take apart.</p>
+
+        <h2 id="combine">Two signals beat one (exploratory)</h2>
+        <p>P(True) closes most of the stated probability’s gap. The probe leads it across the test set, +0.067 [0.003, 0.124] with biographies resampled, but not within biographies over all 157 (+0.029 [−0.009, 0.068]). The two scores are only weakly correlated (0.35), so I tested a linear stack of the two, with two weights fitted within biographies on the training folds.</p>
+        <p>Within biographies over all 157, the stack reaches 0.745 [0.719, 0.769], against 0.689 for the probe and 0.660 for P(True). That is +0.055 [0.039, 0.072] over the probe and +0.085 [0.056, 0.113] over P(True). Claims from one sentence share the probe’s score, so part of the gain is the stack breaking those ties. Leaving out same-sentence pairs, the gain over the probe is +0.042 [0.025, 0.059]. On the test split the stack reaches 0.834 against the probe’s 0.802. I planned this test after the single-score results were known, and committed the plan before computing any combined score.</p>
+<div class="fx" data-fx data-fx-build="c545644ee271" id="fx-combine">
+<div class="status"><span class="chip explor">Exploratory</span><span class="chip">Planned after the single scores, committed before any combined score</span></div>
+<div class="cols">
+    <div class="panel" style="display:grid; gap:14px">
+      <h3>Within biographies, all 157 (cross-fitted, biographies resampled)</h3>
+      <div class="stat-row">
+        <div class="stat"><span class="k">Probe</span><span class="v">0.689</span><span class="ci">[0.662, 0.717]</span></div>
+        <div class="stat"><span class="k">P(True)</span><span class="v">0.660</span><span class="ci">[0.637, 0.684]</span></div>
+        <div class="stat"><span class="k">Stack</span><span class="v" style="color:var(--c-stack)">0.745</span><span class="ci">[0.719, 0.769]</span></div>
+      </div>
+      <p class="caption">The stack gains +0.055 [0.039, 0.072] over the probe and +0.085 [0.056, 0.113] over P(True). Facts from one sentence share the probe's score, so part of the gain over the probe is the stack breaking those ties; leaving out same-sentence pairs, the gain is +0.042 [0.025, 0.059].</p>
+      <div class="stat-row">
+        <div class="stat"><span class="k">Test split, probe</span><span class="v">0.802</span></div>
+        <div class="stat"><span class="k">Test split, stack</span><span class="v" style="color:var(--c-stack)">0.834</span><span class="ci">[0.802, 0.864] claims resampled</span></div>
+      </div>
+      <p class="caption">Stack weights were fitted within biographies on the other 133 biographies: 0.0729 per unit of probe logit and 0.0283 per unit of P(True) logit difference.</p>
+    </div>
+    <div class="panel">
+      <h3>Every test claim, by both signals</h3>
+      <div class="legend" style="margin:6px 0"><span><span class="swatch" style="background:transparent; border:1.5px solid var(--muted)"></span>correct</span><span><span class="swatch" style="background:var(--ink)"></span>incorrect</span><span><span class="ln dash" style="border-color:var(--c-stack)"></span>equal stack score</span></div>
+      <div class="chart" id="scatter"></div>
+      <p class="caption">The vertical axis reads P(True) in logits: Llama's logit for “True” minus its logit for “False”. Incorrect claims (filled) gather toward the lower left. Each dashed line joins claims with the same stack score, which rises toward the upper right. Hover a point to read its claim.</p>
+    </div>
+  </div>
+<p class="fx-wait">Loading the interactive figure…</p>
+<p class="fx-fail caption">This interactive figure could not load. The same view is in the <a href="explorer/fact-probe/#combine">explorer</a>.</p>
+</div>
+
+
+        <h2 id="anatomy">Where the signal lives</h2>
+        <p>The probe reads one direction in Llama’s layer-19 residual stream. Everything in that stream was written there by an attention head, an MLP neuron or the token embedding, so the probe’s score splits exactly into a direct contribution from each of 286,720 neurons, 640 heads and the embedding. I measured each component’s share of the residualized probe’s within-biography separation between correct and incorrect claims. I wanted to test a claim from Cammarata’s essay “Neural Networks Are Already Clean”, that probe-like directions break down into a few readable neurons.</p>
+        <div class="fx" data-fx data-fx-build="c545644ee271" id="fx-anatomy">
+<div class="status"><span class="chip prereg">Preregistered decomposition</span><span class="chip desc">Descriptive: no test</span><span class="chip">All 157 biographies, cross-fitted</span></div>
+<div class="panel" style="display:grid; gap:12px">
+    <h3>Heads carry 79%; neurons nearly cancel out</h3>
+    <div class="chart" id="tugChart"></div>
+    <p class="caption">Bars show the summed contributions that push correct claims above incorrect ones (right) and the reverse (left); the dot is the net. Neurons push 18.23 one way and 18.06 the other, leaving a net 0.173, or 21% of the total 0.814. The embedding's share is 0.01%.</p>
+  </div>
+<p class="fx-wait">Loading the interactive figure…</p>
+<p class="fx-fail caption">This interactive figure could not load. The same view is in the <a href="explorer/fact-probe/#anatomy">explorer</a>.</p>
+</div>
+<details class="fx-numbers" open>
+<summary>Table 02 as numbers</summary>
+<div class="table-wrap">
+          <div class="table-label"><span class="id">Table 02</span>Direct contributions to the within-biography separation (all 157 biographies, cross-fitted)</div>
+          <table>
+            <thead>
+              <tr><th>Component</th><th class="num">Ranks correct higher</th><th class="num">Ranks incorrect higher</th><th class="num">Net</th><th class="num">Share</th></tr>
+            </thead>
+            <tbody>
+              <tr class="highlight"><td>640 attention heads</td><td class="num">+1.41</td><td class="num">−0.77</td><td class="num">0.641</td><td class="num">79%</td></tr>
+              <tr><td>286,720 MLP neurons</td><td class="num">+18.23</td><td class="num">−18.06</td><td class="num">0.173</td><td class="num">21%</td></tr>
+              <tr><td>Token embedding</td><td class="num"></td><td class="num"></td><td class="num">0.0001</td><td class="num">0.01%</td></tr>
+              <tr class="totals"><td>Total</td><td class="num"></td><td class="num"></td><td class="num">0.814</td><td class="num">100%</td></tr>
+            </tbody>
+          </table>
+        </div>
+</details>
+
+        <p>The heads’ part is somewhat concentrated: the strongest head carries 5.0% of the separation and the top ten 33%. The neurons’ part is not. Neurons push hard in both directions and nearly cancel. The 50 neurons with the most positive contribution hold 1.25% of the positive neuron mass, half of it takes 16,307 neurons, and 80% takes 46,127. The top-50 sets chosen in different folds overlap with Jaccard 0.53 on average. These shares, the head shares included, are preregistered descriptives, not tests. No test on heads was preregistered, and the head knockouts below are exploratory.</p>
+        <div class="fx" data-fx data-fx-build="c545644ee271">
+<div class="cols">
+    <div class="panel" style="display:grid; gap:10px">
+      <h3>640 attention heads</h3>
+      <p class="caption">Layers 0–19 down, heads 0–31 across. Pink heads rank correct claims above incorrect ones, net; blue heads do the reverse. The ten outlined heads carry 33% of the separation between them; the strongest alone carries 5.0%.</p>
+      <div class="chart" id="headGrid"></div>
+    </div>
+    <div class="panel" style="display:grid; gap:10px">
+      <h3>Where the top ten heads look</h3>
+      <p class="caption">Average attention from a sentence's tokens, split by what they attend to. Descriptive.</p>
+      <div class="tablewrap"><table class="regions" id="headRegions"></table></div>
+      <div class="legend"><span><i class="swatch r-bos" style="border-radius:2px"></i>start tokens (2 BOS)</span><span><i class="swatch r-prompt" style="border-radius:2px"></i>prompt (names the subject)</span><span><i class="swatch r-earlier" style="border-radius:2px"></i>earlier sentences</span><span><i class="swatch r-own" style="border-radius:2px"></i>the sentence itself</span></div>
+    </div>
+  </div>
+<div class="panel" style="display:grid; gap:14px">
+    <h3>286,720 MLP neurons, one pixel each</h3>
+    <p class="caption prose">Each square is one layer's 14,336 neurons. Pink neurons rank correct claims above incorrect ones, net; blue neurons do the reverse; colour strength shows how a neuron's mass ranks among all of them. Slide to light up, in amber, the neurons with the most positive mass, and see how little of it any small set holds.</p>
+    <div class="controls">
+      <div class="ctl"><label for="fieldN">Light up the top</label><input type="range" id="fieldN" min="0" max="10" step="1"><span class="big-readout" id="fieldNOut" aria-live="polite"></span></div>
+      <div class="ctl"><span class="lbl">They hold</span><span class="big-readout" id="fieldShareOut" aria-live="polite"></span><span class="muted" style="font-size:.9rem">of the positive neuron mass</span></div>
+    </div>
+    <div class="cols field-row">
+      <div class="field" id="field"></div>
+      <div style="display:grid; gap:8px; min-width:0">
+        <div class="chart" id="concChart"></div>
+        <p class="caption">The 50 neurons with the most positive mass, the positive carriers rated below, hold 1.25% of it. Half of it takes 16,307 neurons and 80% takes 46,127. Across the five folds, the top-50 sets overlap with Jaccard 0.53 on average.</p>
+      </div>
+    </div>
+  </div>
+<p class="fx-wait">Loading the interactive figure…</p>
+<p class="fx-fail caption">This interactive figure could not load. The same view is in the <a href="explorer/fact-probe/#anatomy">explorer</a>.</p>
+</div>
+<noscript>
+<figure>
+          <a href="explorer/fact-probe/#anatomy"><img src="assets/explorer/fact-probe-field.jpg" width="1600" height="1135" loading="lazy" style="display:block;width:100%;height:auto;border-radius:4px" alt="The explorer's neuron field: twenty squares, one per layer, each holding that layer's 14,336 neurons as pixels in pink and blue noise, with the 50 neurons of most positive mass lit in amber, beside a curve of cumulative share against the number of top neurons." /></a>
+          <figcaption><strong>All 286,720 neurons, one pixel each</strong>, from the explorer. Pink neurons rank correct claims above incorrect ones, net, and blue neurons do the reverse. The 50 with the most positive mass are lit in amber; together they hold 1.25% of the positive neuron mass.</figcaption>
+        </figure>
+</noscript>
+
+        <h2 id="knockouts">Knocking components out</h2>
+        <p>If a set of components carries the signal, replacing their output with its average (mean ablation) should hurt the probe more than doing the same to random components from the same layers. Random neurons were also matched on how much their contribution varies; random heads only on layer. Scores here are within-biography AUROCs of the residualized probe, which starts at 0.644 (the fp32 counterpart of the gate’s 0.645).</p>
+        <p>The preregistered test knocked out the 200 neurons with the most held-out mass. That cost 0.032 [0.016, 0.046] of AUROC, against 0.006 for matched random neurons. The difference, 0.026 [0.013, 0.038], is clearly above zero but short of the 0.03 I set in advance, so by the preregistered rule these neurons are not necessary.</p>
+        <div class="fx" data-fx data-fx-build="c545644ee271" id="fx-knockouts">
+<div class="status"><span class="chip prereg">Preregistered: 200 neurons</span><span class="chip explor">Exploratory: head knockouts (E1), dose curves (E2)</span></div>
+<div class="panel" style="display:grid; gap:12px">
+    <div class="controls">
+      <div class="ctl"><span class="lbl">Show</span><div class="seg" id="doseMode" role="group" aria-label="Measure"><button aria-pressed="true" data-m="cost">AUROC lost</button><button aria-pressed="false" data-m="auroc">AUROC left</button></div></div>
+    </div>
+    <div class="legend" id="doseLegend"></div>
+    <div class="chart" id="doseChart"></div>
+    <p class="caption">Exploratory follow-ups, each planned before its data: E1 knocked out the top 10 heads, and E2 extended both curves. Cost grows steadily with set size, from 0.019 for the top 10 heads to 0.213 [0.179, 0.250] for the top 160 heads and 0.219 [0.180, 0.259] for the top 5,000 neurons. Random sets, averaged over three per size, never cost more than 0.010. At 20,000 neurons they slightly raise the score (−0.019), so top − random there overstates the top set's cost.</p>
+    <p class="caption">At the largest sizes the residualized score falls below chance (0.425, 0.376 and 0.431 after 5,000 neurons, 20,000 neurons and 160 heads). On the raw probe logit, which starts at 0.689, the same knockouts leave 0.485, 0.406 and 0.534, so only the 20,000-neuron set is clearly below chance on both scales. Why is untested: the selection took only components with positive mass, so those pushing the wrong way stay in place, and the residualized score subtracts fixed position slopes. Read these points as showing dependence, not measuring it.</p>
+    <p class="caption">Plotted random points average three sets. The preregistered test and E1 used five, giving top − random differences of 0.026 and 0.013 where these three-set points give 0.025 and 0.010. Intervals resample biographies.</p>
+    <details>
+      <summary>Every knockout as a table</summary>
+      <div class="tablewrap" style="margin-top:10px"><table class="regions" id="doseTable"></table></div>
+    </details>
+  </div>
+<p class="fx-wait">Loading the interactive figure…</p>
+<p class="fx-fail caption">This interactive figure could not load. The same view is in the <a href="explorer/fact-probe/#knockouts">explorer</a>.</p>
+</div>
+<details class="fx-numbers" open>
+<summary>Table 03 as numbers</summary>
+<div class="table-wrap">
+          <div class="table-label"><span class="id">Table 03</span>Exploratory knockouts: within-biography AUROC lost (biographies resampled)</div>
+          <table>
+            <thead>
+              <tr><th>Set knocked out</th><th class="num">Top components</th><th class="num">Random (mean of 3 sets)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>10 heads</td><td class="num">0.019 [0.004, 0.036]</td><td class="num">0.009</td></tr>
+              <tr><td>40 heads</td><td class="num">0.091 [0.068, 0.114]</td><td class="num">0.010</td></tr>
+              <tr class="highlight"><td>160 heads</td><td class="num">0.213 [0.179, 0.250]</td><td class="num">0.001</td></tr>
+              <tr><td>50 neurons</td><td class="num">0.011 [0.003, 0.022]</td><td class="num">0.004</td></tr>
+              <tr><td>200 neurons</td><td class="num">0.032 [0.016, 0.046]</td><td class="num">0.007</td></tr>
+              <tr><td>1,000 neurons</td><td class="num">0.082 [0.056, 0.108]</td><td class="num">0.009</td></tr>
+              <tr class="highlight"><td>5,000 neurons</td><td class="num">0.219 [0.180, 0.259]</td><td class="num">−0.007</td></tr>
+              <tr><td>20,000 neurons</td><td class="num">0.268 [0.223, 0.314]</td><td class="num">−0.019</td></tr>
+            </tbody>
+          </table>
+        </div>
+<p>The random column averages three sets per size. The preregistered 200-neuron test used five, which is why the text above gives 0.006 where the table gives 0.007.</p>
+</details>
+
+        <p>In exploratory follow-ups, each planned before its data, the cost grows steadily with set size, while random sets averaged over three per size never cost more than 0.010. At the largest sizes the residualized score falls below chance: 0.425, 0.376 and 0.431 after 5,000 neurons, 20,000 neurons and 160 heads. On the raw probe score, which starts at 0.689, the same knockouts leave 0.485, 0.406 and 0.534, so only the 20,000-neuron set is clearly below chance on both scales. Why is untested. The selection took only components with positive mass, so those pushing the wrong way stayed in place, and the residualized score subtracts fixed position slopes. I read these points as showing dependence, not measuring it.</p>
+
+        <h2 id="neurons">The top neurons read like random ones</h2>
+        <p>For the legibility test I took the 100 carriers, the 50 neurons with the most positive and the 50 with the most negative mass. I paired each with a random neuron from the same layer whose contribution varies about as much, drawn from outside the top 1,000. A rater saw the 200 in shuffled order, with no layer, mass or role. For each neuron it saw the 10 highest- and 10 lowest-activating biography sentences, shaded token by token, and the highest- and lowest-activating web-text contexts from a FineWeb sample. It wrote a description, judged whether the description fits at least 14 of the 20 sentences, and labelled the neuron as tracking knowledge (epistemic), a confound such as topic or format, or a mix.</p>
+        <p>Before any rating existed, I made an LLM (Claude Opus 5.5) the rater of record instead of myself, in a dated amendment. That brings back the circularity raised against the essay, whose neuron explanations are also written and judged by models. A second, independent pass of the same model agreed with κ 0.83 on fit and 0.76 on category, which shows consistency, not validity.</p>
+        <ul>
+          <li><strong>Nearly everything is legible.</strong> 98 of 100 carriers and 95 of 100 random neurons got a description that fits, so the test sits near its ceiling.</li>
+          <li><strong>Confound-led, like random neurons.</strong> Weighted by mass, the coherent carriers are 90% confound, 9% mixed and 1.2% epistemic. Confound labels are no more common among carriers than among random neurons (87 of 98 against 91 of 95, Fisher p = 0.10). The rubric counts a claim type or topic, such as awards or family, as a confound, so both groups come out confound-heavy. The label reflects the rubric as much as the neurons.</li>
+          <li><strong>Descriptions predict carriers no better.</strong> In an exploratory test, a second model (gpt-6.1-sol) used each description to predict the neuron’s activations on held-out sentences. Spearman correlations were 0.33 for carriers and 0.27 for random neurons, a difference of 0.062 [−0.014, 0.137] with neuron pairs resampled. No human wrote or checked either side, and the control that would set a chance level was not run.</li>
+          <li><strong>Activation is not effect.</strong> A neuron’s contribution is its activation times its readout. For 32 of the 50 positive carriers, higher activation lowers the probe’s score; they rank correct claims higher by being less active on them. Eight carriers change readout sign across folds. The rater saw activation only, so its descriptions say what a neuron fires on, not how firing moves the score.</li>
+        </ul>
+<div class="fx" data-fx data-fx-build="c545644ee271" id="fx-neurons">
+<div class="status"><span class="chip prereg">Preregistered: category (A), legibility (B)</span><span class="chip explor">Exploratory: description simulation (E3)</span><span class="chip warn">LLM rater of record</span></div>
+<div class="cols">
+    <div class="panel" style="display:grid; gap:8px">
+      <h3>Legible, and read like random neurons</h3>
+      <p class="caption">98 of 100 carriers and 95 of 100 random neurons got a description that fits. Weighted by mass, the coherent carriers are 90% confound, 9% mixed and 1.2% epistemic: Primary A reads <b>CONFOUND-LED</b>. Confound features are no more common among carriers than among random neurons (87/98 against 91/95, Fisher p = 0.10). The preregistered rubric counts a claim type or topic (awards, education, family) as a confound, so both groups come out confound-heavy: the label reflects the rubric as much as the carriers, and the comparison with random neurons is the informative one.</p>
+      <p class="caption">Primary B asks whether the top carriers are as legible as Cammarata's essay “Neural Networks Are Already Clean” predicts. It reads <b>ESSAY-CONSISTENT</b> for the top carriers of a dense probe, on a test near its ceiling: 2% of carriers got a description that did not fit their sentences, against 5% of random neurons. But the 50 positive carriers hold only 1.25% of the positive neuron mass, and neurons carry 21% of the total separation.</p>
+    </div>
+    <div class="panel" style="display:grid; gap:8px">
+      <h3>Descriptions predict carriers no better than random neurons</h3>
+      <p class="caption">A second model (gpt-6.1-sol) used each description to predict the neuron's activations on held-out sentences. The descriptions predicted carriers no better than random neurons: Spearman 0.33 against 0.27, a difference of 0.062 [−0.014, 0.137] with neuron pairs resampled. The interval rules out a carrier disadvantage beyond 0.014, but not an advantage of up to 0.14. The control that would set a chance level was not run. Both sides are LLM judgements: no human wrote or checked either.</p>
+    </div>
+  </div>
+<p class="notice prose">The rater of record is an LLM (Claude Opus 5.5). A second, independent pass of the same model agreed with κ 0.83 on fit and 0.76 on category, which shows consistency, not validity. That is the same circularity raised against the claim being tested. <span id="keyNote">This version leaves out which neurons were carriers, so the packet can still be rated blind.</span></p>
+<details class="fx-more"><summary>Browse all 200 rated neurons</summary>
+<div class="panel" style="display:grid; gap:14px">
+    <div class="controls">
+      <div class="ctl" hidden><span class="lbl">Show</span><div class="seg" id="roleSeg" role="group" aria-label="Neuron set"><button aria-pressed="true" data-r="all">All 200</button><button aria-pressed="false" data-r="carrier">Carriers</button><button aria-pressed="false" data-r="random">Matched random</button></div></div>
+      <div class="ctl"><label for="nSort">Sort</label><select id="nSort"><option value="id">by packet order</option><option value="rho">by simulation ρ</option></select></div>
+      <div class="ctl" hidden><label class="toggle"><input type="checkbox" id="blind"> Blind mode: guess carrier or random</label><span class="num muted" id="guessScore"></span></div>
+    </div>
+    <p class="caption prose">Mass is a neuron's net effect on ranking; activation is not. A neuron's effect on the probe score is its activation times its readout, so for 32 of the 50 positive carriers higher activation lowers the probe score, and their mass comes from being less active on correct claims. 8 carriers change readout sign across folds. <span id="roNote">This version leaves the per-neuron readout out.</span></p>
+    <p class="caption prose">Biography sentences are ChatGPT-written FActScore text and may contain false claims about real people.<span id="lbNote" hidden> ✗ counts the claims annotators marked unsupported.</span> Web-text contexts are unfiltered FineWeb excerpts and can include adult or offensive text.</p>
+    <div class="nb">
+      <div class="nlist" id="nList" role="listbox" aria-label="Neurons"></div>
+      <div class="ndetail" id="nDetail"></div>
+    </div>
+  </div>
+</details>
+<p class="fx-wait">Loading the interactive figure…</p>
+<p class="fx-fail caption">This interactive figure could not load. The same view is in the <a href="explorer/fact-probe/#neurons">explorer</a>.</p>
+</div>
+
+
+        <h2 id="explorer">Explore it</h2>
+        <p>The <a href="explorer/fact-probe/">Fact Probe Explorer</a> holds the data behind this post. You can read any of the 24 test biographies and flag the claims each signal trusts least, to see which errors it catches. It shows how many errors each signal catches as more claims are flagged, every claim plotted by probe score against P(True), and a grid of all 640 heads. All 286,720 neurons are drawn one pixel each, with a slider that lights up the top N. There are the knockout curves, and a browser for the 200 rated neurons, with each neuron’s sentences, web-text contexts and description. Every number on the page is read from the study’s result files, and a sources table lists the file and key for each one.</p>
+        <p>The public explorer leaves out which of the 200 neurons were carriers, along with their layers, masses and readouts, so the same packet can still be rated blind by people.</p>
+
+        <h2 id="interpretation">Interpretation and limits</h2>
+        <p>The positive result is that a simple probe on Llama’s hidden states ranks claims much better than Llama’s stated confidence. The lead holds up when popularity and position are controlled, and the probe adds to P(True), the strongest read of Llama’s own confidence I tested. What the probe reads is distributed: most of it comes through attention heads, and the neuron part is spread over tens of thousands of neurons that mostly cancel. I found no small, readable set of neurons that carries it.</p>
+        <ul>
+          <li>One model, one layer and one pooling choice. Llama 3.1 8B Instruct, layer 19 and sentence pooling were fixed in advance, so facts from one sentence share a score.</li>
+          <li>The test split is small: 24 biographies. The probe scored 0.728 on validation and 0.802 on test, and with whole test biographies resampled its interval is [0.748, 0.848].</li>
+          <li>Popularity explains much of the pooled score. The within-biography comparisons are the ones that hold it fixed.</li>
+          <li>The stated probability is Llama verifying text ChatGPT wrote. P(True) is the stronger read of its confidence, and sampled self-consistency is still untested.</li>
+          <li>The decomposition counts direct effects only. Each component is credited with what it writes straight into the layer-19 stream; influence that passes through later components is credited to those components.</li>
+          <li>The preregistered knockout test missed its bar. The stack, the head knockout, the dose-response curves and the simulation test are exploratory. Each was chosen after related results were known, then fixed in a dated plan before its own data existed.</li>
+          <li>Legibility was judged by an LLM, near the coherence ceiling and under a rubric that files topics as confounds.</li>
+          <li>In one training biography, a decoding clean-up made three sentence windows one token too long, which affects 12 of the 4,886 facts. Refitting the probes moves the test AUROC and the 0.645 by under 0.001. With the probes held fixed, no within-biography AUROC can move by more than 0.0055. The error is recorded as a dated amendment.</li>
+        </ul>
+
+        <h2 id="next-experiment">Next experiment</h2>
+        <ul>
+          <li>Human ratings of the same packet, by raters who haven’t seen which neurons are carriers.</li>
+          <li>A probe trained to ignore position, instead of a residualized score, and one trained within biographies so it can’t lean on subject popularity.</li>
+          <li>Sampled self-consistency and a semantic-entropy-probe baseline.</li>
+        </ul>
+
+        <h2 id="reproducibility">Reproducibility</h2>
+        <table class="repro">
+          <tbody>
+            <tr><th scope="row">Model</th><td>Llama 3.1 8B Instruct (<code>meta-llama/Llama-3.1-8B-Instruct</code>); this study’s forward passes ran on one A100-80GB on Modal. Rater of record: Claude Opus 5.5. Simulator for the exploratory description test: gpt-6.1-sol.</td></tr>
+            <tr><th scope="row">Experiment</th><td>Layer-19 residual stream, mean-pooled over each fact’s source sentence; L2 logistic regression, C&nbsp;=&nbsp;0.01; trained on 109 + 24 biographies, scored once on 24. Cross-fit: five biography folds. Intervals: 1,000 bootstrap resamples over claims or whole biographies, seed 20260424; the description-simulation interval uses 10,000 resamples over neuron pairs. The decomposition reproduces the probe’s score to within 0.002 logit; knockouts replace outputs with their mean at answer tokens.</td></tr>
+            <tr><th scope="row">Data</th><td><a href="https://github.com/shmsw25/FActScore">FActScore</a>’s ChatGPT biographies and human labels (Min et al., 2023): 157 biographies, 4,886 facts after dropping 540 marked irrelevant. Neuron contexts: 5M tokens of FineWeb <code>sample/10BT</code> (ODC-By 1.0).</td></tr>
+            <tr><th scope="row">Results</th><td>The <a href="explorer/fact-probe/">interactive explorer</a>, built from the result files; its sources table names the file and key behind each number. The probe’s test AUROC and its lead over the stated probability with whole biographies resampled come from the April release’s 10,000-resample run (<code>factscore_grouped_bootstrap_ci.json</code>), so they match the <a href="blog_interp.html">April post</a>.</td></tr>
+            <tr><th scope="row">Code</th><td>Branch <code>workshop-revision</code> of <a href="https://github.com/scasella/activation-probes-claim-correctness">scasella/activation-probes-claim-correctness</a>, not public yet. The April release is public.</td></tr>
+            <tr><th scope="row">Status</th><td>Published 2026-10-18 · Decomposition, knockout test and neuron ratings preregistered (amendments A1–A4); other analyses labelled; workshop paper in draft; not peer reviewed.</td></tr>
+          </tbody>
+        </table>
+    <!-- PANES:NEXT:START -->
+    <nav class="post-next" aria-label="More research">
+      <a href="blog_reusable_binary_assurance.html"><span>next →</span><span>Verified once, reused three times: agents carried proofs of shipped OpenSSL code into new callers</span></a>
+      <a class="post-next__all" href="research.html">← all research</a>
+    </nav>
+  <!-- PANES:NEXT:END -->
+  </article>
+  </main>
+  <!-- PANES:FOOT:START -->
+    <footer class="pn-foot">
+      <p>Personal projects. Not affiliated with or endorsed by my employer. No employer data, infrastructure, or confidential information used.</p>
+    </footer>
+    </div>
+  </div>
+  <!-- PANES:FOOT:END -->
+</body>
+</html>
