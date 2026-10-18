@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Research | Stephen Casella</title>
-    <meta name="description" content="9 write-ups by Stephen Casella on language-model confidence, sampling bias and reasoning formats, and on AI agents doing formal verification and bug hunting, each with its setup and limitations.">
+    <meta name="description" content="10 write-ups by Stephen Casella on language-model confidence, sampling bias and reasoning formats, and on AI agents doing formal verification and bug hunting, each with its setup and limitations.">
     <meta name="author" content="Stephen Casella">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#080c0f">
@@ -13,7 +13,7 @@
     <meta property="og:site_name" content="Stephen Casella">
     <meta property="og:type" content="website">
     <meta property="og:title" content="~/research | Stephen Casella">
-    <meta property="og:description" content="9 LLM and agent experiment write-ups: what each measured, and what it did not show.">
+    <meta property="og:description" content="10 LLM and agent experiment write-ups: what each measured, and what it did not show.">
     <meta property="og:url" content="https://casella.dev/research.html">
     <meta property="og:image" content="https://casella.dev/assets/og/home.png">
     <meta property="og:image:secure_url" content="https://casella.dev/assets/og/home.png">
@@ -22,7 +22,7 @@
     <meta property="og:image:alt" content="Stephen Casella's research write-ups, newest first">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="~/research | Stephen Casella">
-    <meta name="twitter:description" content="9 LLM and agent experiment write-ups: what each measured, and what it did not show.">
+    <meta name="twitter:description" content="10 LLM and agent experiment write-ups: what each measured, and what it did not show.">
     <meta name="twitter:image" content="https://casella.dev/assets/og/home.png">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
     <script>
@@ -76,6 +76,16 @@
               "@id": "https://casella.dev/#person"
             },
             "hasPart": [
+              {
+                "@type": "BlogPosting",
+                "headline": "A probe on Llama’s hidden states beats its stated confidence, and the signal is spread across the network",
+                "url": "https://casella.dev/blog_fact_probe.html",
+                "datePublished": "2026-10-18",
+                "dateModified": "2026-10-18",
+                "author": {
+                  "@id": "https://casella.dev/#person"
+                }
+              },
               {
                 "@type": "BlogPosting",
                 "headline": "Verified once, reused three times: agents carried proofs of shipped OpenSSL code into new callers",
@@ -141,7 +151,7 @@
                 "headline": "Hidden-state probes outperform self-reported confidence",
                 "url": "https://casella.dev/blog_interp.html",
                 "datePublished": "2026-04-25",
-                "dateModified": "2026-09-23",
+                "dateModified": "2026-10-18",
                 "author": {
                   "@id": "https://casella.dev/#person"
                 }
@@ -225,11 +235,19 @@
       <main class="flow">
         <div class="proj-head">
           <h1>~/research</h1>
-          <p>[ 9 write-ups ] each lists its model, data, code, and open issues</p>
+          <p>[ 10 write-ups ] each lists its model, data, code, and open issues</p>
         </div>
         <section aria-labelledby="writing">
           <h2 class="visually-hidden" id="writing">write-ups</h2>
           <ul class="posts">
+            <li>
+              <a href="blog_fact_probe.html">
+                <span class="posts__kicker">2026-10-18 — interp / probes</span>
+                <span class="posts__title">A probe on Llama’s hidden states beats its stated confidence, and the signal is spread across the network</span>
+                <span class="posts__dek">On 742 held-out FActScore claims, a layer-19 probe reaches AUROC 0.802 against 0.541 for Llama’s stated confidence. A preregistered decomposition puts 79% of its residualized signal in attention heads; the neuron part is spread over thousands of neurons.</span>
+                <span class="posts__scope">One model and layer, 157 ChatGPT biographies; the 200-neuron knockout missed its preregistered bar; neuron legibility judged by an LLM.</span>
+              </a>
+            </li>
             <li>
               <a href="blog_reusable_binary_assurance.html">
                 <span class="posts__kicker">2026-10-05 — agents / formal verification</span>
