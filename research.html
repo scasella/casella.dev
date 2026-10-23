@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Research | Stephen Casella</title>
-    <meta name="description" content="11 write-ups by Stephen Casella on language-model confidence, sampling bias and reasoning formats, and on AI agents doing formal verification and bug hunting, each with its setup and limitations.">
+    <meta name="description" content="12 write-ups by Stephen Casella on language-model confidence, sampling bias and reasoning formats, and on AI agents doing formal verification and bug hunting, each with its setup and limitations.">
     <meta name="author" content="Stephen Casella">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#080c0f">
@@ -13,7 +13,7 @@
     <meta property="og:site_name" content="Stephen Casella">
     <meta property="og:type" content="website">
     <meta property="og:title" content="~/research | Stephen Casella">
-    <meta property="og:description" content="11 LLM and agent experiment write-ups: what each measured, and what it did not show.">
+    <meta property="og:description" content="12 LLM and agent experiment write-ups: what each measured, and what it did not show.">
     <meta property="og:url" content="https://casella.dev/research.html">
     <meta property="og:image" content="https://casella.dev/assets/og/home.png">
     <meta property="og:image:secure_url" content="https://casella.dev/assets/og/home.png">
@@ -22,7 +22,7 @@
     <meta property="og:image:alt" content="Stephen Casella's research write-ups, newest first">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="~/research | Stephen Casella">
-    <meta name="twitter:description" content="11 LLM and agent experiment write-ups: what each measured, and what it did not show.">
+    <meta name="twitter:description" content="12 LLM and agent experiment write-ups: what each measured, and what it did not show.">
     <meta name="twitter:image" content="https://casella.dev/assets/og/home.png">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
     <script>
@@ -76,6 +76,16 @@
               "@id": "https://casella.dev/#person"
             },
             "hasPart": [
+              {
+                "@type": "BlogPosting",
+                "headline": "Agents traced a three-stage lookup pathway in Qwen3, and six heads found in the small model held up in the larger one",
+                "url": "https://casella.dev/blog_qwen_lookup.html",
+                "datePublished": "2026-10-23",
+                "dateModified": "2026-10-23",
+                "author": {
+                  "@id": "https://casella.dev/#person"
+                }
+              },
               {
                 "@type": "BlogPosting",
                 "headline": "Agents built a label-free search for what Gemma 3 1B tracks as it reads, and confirmed one direction by steering",
@@ -245,11 +255,19 @@
       <main class="flow">
         <div class="proj-head">
           <h1>~/research</h1>
-          <p>[ 11 write-ups ] each lists its model, data, code, and open issues</p>
+          <p>[ 12 write-ups ] each lists its model, data, code, and open issues</p>
         </div>
         <section aria-labelledby="writing">
           <h2 class="visually-hidden" id="writing">write-ups</h2>
           <ul class="posts">
+            <li>
+              <a href="blog_qwen_lookup.html">
+                <span class="posts__kicker">2026-10-23 — interp / patching</span>
+                <span class="posts__title">Agents traced a three-stage lookup pathway in Qwen3, and six heads found in the small model held up in the larger one</span>
+                <span class="posts__dek">Agents traced a twelve-head lookup pathway in Qwen3-0.6B. Six of its heads, fixed before testing, had the predicted effect in Qwen3-1.7B on 92.2–100% of held-out prompts, and that transfer passed every registered gate.</span>
+                <span class="posts__scope">Short synthetic lookup prompts in two related Qwen3 models; two-word answer preference, not free generation; the 0.6B three-stage study and the repair failed their verdicts; evidence private.</span>
+              </a>
+            </li>
             <li>
               <a href="blog_gemma_blind_search.html">
                 <span class="posts__kicker">2026-10-23 — interp / SAEs</span>
