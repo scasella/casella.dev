@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agents built a label-free search for what Gemma 3 1B tracks as it reads, and confirmed one direction by steering | Stephen Casella</title>
+  <meta name="description" content="Claude Opus 5.5 agents built a preregistered, label-free search for what Gemma 3 1B tracks as it reads. It finds known variables blind and confirmed one direction by steering." />
+  <meta name="author" content="Stephen Casella" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#080c0f" />
+  <link rel="canonical" href="https://casella.dev/blog_gemma_blind_search.html" />
+  <meta property="og:site_name" content="Stephen Casella" />
+  <meta property="og:title" content="Agents built a label-free search for what Gemma 3 1B tracks as it reads" />
+  <meta property="og:description" content="It finds parenthesis and quotation state without labels and confirmed one direction by preregistered steering on untouched text (Δ 1.49 against a random maximum of 0.75). Gemma Scope 2 already had that direction, as a blend." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://casella.dev/blog_gemma_blind_search.html" />
+  <meta property="og:image" content="https://casella.dev/assets/og/blog_gemma_blind_search.png" />
+  <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_gemma_blind_search.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Share card for the write-up: Agents built a label-free search for what Gemma 3 1B tracks as it reads." />
+  <meta property="article:author" content="Stephen Casella" />
+  <meta property="article:published_time" content="2026-10-23" />
+  <meta property="article:modified_time" content="2026-10-23" />
+  <meta property="article:tag" content="AI agents" />
+  <meta property="article:tag" content="interpretability" />
+  <meta property="article:tag" content="sparse autoencoders" />
+  <meta property="article:tag" content="Gemma" />
+  <meta property="article:tag" content="Gemma Scope 2" />
+  <meta property="article:tag" content="preregistration" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Agents built a label-free search for what Gemma 3 1B tracks as it reads" />
+  <meta name="twitter:description" content="It finds parenthesis and quotation state without labels and confirmed one direction by preregistered steering on untouched text (Δ 1.49 against a random maximum of 0.75). Gemma Scope 2 already had that direction, as a blend." />
+  <meta name="twitter:image" content="https://casella.dev/assets/og/blog_gemma_blind_search.png" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-2RSWDWW67D');
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "Agents built a label-free search for what Gemma 3 1B tracks as it reads",
+      "description": "Claude Opus 5.5 agents built a preregistered, label-free search for what Gemma 3 1B tracks as it reads. It finds known variables blind and confirmed one direction by steering.",
+      "url": "https://casella.dev/blog_gemma_blind_search.html",
+      "mainEntityOfPage": "https://casella.dev/blog_gemma_blind_search.html",
+      "image": "https://casella.dev/assets/og/blog_gemma_blind_search.png",
+      "datePublished": "2026-10-23",
+      "dateModified": "2026-10-23",
+      "author": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/",
+        "sameAs": [
+          "https://github.com/scasella",
+          "https://www.linkedin.com/in/stevecasella/"
+        ]
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "keywords": [
+        "mechanistic interpretability",
+        "sparse autoencoders",
+        "Gemma Scope 2",
+        "gemma-3-1b-pt",
+        "ICA",
+        "steering",
+        "preregistration",
+        "random baselines",
+        "AI agents",
+        "Claude Opus 5.5"
+      ],
+      "codeRepository": "https://github.com/scasella/gf-discovery-ext"
+    }
+  </script>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:           #fafaf8;
+      --paper:        #ffffff;
+      --fg:           #222;
+      --fg-mute:      #555;
+      --fg-faint:     #8a8a85;
+      --rule:         #e2e2dd;
+      --hi:           #f3f2ec;
+      --link:         #1a5fb4;
+      --link-visited: #5a3aa3;
+      --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono:    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      font-size: 16.5px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: rgba(0,0,0,0.08); color: inherit; }
+
+    .site-header {
+      max-width: 720px; margin: 0 auto; padding: 28px 24px 0;
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 13px; color: var(--fg-mute);
+    }
+    .site-header a {
+      color: var(--fg-mute); text-decoration: none;
+      border-bottom: 1px dotted var(--fg-faint); padding-bottom: 1px;
+    }
+    .site-header a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+
+    article {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 24px 64px;
+    }
+    .meta, .date {
+      color: var(--fg-faint); font-size: 13px;
+      margin-bottom: 8px; text-transform: none; letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: 32px; line-height: 1.22; font-weight: 600;
+      margin: 0 0 10px; letter-spacing: -0.01em; color: #111;
+    }
+    .subtitle {
+      color: var(--fg-mute); font-size: 17px; font-weight: 400;
+      line-height: 1.5; margin: 0 0 24px;
+    }
+    h2 {
+      font-size: 22px; font-weight: 600; line-height: 1.3;
+      margin: 1.9em 0 0.5em; letter-spacing: -0.005em; color: #111;
+    }
+    h3 { font-size: 17px; font-weight: 600; margin: 1.5em 0 0.35em; }
+
+    p { margin: 0 0 0.9em; }
+    ul, ol { margin: 0 0 1em; padding-left: 1.4em; }
+    li { margin-bottom: 0.35em; }
+    li::marker { color: var(--fg-faint); }
+
+    a { color: var(--link); text-decoration: underline; text-decoration-color: rgba(26,95,180,0.4); }
+    a:visited { color: var(--link-visited); }
+    a:hover { text-decoration-color: var(--link); }
+
+    code {
+      font-family: var(--font-mono); font-size: 0.85em;
+      background: var(--hi); padding: 1px 5px; border-radius: 3px;
+    }
+    pre {
+      background: var(--hi); padding: 14px 18px; border-radius: 8px;
+      overflow-x: auto; margin: 1em 0; font-size: 13px; line-height: 1.55;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    pre code { background: none; padding: 0; border-radius: 0; font-size: inherit; }
+    strong { font-weight: 600; color: var(--fg); }
+    em { font-style: italic; }
+
+    blockquote {
+      margin: 1em 0; padding: 6px 0 6px 18px;
+      border-left: 3px solid var(--rule); color: var(--fg-mute);
+    }
+    blockquote p { font-size: 15.5px; margin: 0; }
+
+    /* Paper links / pill button */
+    .paper-links {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 18px 0 8px; flex-wrap: wrap;
+    }
+    .paper-links .btn-pill {
+      font-size: 13px; line-height: 1; color: var(--fg);
+      text-decoration: none; background: var(--paper);
+      border: 1px solid var(--rule); border-radius: 999px;
+      padding: 0.55rem 0.95rem 0.65rem;
+      transition: background 200ms ease;
+    }
+    .paper-links .btn-pill:hover { background: var(--hi); }
+
+    /* TL;DR */
+    .tldr {
+      margin: 1.2em 0 1.6em;
+      padding: 14px 18px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      font-size: 15.5px;
+    }
+    .tldr-label, .tldr .label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .tldr p { font-size: 15.5px; line-height: 1.6; color: var(--fg); margin: 0; }
+    .tldr p + p { margin-top: 0.6em; }
+
+    /* Callout */
+    .callout {
+      margin: 1.5em 0; padding: 14px 18px;
+      background: var(--hi); border-radius: 6px;
+    }
+    .callout-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-mute); margin-bottom: 8px;
+    }
+    .callout p { font-size: 15px; line-height: 1.55; color: var(--fg); margin: 0; }
+
+    /* Stat row */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0;
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+    @media (min-width: 600px) {
+      .stat-row { grid-template-columns: repeat(4, 1fr); }
+    }
+    .stat {
+      padding: 16px 18px;
+      border-right: 1px solid var(--rule);
+    }
+    .stat:first-child { padding-left: 0; }
+    .stat:last-child { border-right: 0; }
+    @media (max-width: 599px) {
+      .stat:nth-child(2n) { border-right: 0; }
+      .stat:nth-child(n+3) { border-top: 1px solid var(--rule); }
+    }
+    .stat .k {
+      display: block;
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .stat .v {
+      font-size: 22px; font-weight: 600; color: var(--fg);
+      line-height: 1.1; letter-spacing: -0.01em;
+    }
+    .stat .s {
+      font-size: 12px; color: var(--fg-faint);
+      margin-top: 6px; line-height: 1.4;
+    }
+
+    /* Mode grid */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin: 1.5em 0;
+    }
+    @media (min-width: 600px) { .mode-grid { grid-template-columns: repeat(2, 1fr); } }
+    .mode-card {
+      background: var(--paper);
+      border-radius: 8px;
+      padding: 16px 18px;
+      border: 1px solid var(--rule);
+    }
+    .mode-card .tag {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .mode-card .t {
+      display: block;
+      font-size: 16px; font-weight: 600; color: var(--fg);
+      margin-bottom: 6px; letter-spacing: -0.005em;
+    }
+    .mode-card .desc {
+      font-size: 14px; line-height: 1.5; color: var(--fg-mute);
+    }
+
+    /* Table */
+    .table-wrap { margin: 1.5em 0; }
+    .table-label {
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 10px;
+    }
+    .table-label .id { color: var(--fg); margin-right: 12px; }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+    th, td {
+      padding: 8px 12px 8px 0; text-align: left;
+      border-bottom: 1px solid var(--rule); color: var(--fg);
+    }
+    th {
+      font-weight: 600; color: var(--fg-mute);
+      font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--fg-mute);
+    }
+    td.num { text-align: right; white-space: nowrap; }
+    td.pos { color: var(--fg); }
+    td.neg { color: var(--fg-faint); }
+    tr:last-child td { border-bottom: none; }
+    tr.highlight td { background: var(--hi); }
+    tr.totals td { border-top: 1px solid var(--fg-mute); }
+
+    /* Figure / chart */
+    figure.chart, figure { margin: 1.6em 0; }
+    figure svg, figure.chart svg {
+      display: block; width: 100%; height: auto;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+    }
+    figcaption {
+      font-size: 13px; color: var(--fg-mute);
+      line-height: 1.5; margin-top: 10px;
+    }
+    figcaption strong { color: var(--fg); font-weight: 500; }
+    @media (min-width: 960px) {
+      article > figure.chart, .body-main > figure.chart {
+        width: min(1100px, calc(100vw - 3rem));
+        max-width: none;
+        margin-left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+
+    /* Neg list */
+    .neg-list {
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+    }
+    .neg-list-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin: 14px 0 6px;
+    }
+    .neg-list ul { list-style: none; padding: 0; margin: 0; }
+    .neg-list li {
+      padding: 14px 0; border-bottom: 1px solid var(--rule);
+      font-size: 15px; line-height: 1.6; color: var(--fg-mute);
+      margin-bottom: 0;
+    }
+    .neg-list li:last-child { border-bottom: 0; }
+    .neg-list li strong { color: var(--fg); font-weight: 600; }
+
+    /* Break */
+    .break {
+      display: flex; align-items: center; justify-content: center;
+      margin: 3rem 0 2.5rem;
+      color: var(--fg-faint);
+      font-size: 11px; letter-spacing: 0.6em;
+    }
+
+    hr { border: 0; border-top: 1px solid var(--rule); margin: 1.8em 0; }
+    .footer { font-size: 12.5px; color: var(--fg-faint); }
+
+    /* Reproducibility panel */
+    table.repro { margin: 1em 0 1.5em; }
+    table.repro th {
+      width: 7.5em; vertical-align: top; text-transform: none; letter-spacing: 0;
+      font-size: 13px; border-bottom: 1px solid var(--rule);
+    }
+    table.repro td { font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+    table.repro tr:last-child th { border-bottom: none; }
+
+
+    /* Contexts from the data: the token where a direction is strongest */
+    .ctx { font-family: var(--font-mono); font-size: 0.9em; }
+    .ctx b { font-weight: 600; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+    /* Steering dial */
+    .dial { margin: 1.5em 0; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); }
+    .dial .prompt { margin: 0; padding: 12px 16px; border-bottom: 1px solid var(--rule); font-size: 14px; line-height: 1.6; color: var(--fg-mute); }
+    .dial ol { list-style: none; margin: 0; padding: 0; }
+    .dial li { display: grid; grid-template-columns: 6.5em minmax(0, 1fr); gap: 12px; margin: 0; padding: 10px 16px; border-bottom: 1px solid var(--rule); }
+    .dial li:last-child { border-bottom: 0; }
+    .dial .lvl { font-size: 12.5px; color: var(--fg-faint); }
+    .dial .txt { font-family: var(--font-mono); font-size: 13.5px; line-height: 1.6; overflow-wrap: anywhere; }
+    .dial .br { color: var(--link); padding: 0 2px; }
+    @media (max-width: 480px) { .dial li { grid-template-columns: 1fr; gap: 4px; } }
+
+    @media (max-width: 480px) {
+      .site-header { padding: 22px 20px 0; }
+      article { padding: 16px 20px 56px; }
+      h1 { font-size: 28px; }
+      .subtitle { font-size: 16px; }
+      .stat-row { grid-template-columns: 1fr; }
+      .mode-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+    <!-- PANES:HEAD:START -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
+  <link rel="stylesheet" href="panes.css?v=bbd7cc12" />
+  <script src="ascii.js?v=6f1f421a" defer></script>
+  <!-- PANES:HEAD:END -->
+</head>
+<body class="pn-body panes-post">
+  <!-- PANES:BAR:START -->
+  <div class="split split--inner">
+    <aside class="side">
+      <div class="side__pin">
+        <figure class="side__art">
+          <pre data-landscape data-rows="22" aria-hidden="true">                                             
+                                             
+                                             
+                                             
+                       ==                    
+                    -======                  
+                 :----=======                
+          ::::::::::----=======              
+   :::::----:::::,,,:::--=================   
+    :::-----:::::,..,,:--==================  
+     :::::::::::::,...,:-===-============    
+       ::::::::::::::,,<b>@</b><b>@</b>------========      
+         ,,,,,,,:::--======----------        
+           ,,,..,,::-======-------           
+             ,,...,:-====------              
+              :::,,,::::---                  
+                 ::::::                      
+                                             
+                                             
+                                             
+                                             
+                                             </pre>
+        </figure>
+        <p class="side__name"><a href="/">Stephen<br> Casella<span class="accent">_</span></a></p>
+        <p class="side__bio">I study how language models reason and respond to training, and put AI agents to work on hard, checkable problems: formal proofs, faster code, real bugs.</p>
+        <nav class="side__nav" aria-label="Site">
+          <a href="research.html" aria-current="true">research</a>
+          <a href="projects.html">software</a>
+          <a href="/#contact">contact</a>
+        </nav>
+      </div>
+      <div class="side__links">
+        <a class="side__grid" href="blog_diversity.html" title="pick a random integer between 1 and 100." aria-label="Pick a random integer between 1 and 100. It put more than 95% of its probability on three numbers: 4, 42, and 47. Read the write-up."><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></a>
+        <a href="https://github.com/scasella" rel="me">github.com/scasella</a>
+        <a href="https://huggingface.co/scasella91" rel="me">huggingface.co/scasella91</a>
+        <a href="https://www.linkedin.com/in/stevecasella/" rel="me">linkedin</a>
+      </div>
+    </aside>
+    <div class="split__main">
+  <!-- PANES:BAR:END -->
+  <main class="post-main">
+  <article class="post">
+
+<h1>Agents built a label-free search for what Gemma 3 1B tracks as it reads, and confirmed one direction by steering</h1>
+<!-- PANES:META:START -->
+    <p class="post-byline">[ <time datetime="2026-10-23">2026-10-23</time> ] // Claude Opus 5.5 · Gemma 3 1B · Gemma Scope 2 // 12 MIN READ</p>
+  <!-- PANES:META:END -->
+        <p class="subtitle">A preregistered process that finds what a language model keeps track of, without labels, and tests it by steering. On Gemma 3 1B it recovered known variables blind and confirmed one direction on untouched text, which Gemma Scope 2 already had.</p>
+
+        <div class="tldr">
+          <span class="tldr-label">TL;DR</span>
+          <p>Claude Opus 5.5 agents built a process for finding the variables a language model tracks as it reads, and for testing them causally. On <code>gemma-3-1b-pt</code>, its instrument removes token identity from the residual stream and unmixes what is left with ICA. It finds parenthesis and quotation state without labels (|AUROC| up to 0.78 and 0.75, against a null of about 0.52), and most of the other directions it finds track grammar. One layer-12 direction then passed a preregistered steering test at 200 sites drawn from 1,000 untouched sequences: Δ 1.49, against at most 0.75 for 99 random directions and 0.85 for 76 shuffled signatures. Pushed, it makes the model attach a prepositional phrase or subordinate clause; pulled, it ends the clause. Gemma Scope 2's sparse autoencoders (SAEs) already encode it, as a blend, so no new variable is claimed. The code and full record are public.</p>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat">
+            <span class="k">Known variables, found blind</span>
+            <div class="v">0.78 / 0.75</div>
+            <div class="s">Paren (L7) and quote (L12) |AUROC|; null about 0.52</div>
+          </div>
+          <div class="stat">
+            <span class="k">Readings that held as rules</span>
+            <div class="v">11 / 14</div>
+            <div class="s">Grammar readings, checked by parse and previous-token rules</div>
+          </div>
+          <div class="stat">
+            <span class="k">Held-out steering Δ</span>
+            <div class="v">1.49</div>
+            <div class="s">Random max 0.75, shuffled-signature max 0.85</div>
+          </div>
+          <div class="stat">
+            <span class="k">Checked against the SAE</span>
+            <div class="v">Covered</div>
+            <div class="s">A blend of subordinator and preposition latents</div>
+          </div>
+        </div>
+
+        <div class="callout">
+          <span class="callout-label">Status</span>
+          <p>The process is the result. Its instrument is validated at layers 7 and 12, and its steering test at layer 12 only. The one direction it confirmed is already in Gemma Scope 2, so no unnamed variable is claimed. Scripts, preregistrations, the hash ledger and the result files are in <a href="https://github.com/scasella/gf-discovery-ext">scasella/gf-discovery-ext</a>.</p>
+        </div>
+
+        <h2 id="process">The process</h2>
+        <p>A model keeps track of things as it reads: whether it is inside brackets, whether a clause has finished, whether a negation still applies. I wanted a way to find those variables without telling the search what to look for, and to tell a real one from an artefact of the search. Claude Opus 5.5 agents built it as seven steps:</p>
+        <ol>
+          <li><strong>Rules first.</strong> Every preregistration, rubric and script is hashed into a ledger before the step it governs. Every block of text has a recorded state, confirmations run only on untouched blocks, and no verdict is edited later. A redesign made after a failure is labelled post hoc.</li>
+          <li><strong>Remove the obvious, then unmix.</strong> Strip out what the token, the document and the position explain, then run full-rank ICA on the rest.</li>
+          <li><strong>Prove it on known variables.</strong> It has to find parenthesis and quotation state with no labels.</li>
+          <li><strong>Name what can be named.</strong> A feature battery, a sealed reading of each direction's contexts, then mechanical grammar rules.</li>
+          <li><strong>Test causally.</strong> Push each direction at its natural scale, against random directions from the same subspace and against shuffled signatures.</li>
+          <li><strong>Confirm on untouched text,</strong> with one primary test fixed in advance.</li>
+          <li><strong>Check against the dictionary.</strong> Does an existing SAE latent already cover what was confirmed?</li>
+        </ol>
+        <p>The text is FineWeb's <code>sample-10BT</code> stream in 256-token sequences, split into blocks of 1,000. The search runs on Gemma Scope 2's reconstruction of the residual stream at layer 7 or 12 (16k latents, larger L0), so everything it finds is a readout of that SAE's codes, which matters at step 7.</p>
+        <p>The agents designed each step, froze the preregistrations, ran every job on my M4 Pro MacBook Pro and kept the record. I set the questions, approved the confirmation runs and decided when to close a line of work. Smoke tests and pre-freeze reviews caught six bugs, two of which leaned toward GO.</p>
+
+        <h2 id="instrument">Finding known variables without labels</h2>
+        <p>The first instrument failed its positive control: its ICA searched a subspace chosen by noise, and its pass mark (0.85) sat above what a supervised probe could reach (0.83). Version 2 removes token-type, document and position means, whitens with PCA to 64 dimensions, equalises each frequent token type's covariance, re-whitens, and runs full-rank ICA with logcosh and skewness contrasts. The floor of 0.70 was fixed in advance. Parenthesis state was tuned on a calibration block; quotation state was never used in any choice.</p>
+
+        <figure class="chart">
+          <svg viewBox="0 0 720 300" role="img" aria-label="Best screened unit per label on D2. Parenthesis at layer 7, 0.779; parenthesis at layer 12, 0.736; quotation at layer 12, 0.747; all above the 0.70 floor. Quotation at layer 24, 0.587, and parenthesis at layer 24, 0.558, fail. The token-matched null's 99.9th percentile is about 0.52.">
+            <text x="14" y="24" fill="#222" font-family="Inter, sans-serif" font-size="13" font-weight="600">Best screened unit per label, |AUROC| on the discovery block</text>
+            <text x="14" y="42" fill="#8a8a85" font-family="Inter, sans-serif" font-size="11">Units are found without labels; labels only score them. Bars start at 0.5, chance.</text>
+
+            <line x1="200" y1="62" x2="200" y2="250" stroke="#bbb" stroke-width="1" />
+            <line x1="337" y1="62" x2="337" y2="250" stroke="#e2e2dd" stroke-width="1" stroke-dasharray="2 3" />
+            <line x1="611" y1="62" x2="611" y2="250" stroke="#e2e2dd" stroke-width="1" stroke-dasharray="2 3" />
+
+            <text x="190" y="88" text-anchor="end" fill="#222" font-family="Inter, sans-serif" font-size="12">paren, layer 7</text>
+            <rect x="200" y="75" width="383" height="18" fill="#1a5fb4" />
+            <text x="590" y="88" fill="#222" font-family="Inter, sans-serif" font-size="11">0.779</text>
+
+            <text x="190" y="123" text-anchor="end" fill="#222" font-family="Inter, sans-serif" font-size="12">paren, layer 12</text>
+            <rect x="200" y="110" width="324" height="18" fill="#1a5fb4" />
+            <text x="531" y="123" fill="#222" font-family="Inter, sans-serif" font-size="11">0.736</text>
+
+            <text x="190" y="158" text-anchor="end" fill="#222" font-family="Inter, sans-serif" font-size="12">quote, layer 12 (untuned)</text>
+            <rect x="200" y="145" width="339" height="18" fill="#1a5fb4" />
+            <text x="546" y="158" fill="#222" font-family="Inter, sans-serif" font-size="11">0.747</text>
+
+            <text x="190" y="193" text-anchor="end" fill="#555" font-family="Inter, sans-serif" font-size="12">quote, layer 24</text>
+            <rect x="200" y="180" width="119" height="18" fill="#c9c9c3" />
+            <text x="326" y="193" fill="#555" font-family="Inter, sans-serif" font-size="11">0.587</text>
+
+            <text x="190" y="228" text-anchor="end" fill="#555" font-family="Inter, sans-serif" font-size="12">paren, layer 24</text>
+            <rect x="200" y="215" width="80" height="18" fill="#c9c9c3" />
+            <text x="287" y="228" fill="#555" font-family="Inter, sans-serif" font-size="11">0.558</text>
+
+            <line x1="474" y1="62" x2="474" y2="250" stroke="#222" stroke-width="1.5" stroke-dasharray="5 3" />
+            <line x1="227" y1="62" x2="227" y2="250" stroke="#8a8a85" stroke-width="1.5" stroke-dasharray="1.5 2.5" />
+
+            <text x="200" y="266" text-anchor="middle" fill="#8a8a85" font-family="Inter, sans-serif" font-size="10">0.5</text>
+            <text x="337" y="266" text-anchor="middle" fill="#8a8a85" font-family="Inter, sans-serif" font-size="10">0.6</text>
+            <text x="474" y="266" text-anchor="middle" fill="#8a8a85" font-family="Inter, sans-serif" font-size="10">0.7</text>
+            <text x="611" y="266" text-anchor="middle" fill="#8a8a85" font-family="Inter, sans-serif" font-size="10">0.8</text>
+
+            <line x1="200" y1="286" x2="222" y2="286" stroke="#222" stroke-width="1.5" stroke-dasharray="5 3" />
+            <text x="228" y="290" fill="#555" font-family="Inter, sans-serif" font-size="11">floor, fixed in advance (0.70)</text>
+            <line x1="420" y1="286" x2="442" y2="286" stroke="#8a8a85" stroke-width="1.5" stroke-dasharray="1.5 2.5" />
+            <text x="448" y="290" fill="#555" font-family="Inter, sans-serif" font-size="11">token-matched null, p99.9 (0.512–0.520)</text>
+          </svg>
+          <figcaption><strong>Figure 1.</strong> The best logcosh unit per cell; the skewness units are within 0.02. Layer 24 was expected to fail, because its floor sat above the supervised probe's ceiling there. Source: <code>e63_occurrence_v2.json</code>.</figcaption>
+        </figure>
+
+        <p>At layers 7 and 12, one direction carries 90–97% of a held-out supervised probe's excess over chance. It is a readout, not a clean detector: among a paren unit's strongest 1% of positions, 50–69% are inside parentheses. Token identity is reduced, not gone; nearest-neighbour identity is still 9–15 times chance.</p>
+
+        <h2 id="grammar">Naming what it finds: mostly grammar</h2>
+        <p>The discovery run screened 143 directions. A 24-feature battery left 91 unnamed, and a sealed reading of their strongest contexts named 26 more, leaving 65 candidates. The first steering tier then failed its own anchors, so that run claimed no discovery (the next section explains why). Still, 23 candidate families reappeared on a fresh replication block.</p>
+        <p>The readings kept finding grammar. After the verdict, the agents turned each of the 14 readings into a mechanical rule over a spaCy parse or the previous token. The contexts below are real; the bracketed token is where the direction is strongest.</p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 01</span>Readings checked as rules (descriptive, after the verdict)</div>
+          <table>
+            <thead>
+              <tr><th>Reading (unit)</th><th>A context from the data</th><th class="num">Rule AUROC</th><th class="num">Top-1% rate (base)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Right after <em>and</em> / <em>or</em> / <em>but</em> (L7 #37)</td><td><span class="ctx">…actress, comedienne, singer, and <b>model</b>.</span></td><td class="num">0.955</td><td class="num">73% (2.5%)</td></tr>
+              <tr><td>Inside a negation's scope (L12 #39)</td><td><span class="ctx">…but it did not tell <b>me</b> how Intel became…</span></td><td class="num">0.71</td><td class="num">71% (5.0%)</td></tr>
+              <tr><td>Inside a fronted adverbial (L12 #24)</td><td><span class="ctx">↵Through <b>the</b> Site Administrator interface…</span></td><td class="num">0.75</td><td class="num">57% (5.3%)</td></tr>
+              <tr><td>Inside a temporal clause (L7 #38)</td><td><span class="ctx">…bring him back when the doctors <b>clear</b> him.</span></td><td class="num">0.68</td><td class="num">36% (2.9%)</td></tr>
+              <tr><td>Inside the subject, before its verb (L12 #15)</td><td><span class="ctx">…a lot of <b>my</b> mistakes come from…</span></td><td class="num">0.68</td><td class="num">86% (16%)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The last column is the share of the direction's strongest 1% of positions that the rule marks, against its base rate. Eleven of the 14 readings held up. The reading also missed four directions its own rules name, so about 19 of the 23 families remain unnamed.</p>
+
+        <h2 id="confirmed">Testing causally, then confirming on untouched text</h2>
+        <p>The first steering tier pushed every direction by a fixed 2% of the residual norm. To pass, a direction had to beat the largest effect among its sibling directions. The siblings were real effects: the subject-noun-phrase family reached Δ 1.52 at that push, so even the quotation anchor (0.246) could not pass. So the agents redesigned the rig, post hoc:</p>
+        <ul>
+          <li>the push is scaled to each direction's natural spread, c·σ, with the test at c = 2;</li>
+          <li>the null is 99 random directions drawn in the units' own 64-dimensional space;</li>
+          <li>a shuffled-signature control scores the same push against 76 other units' signatures.</li>
+        </ul>
+        <p>A signature is the 20 next tokens most over-represented after a direction's strongest 1% of positions, found without labels. Δ is the change in their log-probability against frequency-matched random tokens, steered minus unsteered, averaged over 200 sites, in nats. The quotation anchor passed on two blocks (Δ 0.856 and 0.873), so the rig works at layer 12. The layer-7 anchor failed, so layer 7 has no behavioural test. One candidate family, logcosh #13 and its twin skew #16, passed both blocks.</p>
+        <p>A confirmation preregistration, frozen with its script before any of its text was processed, then named one primary test: logcosh #13.</p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 02</span>Confirmation: 200 sites drawn from 1,000 untouched sequences, push of 2σ</div>
+          <table>
+            <thead>
+              <tr><th>Unit</th><th class="num">Δ</th><th class="num">Random max (99)</th><th class="num">Shuffled max (76)</th><th>Pass</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Anchor: logcosh #33 (quote)</td><td class="num">0.84</td><td class="num">0.48</td><td class="num">0.51</td><td>yes</td></tr>
+              <tr class="highlight"><td>Primary: logcosh #13</td><td class="num">1.49</td><td class="num">0.75</td><td class="num">0.85</td><td>yes</td></tr>
+              <tr><td>Twin: skew #16</td><td class="num">1.38</td><td class="num">0.72</td><td class="num">1.03</td><td>yes</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The per-test false-pass bound is at most 1/77. The effect is about twice the largest random one, and it grows with dose: Δ 0.28, 0.63, 1.49 and 2.89 at 0.5, 1, 2 and 4σ.</p>
+
+        <h3>What it does</h3>
+        <p>Described after the verdict, on a further reserve block: pushed by 2σ, the direction raises words that open an adjunct. Unpushed, the tokens where it is strongest complete a clause's core (<span class="ctx">absorb the <b>material</b> in manageable segments</span>), and 28% of the tokens after them are prepositions, against 8% at random.</p>
+
+        <figure class="chart">
+          <svg viewBox="0 0 720 400" role="img" aria-label="The twelve next tokens most promoted by a push of 2 sigma, as fold changes: during 13.7, because 13.5, while 13.0, before 12.5, when 10.7, until 9.9, without 9.8, with 9.4, through 8.7, since 8.7, from 8.3, after 8.2.">
+            <text x="14" y="24" fill="#222" font-family="Inter, sans-serif" font-size="13" font-weight="600">The twelve next tokens a 2σ push raises most</text>
+            <text x="14" y="42" fill="#8a8a85" font-family="Inter, sans-serif" font-size="11">Fold change in probability, exp of the mean change in log-probability over 200 sites.</text>
+
+            <rect x="150" y="54" width="12" height="12" fill="#1a5fb4" />
+            <text x="168" y="64" fill="#555" font-family="Inter, sans-serif" font-size="11">subordinator</text>
+            <rect x="266" y="54" width="12" height="12" fill="#8fb0dc" />
+            <text x="284" y="64" fill="#555" font-family="Inter, sans-serif" font-size="11">preposition</text>
+
+            <line x1="150" y1="76" x2="150" y2="364" stroke="#bbb" stroke-width="1" />
+            <line x1="304" y1="76" x2="304" y2="364" stroke="#e2e2dd" stroke-width="1" stroke-dasharray="2 3" />
+            <line x1="496" y1="76" x2="496" y2="364" stroke="#e2e2dd" stroke-width="1" stroke-dasharray="2 3" />
+
+            <text x="140" y="93" text-anchor="end" fill="#222" font-family="Inter, sans-serif" font-size="12">during</text>
+            <rect x="150" y="82" width="488" height="14" fill="#1a5fb4" /><text x="644" y="93" fill="#222" font-family="Inter, sans-serif" font-size="11">13.7×</text>
+            <text x="140" y="117" text-anchor="end" fill="#222" font-family="Inter, sans-serif" font-size="12">because</text>
+            <rect x="150" y="106" width="481" height="14" fill="#1a5fb4" /><text x="637" y="117" fill="#222" font-family="Inter, sans-serif" font-size="11">13.5×</text>
+            <text x="140" y="141" text-anchor="end" fill="#222" font-family="Inter, sans-serif" font-size="12">while</text>
+            <rect x="150" y="130" width="462" height="14" fill="#1a5fb4" /><text x="618" y="141" fill="#222" font-family="Inter, sans-serif" font-size="11">13.0×</text>
+            <text x="140" y="165" text-anchor="end" fill="#222" font-family="Inter, sans-serif" font-size="12">before</text>
+            <rect x="150" y="154" width="442" height="14" fill="#1a5fb4" /><text x="598" y="165" fill="#222" font-family="Inter, sans-serif" font-size="11">12.5×</text>
+            <text x="140" y="189" text-anchor="end" fill="#222" font-family="Inter, sans-serif" font-size="12">when</text>
+            <rect x="150" y="178" width="373" height="14" fill="#1a5fb4" /><text x="529" y="189" fill="#222" font-family="Inter, sans-serif" font-size="11">10.7×</text>
+            <text x="140" y="213" text-anchor="end" fill="#222" font-family="Inter, sans-serif" font-size="12">until</text>
+            <rect x="150" y="202" width="342" height="14" fill="#1a5fb4" /><text x="498" y="213" fill="#222" font-family="Inter, sans-serif" font-size="11">9.9×</text>
+            <text x="140" y="237" text-anchor="end" fill="#222" font-family="Inter, sans-serif" font-size="12">without</text>
+            <rect x="150" y="226" width="338" height="14" fill="#1a5fb4" /><text x="494" y="237" fill="#222" font-family="Inter, sans-serif" font-size="11">9.8×</text>
+            <text x="140" y="261" text-anchor="end" fill="#222" font-family="Inter, sans-serif" font-size="12">with</text>
+            <rect x="150" y="250" width="323" height="14" fill="#8fb0dc" /><text x="479" y="261" fill="#222" font-family="Inter, sans-serif" font-size="11">9.4×</text>
+            <text x="140" y="285" text-anchor="end" fill="#222" font-family="Inter, sans-serif" font-size="12">through</text>
+            <rect x="150" y="274" width="296" height="14" fill="#8fb0dc" /><text x="452" y="285" fill="#222" font-family="Inter, sans-serif" font-size="11">8.7×</text>
+            <text x="140" y="309" text-anchor="end" fill="#222" font-family="Inter, sans-serif" font-size="12">since</text>
+            <rect x="150" y="298" width="296" height="14" fill="#1a5fb4" /><text x="452" y="309" fill="#222" font-family="Inter, sans-serif" font-size="11">8.7×</text>
+            <text x="140" y="333" text-anchor="end" fill="#222" font-family="Inter, sans-serif" font-size="12">from</text>
+            <rect x="150" y="322" width="281" height="14" fill="#8fb0dc" /><text x="437" y="333" fill="#222" font-family="Inter, sans-serif" font-size="11">8.3×</text>
+            <text x="140" y="357" text-anchor="end" fill="#222" font-family="Inter, sans-serif" font-size="12">after</text>
+            <rect x="150" y="346" width="277" height="14" fill="#1a5fb4" /><text x="433" y="357" fill="#222" font-family="Inter, sans-serif" font-size="11">8.2×</text>
+
+            <text x="150" y="382" text-anchor="middle" fill="#8a8a85" font-family="Inter, sans-serif" font-size="10">1×</text>
+            <text x="304" y="382" text-anchor="middle" fill="#8a8a85" font-family="Inter, sans-serif" font-size="10">5×</text>
+            <text x="496" y="382" text-anchor="middle" fill="#8a8a85" font-family="Inter, sans-serif" font-size="10">10×</text>
+          </svg>
+          <figcaption><strong>Figure 2.</strong> Logcosh #13 on reserve 7,000–7,999. At 4σ the top gains roughly double; at −2σ, line breaks rise most. Source: <code>e66_describe.json</code>.</figcaption>
+        </figure>
+
+        <p>One real passage, continued by the model unsteered and with the push held at three strengths:</p>
+        <div class="dial">
+          <p class="prompt">A web page on animal models in cancer research. After a section headed <em>Mouse Cancer Models</em>, the passage stops at <span class="ctx">|Rat Cancer Models↵Rats, another rodent species like mice</span></p>
+          <ol>
+            <li><span class="lvl">−4σ</span><span class="txt">, are used to study cancer.<span class="br">↵</span>|Mouse Cancer Models<span class="br">↵</span>Cancer cells are the most common cancer model.<span class="br">↵</span>|</span></li>
+            <li><span class="lvl">unsteered</span><span class="txt">, are also used in cancer research.<span class="br">↵</span>|Dog Cancer Models<span class="br">↵</span>Dogs are another species that have been used in cancer</span></li>
+            <li><span class="lvl">+2σ</span><span class="txt">, are used in a variety of research projects, including to study the effects of environmental toxins, to test the safety of</span></li>
+            <li><span class="lvl">+4σ</span><span class="txt">, are for a lot of reasons, but for the sake of this article, because it’s because of the cancer</span></li>
+          </ol>
+        </div>
+
+        <p>Pushed, the model keeps the clause going; pulled hard, it ends the sentence. The name I'd give the direction, <em>the clause's core is complete and an adjunct can attach here</em>, was found after the fact.</p>
+
+        <h2 id="covered">Step 7: Gemma Scope 2 already had it</h2>
+        <p>The last step asks whether the confirmed direction is new. The rubric, hashed before any comparison, calls a direction COVERED if one existing latent has decoder |cos| of at least 0.7 with it and passes a behavioural match: at least 30% of the latent's 200 strongest rows are followed by a preposition, subordinator or temporal word. Of 16 Gemma Scope 2 dictionaries checked, three latents qualified. One is layer-12 #11562 (|cos| 0.735, share 0.485), whose strongest contexts include <span class="ctx">absorb the <b>material</b> in manageable segments</span>.</p>
+        <p>So it is covered, with qualifications. The cosines sit inside a null of random directions built like the unit (99.9th percentile 0.74–0.85), no single latent tracks it closely (best activation correlation 0.40), and related latents split the behaviour by adjunct type. It is a blend of subordinator and preposition latents that the SAEs keep apart, unified in one direction and confirmed causally on three blocks. It is not a new concept.</p>
+
+        <h2 id="stops">Where the process stops</h2>
+        <p>The process can say a direction is covered. It cannot yet say one is not.</p>
+        <p><strong>No test certified "uncovered."</strong> The search runs in the SAE's decoded span, so some coverage is built in.</p>
+        <ul>
+          <li>A single-latent census called 3 of the 4 layer-12 paren and quote controls NOT COVERED, though they have dedicated latents. It also called 6 of 40 random layer-7 directions COVERED.</li>
+          <li>A per-family readout put the paren controls in its chance-like sparsity class.</li>
+          <li>A knockout control removed the SAE's own paren and quote latents, and admitted no test at either 16k dictionary. A probe still recovered paren from the reconstruction after the largest knockout (AUROC 0.663, against a chance band whose 99th percentile is about 0.52). Meanwhile the random baseline's largest error share climbed from 0.36 to about 1.0.</li>
+        </ul>
+        <p>I accepted the closure for layer 12.</p>
+        <p><strong>Looking outside the span found nothing that survived a matched null.</strong> A pilot on the SAE's reconstruction error said GO by its frozen rule, but 71 of 100 random error-space directions passed the same shuffle test. On the raw residual, the instrument passed its positive control and gave one thin lead, about 76% of which is still SAE span. Refit on five shuffles of the same text, the rule that picked that lead fired once on 4 of the 5. No fresh text was spent on either.</p>
+        <p><strong>A behavioural split test was inconclusive.</strong> On a fresh block, the confirmed direction passed a fourth time (Δ 1.78 against a random max of 1.14) and moved both word classes. Whether its best decoder row moves only one class could not be decided. A precondition compared a bank median with the maximum of 99 heavy-tailed random draws (1.29 against 2.21). I closed that line at 1B.</p>
+
+        <h2 id="baselines">A rule of the process: same-subspace random baselines</h2>
+        <p>A screen on a derived direction means little until it is rerun on random directions built the same way, in the same subspace. Five screens in this project looked informative without that baseline:</p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 03</span>Each screen, without and with a same-subspace baseline</div>
+          <table>
+            <thead>
+              <tr><th>Step</th><th>The bar without the baseline</th><th>What the baseline showed</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>First steering tier</td><td>Δ above the sibling maximum</td><td>Siblings are real effects; the anchors cannot pass</td></tr>
+              <tr><td>Prior-feature check</td><td>Decoder |cos| 0.71–0.74, far above the isotropic null</td><td>Inside the same-subspace null (p99.9 0.74–0.85)</td></tr>
+              <tr><td>Coverage census</td><td>Decoder |cos| ≥ 0.7 plus a behavioural match</td><td>6 of 40 random layer-7 directions come out COVERED</td></tr>
+              <tr class="highlight"><td>Error-space pilot</td><td>Shuffle persistence ratio below 0.5</td><td>71 of 100 random error-space directions pass</td></tr>
+              <tr><td>Per-family readout</td><td>A latent fires where the unit fires</td><td>19 of 40 random layer-12 directions have one too</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The confirmation passed against exactly this kind of baseline.</p>
+
+        <h2 id="limitations">Limitations</h2>
+        <ul>
+          <li>One model. The whole process works only at layer 12: the instrument passes at layers 7 and 12 and fails at 24, and the layer-7 steering anchor failed twice.</li>
+          <li>The steering rig was redesigned after its first anchors failed. The confirmation was preregistered, but on that post hoc rig.</li>
+          <li>The search ran in the SAE-decoded residual, so every direction it found is a readout of SAE codes. The raw-residual run mostly re-found the same ones.</li>
+          <li>The readings come from an agent; the rules that check them see whole sequences and depend on a parser.</li>
+          <li>Parenthesis state was tuned on calibration data. Quotation state is the only untuned positive control.</li>
+        </ul>
+
+        <h2 id="untested">Untested</h2>
+        <ul>
+          <li>A "not a blend" criterion. It needs a positive control known not to be a blend.</li>
+          <li><code>gemma-3-4b-pt</code>, estimated at 9–13 hours on this laptop and deferred until that criterion exists.</li>
+          <li>Other coverage bars, knockout ladders at layers 11 and 13, and other dictionaries such as transcoders.</li>
+        </ul>
+
+        <h2 id="next-experiment">Next experiment</h2>
+        <p>Nothing is scheduled. If the work resumes, the order is:</p>
+        <ol>
+          <li>A coverage test that passes the knockout control on already-used text.</li>
+          <li>Only then 4B, with a disk plan, two protected text blocks and the controls re-admitted at each layer.</li>
+          <li>Before trusting any new instrument, a blind round: one session plants a direction, and another searches for it without knowing where it is.</li>
+        </ol>
+
+        <h2 id="related-work">Related work</h2>
+        <ul>
+          <li><strong>Gemma Scope 2.</strong> <a href="https://storage.googleapis.com/deepmind-media/DeepMind.com/Blog/gemma-scope-2-helping-the-ai-safety-community-deepen-understanding-of-complex-language-model-behavior/Gemma_Scope_2_Technical_Paper.pdf">McDougall et al. (2025)</a> released the open SAEs for Gemma 3 used here.</li>
+          <li><strong>Feature absorption.</strong> <a href="https://arxiv.org/abs/2409.14507">Chanin et al. (NeurIPS 2025)</a> show that latents that look monosemantic can fail to fire where they should when features form a hierarchy. The split seen here is related, but I did not test it as absorption.</li>
+          <li><strong>SAE dark matter.</strong> <a href="https://arxiv.org/abs/2410.14670">Engels, Riggs and Tegmark (TMLR 2025)</a> find that much of the SAE error is linearly predictable. The error pilot here found nothing context-specific beyond what random directions show.</li>
+          <li><strong>Stitching and meta-SAEs.</strong> <a href="https://arxiv.org/abs/2502.04878">Leask et al. (ICLR 2025)</a> and <a href="https://www.lesswrong.com/posts/TMAmHh4DdMr4nCSr5/showing-sae-latents-are-not-atomic-using-meta-saes">Bussmann et al. (2024)</a> show that SAE latents are neither canonical nor atomic. That fits single-latent coverage failing here.</li>
+          <li><strong>Reconstructions and steering.</strong> <a href="https://proceedings.mlr.press/v267/kharlapenko25a.html">Kharlapenko et al. (ICML 2025)</a> report that passing a task vector through an SAE noticeably reduced its effect. The split test here asked a related question.</li>
+        </ul>
+
+        <h2 id="reproducibility">Reproducibility</h2>
+        <table class="repro">
+          <tbody>
+            <tr><th scope="row">Model</th><td><code>google/gemma-3-1b-pt</code>, bf16. Gemma Scope 2 (<code>google/gemma-scope-2-1b-pt</code>): <code>resid_post_all</code> 16k with the larger L0 at layers 7 and 12, plus 27 dictionaries for coverage checks. Agents: Claude Opus 5.5 in Claude Code.</td></tr>
+            <tr><th scope="row">Experiment</th><td>All local, on an M4 Pro MacBook Pro (24 GB, MPS); torch 2.14.1, transformers 5.19.0. Every preregistration, rubric and script hashed in <code>docs/HASHES.txt</code> (155 entries) before the step it governs. Confirmation: one primary test, 200 sites, 99 same-subspace random directions and 76 shuffled signatures at 2σ.</td></tr>
+            <tr><th scope="row">Data</th><td>FineWeb <code>sample-10BT</code>, 256-token sequences: a 15,696-sequence corpus checked against 5,152 stored row-to-token anchors, plus 8,000 reserve sequences. Discovery: corpus 1,000–1,999. Confirmation: reserve 6,000–6,999.</td></tr>
+            <tr><th scope="row">Results</th><td><a href="https://github.com/scasella/gf-discovery-ext/blob/472e9909aec40fdc1159b93f8cee7dac8905396a/SUMMARY.md"><code>SUMMARY.md</code></a> maps every number to its source; <a href="https://github.com/scasella/gf-discovery-ext/blob/472e9909aec40fdc1159b93f8cee7dac8905396a/REPORT.md"><code>REPORT.md</code></a> is the full record. Key files: <code>e63_occurrence_v2.json</code>, <code>e66_confirm.json</code>, <code>e67_verdict.json</code>, <code>e73_coverage_admission.json</code>.</td></tr>
+            <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/gf-discovery-ext/tree/472e9909aec40fdc1159b93f8cee7dac8905396a">scasella/gf-discovery-ext @ 472e990</a>: scripts, preregistrations, the hash ledger and every result file under 5 MB. <code>tools/verify_hashes.py</code> checks the ledger. Weights, caches and large arrays are listed in <code>RELEASE_EXCLUDED.txt</code>.</td></tr>
+            <tr><th scope="row">Status</th><td>Published 2026-10-23 · Code and record public under MIT. Methods result; no unnamed variable claimed at 1B.</td></tr>
+          </tbody>
+        </table>
+
+
+            <!-- PANES:NEXT:START -->
+    <nav class="post-next" aria-label="More research">
+      <a href="blog_fact_probe.html"><span>next →</span><span>A probe on Llama’s hidden states beats its stated confidence, and the signal is spread across the network</span></a>
+      <a class="post-next__all" href="research.html">← all research</a>
+    </nav>
+  <!-- PANES:NEXT:END -->
+  </article>
+  </main>
+  <!-- PANES:FOOT:START -->
+    <footer class="pn-foot">
+      <p>Personal projects. Not affiliated with or endorsed by my employer. No employer data, infrastructure, or confidential information used.</p>
+    </footer>
+    </div>
+  </div>
+  <!-- PANES:FOOT:END -->
+</body>
+</html>
