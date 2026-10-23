@@ -173,6 +173,13 @@
 .posts__title { font-size: 22px; line-height: 1.4; font-weight: 500; letter-spacing: -0.01em; text-wrap: pretty; }
 .posts__dek { color: var(--pn-dim); text-wrap: pretty; }
 .posts__scope { font-size: 13px; line-height: 1.6; color: var(--pn-quiet); text-wrap: pretty; }
+/* A project's other stages: nested under the lead on the research index, one
+   quiet line each on the home page. */
+.posts--stages { margin-top: 20px; padding-left: 20px; border-left: 1px solid var(--pn-line); gap: 24px; }
+.posts--stages .posts__title { font-size: 17px; }
+.posts__rel { margin: 6px 0 0; font-size: 12px; line-height: 1.6; color: var(--pn-quiet); text-wrap: pretty; }
+.posts .posts__rel a { display: inline; color: var(--pn-dim); text-decoration: underline; text-decoration-color: var(--pn-rule); text-underline-offset: 3px; }
+.posts .posts__rel a:hover { color: var(--pn-accent); }
 
 .rows { display: flex; flex-direction: column; }
 .rows a { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; padding: 6px 0; text-decoration: none; font-size: 14px; }

@@ -3,11 +3,29 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>[Retracted] A Transferable 1.5B Bug Fixer from Ten LoRA Examples | Stephen Casella</title>
-  <meta name="description" content="An open-weight 1.5B model scored zero verified bug fixes in 384 tries. Verifier-guided prompt mining surfaced ten correct fixes; a LoRA on them generalized to unseen bugs." />
+  <title>[Withdrawn] A Transferable 1.5B Bug Fixer from Ten LoRA Examples (archived original) | Stephen Casella</title>
+  <meta name="description" content="Archived original text of a May 2026 post, withdrawn on 2026-09-23. Its evidence does not support its conclusions: its test prompts named each bug category, its feedback comparison was not isolated, and most of its zero-fix baseline was unparseable output." />
   <meta name="author" content="Stephen Casella" />
   <meta name="robots" content="noindex, nofollow" />
   <meta name="theme-color" content="#fafaf8" />
+  <link rel="canonical" href="https://casella.dev/archive/blog_finetuning_2026-05-26.html" />
+  <meta property="og:site_name" content="Stephen Casella" />
+  <meta property="og:title" content="[Withdrawn] A Transferable 1.5B Bug Fixer from Ten LoRA Examples (archived original)" />
+  <meta property="og:description" content="Archived original text of a May 2026 post, withdrawn on 2026-09-23. Its evidence does not support its conclusions: its test prompts named each bug category, its feedback comparison was not isolated, and most of its zero-fix baseline was unparseable output." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://casella.dev/archive/blog_finetuning_2026-05-26.html" />
+  <meta property="og:image" content="https://casella.dev/assets/og/blog_finetuning.png" />
+  <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_finetuning.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Share card: Withdrawn: ten mined examples and a 1.5B bug fixer." />
+  <meta property="article:author" content="Stephen Casella" />
+  <meta property="article:published_time" content="2026-05-26" />
+  <meta property="article:modified_time" content="2026-10-23" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="[Withdrawn] A Transferable 1.5B Bug Fixer from Ten LoRA Examples (archived original)" />
+  <meta name="twitter:description" content="Archived original text of a May 2026 post, withdrawn on 2026-09-23. Its evidence does not support its conclusions: its test prompts named each bug category, its feedback comparison was not isolated, and most of its zero-fix baseline was unparseable output." />
+  <meta name="twitter:image" content="https://casella.dev/assets/og/blog_finetuning.png" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
   <script>
@@ -16,6 +34,40 @@
     gtag('js', new Date());
 
     gtag('config', 'G-2RSWDWW67D');
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "[Withdrawn] A Transferable 1.5B Bug Fixer from Ten LoRA Examples (archived original)",
+      "description": "Archived original text of a May 2026 post, withdrawn on 2026-09-23. Its evidence does not support its conclusions: its test prompts named each bug category, its feedback comparison was not isolated, and most of its zero-fix baseline was unparseable output.",
+      "creativeWorkStatus": "Withdrawn",
+      "correction": "https://casella.dev/blog_finetuning.html",
+      "url": "https://casella.dev/archive/blog_finetuning_2026-05-26.html",
+      "mainEntityOfPage": "https://casella.dev/archive/blog_finetuning_2026-05-26.html",
+      "image": "https://casella.dev/assets/og/blog_finetuning.png",
+      "datePublished": "2026-05-26",
+      "dateModified": "2026-10-23",
+      "author": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/",
+        "sameAs": [
+          "https://github.com/scasella",
+          "https://www.linkedin.com/in/stevecasella/"
+        ]
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      }
+    }
   </script>
   <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -166,7 +218,7 @@
     <a href="../blog_diversity.html">~/next</a>
   </header>
   <article>
-    <p class="retracted"><strong>Retracted.</strong> This is the original text of a post withdrawn on 2026-09-23, kept as a record. Its conclusions do not hold. <a href="../blog_finetuning.html">Read why it was withdrawn.</a></p>
+    <p class="retracted"><strong>Withdrawn on 2026-09-23.</strong> Below is the original text of a post published on 2026-05-26, kept as last published. Its evidence does not support its conclusions: the test prompts named each bug category, the feedback comparison was not isolated, and most of the zero-fix baseline was output the evaluation harness could not parse. <a href="../blog_finetuning.html">Read the withdrawal notice.</a></p>
     <p class="meta">May 2026</p>
     <h1>Verifier-guided prompt mining turned a zero-success 1.5B model into a transferable bug fixer with ten LoRA examples</h1>
     <p class="subtitle">A small open-weight instruction model (Qwen2.5-1.5B-Instruct, not a code-specialized model) produced zero correct fixes across 384 attempts at a synthetic Python bug-fix task. A prompt-optimization pass mined ten verified-correct fixes from the same model. A LoRA trained on those ten solved bug categories the model had never trained on.</p>

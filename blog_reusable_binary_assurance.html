@@ -4,24 +4,24 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reusing proofs of unchanged OpenSSL binaries to verify three callers | Stephen Casella</title>
-  <meta name="description" content="GPT-6.1 Sol agents used machine-checked contracts for two unchanged, distribution-shipped OpenSSL routines to verify three experimental x86-64 callers through their actual PLT/GOT linkage, in HOL Light." />
+  <meta name="description" content="GPT-6.1 Sol agents verified three experimental x86-64 callers in HOL Light by applying checked contracts for two unchanged Debian OpenSSL routines through their actual PLT/GOT linkage, instead of re-deriving the routines in each caller proof." />
   <meta name="author" content="Stephen Casella" />
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#080c0f" />
   <link rel="canonical" href="https://casella.dev/blog_reusable_binary_assurance.html" />
   <meta property="og:site_name" content="Stephen Casella" />
-  <meta property="og:title" content="Verified once, reused three times: agents carried proofs of shipped OpenSSL code into new callers" />
-  <meta property="og:description" content="Contracts for two unchanged Debian OpenSSL routines verified three different callers through their real linkage. The held-out caller missed its three-hour cap, then completed in a recorded successor." />
+  <meta property="og:title" content="Agents reused proofs of OpenSSL routines across three callers" />
+  <meta property="og:description" content="Three caller proofs applied machine-checked contracts for two unchanged Debian OpenSSL routines rather than stepping through their instructions again. The held-out caller missed its three-hour cap, then completed in a recorded successor." />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://casella.dev/blog_reusable_binary_assurance.html" />
   <meta property="og:image" content="https://casella.dev/assets/og/blog_reusable_binary_assurance.png" />
   <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_reusable_binary_assurance.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Share card for the write-up: Verified once, reused three times: agents carried proofs of shipped OpenSSL code into new callers." />
+  <meta property="og:image:alt" content="Share card for the write-up: Agents reused proofs of OpenSSL routines across three callers." />
   <meta property="article:author" content="Stephen Casella" />
   <meta property="article:published_time" content="2026-10-05" />
-  <meta property="article:modified_time" content="2026-10-05" />
+  <meta property="article:modified_time" content="2026-10-23" />
   <meta property="article:tag" content="AI agents" />
   <meta property="article:tag" content="HOL Light" />
   <meta property="article:tag" content="OpenSSL" />
@@ -29,8 +29,8 @@
   <meta property="article:tag" content="binary verification" />
   <meta property="article:tag" content="formal verification" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Verified once, reused three times: agents carried proofs of shipped OpenSSL code into new callers" />
-  <meta name="twitter:description" content="Contracts for two unchanged Debian OpenSSL routines verified three different callers through their real linkage. The held-out caller missed its three-hour cap, then completed in a recorded successor." />
+  <meta name="twitter:title" content="Agents reused proofs of OpenSSL routines across three callers" />
+  <meta name="twitter:description" content="Three caller proofs applied machine-checked contracts for two unchanged Debian OpenSSL routines rather than stepping through their instructions again. The held-out caller missed its three-hour cap, then completed in a recorded successor." />
   <meta name="twitter:image" content="https://casella.dev/assets/og/blog_reusable_binary_assurance.png" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
@@ -45,13 +45,13 @@
     {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
-      "headline": "Verified once, reused three times: agents carried proofs of shipped OpenSSL code into new callers",
-      "description": "GPT-6.1 Sol agents used machine-checked contracts for two unchanged, distribution-shipped OpenSSL routines to verify three experimental x86-64 callers through their actual PLT/GOT linkage, in HOL Light.",
+      "headline": "Agents reused proofs of OpenSSL routines across three callers",
+      "description": "GPT-6.1 Sol agents verified three experimental x86-64 callers in HOL Light by applying checked contracts for two unchanged Debian OpenSSL routines through their actual PLT/GOT linkage, instead of re-deriving the routines in each caller proof.",
       "url": "https://casella.dev/blog_reusable_binary_assurance.html",
       "mainEntityOfPage": "https://casella.dev/blog_reusable_binary_assurance.html",
       "image": "https://casella.dev/assets/og/blog_reusable_binary_assurance.png",
       "datePublished": "2026-10-05",
-      "dateModified": "2026-10-05",
+      "dateModified": "2026-10-23",
       "author": {
         "@type": "Person",
         "name": "Stephen Casella",
@@ -384,7 +384,7 @@
   </style>
     <!-- PANES:HEAD:START -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
-  <link rel="stylesheet" href="panes.css?v=bbd7cc12" />
+  <link rel="stylesheet" href="panes.css?v=87bdb6c4" />
   <script src="ascii.js?v=6f1f421a" defer></script>
   <!-- PANES:HEAD:END -->
 </head>
@@ -436,21 +436,21 @@
   <!-- PANES:BAR:END -->
   <main class="post-main">
   <article class="post">
-<h1>Verified once, reused three times: agents carried proofs of shipped OpenSSL code into new callers</h1>
+<h1>Agents reused proofs of OpenSSL routines across three callers</h1>
 <!-- PANES:META:START -->
-    <p class="post-byline">[ <time datetime="2026-10-05">2026-10-05</time> ] // GPT-6.1 Sol · HOL Light · x86-64 // 10 MIN READ</p>
+    <p class="post-byline">[ <time datetime="2026-10-05">2026-10-05</time> · updated <time datetime="2026-10-23">2026-10-23</time> ] // GPT-6.1 Sol · HOL Light · x86-64 // 12 MIN READ</p>
   <!-- PANES:META:END -->
-        <p class="subtitle">I wanted to know whether a proof about a library binary could become something another program uses. GPT-6.1 Sol agents took machine-checked contracts for two unchanged, distribution-shipped OpenSSL routines and used them to verify three different experimental callers through their actual linkage. The library bytes stayed the same. What was added is a checked account of how other code can call them.</p>
+        <p class="subtitle">I wanted to know whether a proof about a shipped library binary could become something other programs build on. GPT-6.1 Sol agents used machine-checked contracts for two unchanged OpenSSL routines, exactly as Debian ships them, to verify three experimental callers through their actual linkage. The library bytes stayed the same; what was added is a checked account of how other code can call them.</p>
         <div class="tldr">
           <span class="tldr-label">TL;DR</span>
-          <p>The starting point was this project's proofs of <code>CRYPTO_memcmp</code> and <code>OPENSSL_cleanse</code> as they ship in a pinned Debian build. Instead of reopening those instruction-level proofs for each client, the caller proofs apply the routines' public contracts and prove the code around the calls. The three callers progress from a Boolean comparison wrapper, to conditional cleanup, to a caller that compares, clears and compares again. Within the declared x86-64 model, each accepted result covers the returned value, every memory access, termination at the actual return, and preservation of the caller's stack and registers.</p>
-          <p>The third caller was chosen after the integration layer was frozen. It missed its three-hour construction cap, then completed in a separately recorded successor without changing the supplier contracts, the frozen integration algorithms or its own specification. All three packages were then rebuilt from a checking-only delivery and passed. This is reusable assurance for these clients. It is not automatic verification of arbitrary programs, and I haven't measured construction savings.</p>
+          <p>GPT-6.1 Sol agents verified three experimental callers of <code>CRYPTO_memcmp</code> and <code>OPENSSL_cleanse</code>, unchanged from a pinned Debian OpenSSL build, by applying the routines' machine-checked contracts at each call. A contract states what a routine needs on entry and guarantees on return: its result, the memory it may read or write, the registers and stack it preserves, and that it returns. Earlier work in the project proved these contracts against the shipped machine code. Reuse here means that each caller proof applies these contracts instead of stepping through the library's instructions again, as inspection of the proof sources shows; every fresh check still rebuilds the supplier proofs from source. Within the declared x86-64 model, each accepted caller result covers the returned value, every memory access, termination at the actual return, and stack and register preservation.</p>
+          <p>The third caller, which compares, clears and compares again, was chosen after the shared integration code was frozen. It missed its three-hour construction cap, then completed in a separately recorded successor without changing the supplier contracts, the frozen integration algorithms or its own specification. This is reusable assurance for these three callers, not automatic verification of arbitrary programs, and I did not measure whether reuse saves effort.</p>
         </div>
         <div class="stat-row">
           <div class="stat">
             <span class="k">Callers verified</span>
             <div class="v">3</div>
-            <div class="s">Small experimental programs, through real PLT/GOT linkage</div>
+            <div class="s">Small experimental programs, through their actual dynamic linkage</div>
           </div>
           <div class="stat">
             <span class="k">Library bytes changed</span>
@@ -459,8 +459,8 @@
           </div>
           <div class="stat">
             <span class="k">Held-out caller</span>
-            <div class="v">Fail → pass</div>
-            <div class="s">Missed its 3-hour cap; a recorded successor completed it</div>
+            <div class="v">Missed cap</div>
+            <div class="s">A separately recorded successor then completed its proof</div>
           </div>
           <div class="stat">
             <span class="k">Rebuilt from delivery</span>
@@ -470,23 +470,28 @@
         </div>
         <div class="callout">
           <span class="callout-label">Status</span>
-          <p>All three caller packages are accepted and were reconstructed from the delivered checking sources. Human review of the specifications and the architectural interpretation is pending, and no external organization has checked the package. Proof sources and review evidence are public in <a href="https://github.com/scasella/binary-proofs">scasella/binary-proofs</a>. The sealed replay assets are not, so a public clone cannot repeat the checking yet. Nothing here is upstream in OpenSSL.</p>
+          <p>All three caller packages are accepted. Human review is pending, and nothing here is upstream in OpenSSL. Proof sources and review evidence are public in <a href="https://github.com/scasella/binary-proofs">scasella/binary-proofs</a>, but a clone cannot repeat the checks (see <a href="#inspect">What you can inspect</a>).</p>
+        </div>
+        <div class="callout">
+          <span class="callout-label">Update, 23 October 2026</span>
+          <p>This post was first titled "Verified once, reused three times: agents carried proofs of shipped OpenSSL code into new callers." I retitled it and rewrote the opening because that title suggested later checks skip the supplier proofs, which they do not. The results are unchanged.</p>
         </div>
 
-        <h2 id="setup">Setup</h2>
-        <p>My recent projects used proofs to justify changes that made code faster. Here I wanted to add assurance without changing the library at all. The idea comes from Theorem's essay <a href="https://theorem.dev/blog/verified-software-stack/">Bootstrapping the Verified Software Stack</a>, which argues for verifying production machine code and reusing verified interfaces across the programs that depend on it. The essay doesn't give an implementation recipe, and this experiment is mine, not theirs.</p>
-        <p>The targets were two routines from a pinned Debian OpenSSL build, <code>3.0.22-1~deb12u1</code>. <code>CRYPTO_memcmp</code> had a checked comparison contract and <code>OPENSSL_cleanse</code> a checked zeroing contract. Both also had guarantees about permitted memory accesses, finite return and the state they preserve. Earlier work in the project had composed them into one caller. This experiment asked whether the same assurance could serve more callers with different behavior.</p>
-        <p>The proofs are in <a href="https://github.com/jrh13/hol-light">HOL Light</a>, using the x86-64 instruction semantics and decoder from AWS's <a href="https://github.com/awslabs/s2n-bignum">s2n-bignum</a> at a pinned revision. The agents were GPT-6.1 Sol. They wrote the contracts, the caller proofs, the checking drivers and the release.</p>
-        <p>A caller needs more from an interface than its result. It needs to know which memory can change, which registers survive, what permissions are required and whether the callee returns. Without those, a correct comparison result does not tell the caller whether its saved pointer or return address is still usable.</p>
-        <p>Here those facts are part of the public contracts. A caller proof establishes the contract's entry conditions, applies its guarantees and continues from the resulting state. In the inspected proofs, callers do not step through the supplier's instructions again. Fresh checking still rebuilds the supplier proofs from source, so reuse here does not mean trusting an old success log.</p>
+        <h2 id="setup">Question and setup</h2>
+        <p>My recent projects used proofs to justify faster code; here I wanted to add assurance to code without changing it at all. Shared libraries are the natural place to try: one copy of OpenSSL's <code>libcrypto</code> serves many programs, so a proof about its shipped bytes is worth more if each caller can build on it instead of reasoning about the library's instructions again. The idea comes from Theorem's essay <a href="https://theorem.dev/blog/verified-software-stack/">Bootstrapping the Verified Software Stack</a>, which argues for verifying production machine code and reusing verified interfaces across the programs that depend on it. The essay doesn't give an implementation recipe, and this experiment is mine, not theirs.</p>
+        <p>The targets were two routines from a pinned Debian OpenSSL build, <code>3.0.22-1~deb12u1</code>. <code>CRYPTO_memcmp</code> had a checked comparison contract and <code>OPENSSL_cleanse</code> a checked zeroing contract. Earlier work in the project had composed them into one caller. This experiment asked whether the same assurance could serve more callers with different behavior.</p>
+        <p>The proofs are in <a href="https://github.com/jrh13/hol-light">HOL Light</a>, a proof assistant whose small logical kernel checks every inference. They use the x86-64 instruction semantics and decoder from AWS's <a href="https://github.com/awslabs/s2n-bignum">s2n-bignum</a> at a pinned revision: a formal description of what the modeled instructions do to registers and memory. The theorems are about the shipped machine code, not its C source.</p>
+        <p>A caller needs more from an interface than its result. A correct comparison alone does not tell it whether its saved pointer or return address is still usable, which is why the contracts also cover memory effects, preserved state and the routine's return.</p>
+
+        <h3 id="roles">Who did what, and what checked it</h3>
+        <p>I chose the question and, once the first two callers were accepted, authorized one bounded trial on a third, held-out caller (recorded in the <a href="https://github.com/scasella/binary-proofs/blob/04f48b759f345872d9bf136ae3ccbc58836c8e1f/development/approved-plan/held-out-transfer-v1/STEERING-AMENDMENT-v1.md">steering amendment</a>). Working from a <a href="https://github.com/scasella/binary-proofs/blob/04f48b759f345872d9bf136ae3ccbc58836c8e1f/PROMPT.md">brief for the wider glibc and OpenSSL project</a> and this study's preregistered <a href="https://github.com/scasella/binary-proofs/blob/04f48b759f345872d9bf136ae3ccbc58836c8e1f/development/approved-plan/reusable-assurance-v1/EXPERIMENT-v1.md">experiment plan</a>, GPT-6.1 Sol agents wrote the contracts and caller specifications, the caller proofs and checking drivers, the failed trial's postmortem, the successor proofs and the review packet. The checks are mostly mechanical: HOL Light's kernel rebuilds every theorem from source, the supplier proofs included, and each package's acceptance gate adds the exact frozen statements, an extraction cross-check tying the theorems to the final binary and its linkage, five integrity controls, and a binding probe showing the caller proof fails without the public contract. Agents inspected the proof sources to check that the caller proofs use only the public contracts. No person has yet reviewed the specifications.</p>
 
         <h2 id="linkage">The call itself is part of the proof</h2>
-        <p>These proofs are about concrete final binaries and their declared loaded images. They don't stop at a source-level statement that says "call the verified function".</p>
-        <p>For each client, the chain runs through the actual <code>CALL</code> instruction, the PLT stub and GOT slot the linkage uses, the established supplier entry point, and the continuation after the callee returns. The caller proof must show that the state it reaches satisfies the supplier's precondition. It must then carry the supplier's result and preservation guarantees through the caller's remaining instructions to its actual <code>RET</code>.</p>
-        <p>The loaded image is still an assumption. The experiment verifies the call paths within it, not the dynamic loader that produced it. Within that boundary, the call target and the conditions under which its contract applies are checked rather than assumed.</p>
+        <p>A dynamically linked program does not jump straight into the library. Its call goes to a small stub in the procedure linkage table (PLT), which jumps to an address stored in the global offset table (GOT). Each caller proof follows the actual <code>CALL</code> instruction through that stub and GOT slot to the supplier entry point, shows that the state there satisfies the supplier's precondition, and carries the supplier's result and preservation guarantees through the caller's remaining instructions to its actual <code>RET</code>.</p>
+        <p>The loaded image, the program and library as laid out in memory after the dynamic loader runs, is still an assumption: the experiment verifies the call paths within it, not the loader. Within that boundary, the call target and the conditions for applying its contract are checked rather than assumed.</p>
 
         <h2 id="callers">Three callers, three different obligations</h2>
-        <p>The callers are small experimental programs, not production applications. They were chosen to use the same supplier assurance in different ways.</p>
+        <p>The callers are small experimental programs, not production applications, chosen to use the same supplier assurance in different ways.</p>
         <div class="table-wrap">
           <div class="table-label"><span class="id">Table 01</span>Accepted behavior over each caller's frozen admissible domain</div>
           <table>
@@ -500,12 +505,12 @@
             </tbody>
           </table>
         </div>
-        <p>Each package also proves its access policy, finite execution to the actual return, and the required stack, register and memory preservation. The theorems range over arbitrary contents and lengths that satisfy explicit memory, address and entry conditions, not over a set of test inputs.</p>
+        <p>The theorems range over arbitrary contents and lengths that satisfy explicit memory, address and entry conditions (the admissible domain in Table 01), not over a set of test inputs.</p>
 
         <h3 id="c2">C2: not writing is stronger than restoring</h3>
-        <p>For the conditional-cleanup caller, unequal inputs leave the destination unchanged. The access policy goes further and forbids even intermediate writes to it. A write followed by a restore would pass a check on final memory only, but it does not satisfy this guarantee.</p>
-        <p>On equality, every destination byte is zero at return, and memory outside the destination and a declared scratch area is preserved. The returned comparison refers to the inputs before cleanup. Identical and partially overlapping inputs are admitted, and bytes of the second input that lie inside the cleared region are not promised to survive.</p>
-        <p>That separates a path that leaves data alone from one that is allowed to destroy it, which is what a surrounding proof needs. The nonempty destination still has to be writable at entry on both paths. The no-write result does not widen the admitted permissions.</p>
+        <p>For the conditional-cleanup caller, unequal inputs leave the destination unchanged, and the access policy forbids even intermediate writes to it. A write followed by a restore would pass a check of final memory but violate this guarantee.</p>
+        <p>On equality, every destination byte is zero at return, and memory outside the destination and a declared scratch area is preserved. The returned comparison refers to the inputs before cleanup. Identical and partially overlapping inputs are admitted, and bytes of the second input inside the cleared region are not promised to survive.</p>
+        <p>That separates a path that leaves data alone from one allowed to destroy it, which a surrounding proof needs. The no-write result does not widen the admitted permissions: the nonempty destination must still be writable at entry on both paths.</p>
 
         <h3 id="c3">C3: the second comparison sees different memory</h3>
         <p>The third caller makes the memory snapshot explicit. It behaves roughly like this:</p>
@@ -516,20 +521,20 @@ second_equal = compare(p, q, n) == 0
 if not first_equal:
     return 2
 return 1 if second_equal else 0</code></pre>
-        <p>This is explanatory pseudocode. The verified artifact is an 89-byte, 32-instruction assembly-authored caller plus its two six-byte linkage prefixes, not a C translation of the sketch.</p>
-        <p>Take two disjoint one-byte inputs that both hold <code>7</code>. They compare equal. After the first is cleared, the second comparison sees <code>0</code> and <code>7</code>, so the result is 0. With identical pointers, clearing the first input clears the second too, because they are the same memory. Both comparisons agree, and the result is 1. These examples illustrate the specification. They are not separate machine runs.</p>
-        <p>The proof handles that difference without banning overlap. It keeps the first comparison result across the cleanup, and it relates the second comparison to the actual cleared memory. It also restores the saved slots and the incoming return address, carries the required code and GOT facts forward, and closes every return path.</p>
+        <p>This is explanatory pseudocode; the verified artifact is an 89-byte, 32-instruction assembly-authored caller plus its two six-byte linkage prefixes.</p>
+        <p>Take two disjoint one-byte inputs that both hold <code>7</code>. They compare equal, but after the first is cleared the second comparison sees <code>0</code> and <code>7</code>, so the result is 0. With identical pointers, clearing the first input clears the second, so both comparisons agree and the result is 1. These examples illustrate the specification; they are not separate machine runs.</p>
+        <p>The proof handles that difference without banning overlap. It keeps the first comparison result across the cleanup, relates the second comparison to the actual cleared memory, restores the saved slots and return address, and closes every return path.</p>
         <p>This is the strongest transfer of the three: the contracts supported a caller whose behavior depends on both the old and the new memory.</p>
 
-        <h2 id="heldout">The held-out caller missed its cap, then completed</h2>
-        <p>C1 and C2 were development cases. The integration machinery changed while they were built, and those changes are recorded as adaptation. Before the exact C3 case was exposed, the agents froze a common integration layer and rebuilt both development cases against it. C3 was then chosen in a separate agent context.</p>
+        <h2 id="heldout">The held-out caller missed its cap; a successor completed it</h2>
+        <p>C1 and C2 were development cases: the integration machinery (the general lemmas and proof automation that connect a caller's proof to the contracts) changed while they were built, and those changes are recorded as adaptation. Before the exact C3 case was exposed, the agents froze a common integration layer and rebuilt both development cases against it; C3 was then chosen and written in a separate agent context. The layer had been prepared for a declared family of callers that make several library calls and keep a result between them, but not for C3's exact code, domain or specification, so the trial tests whether it carries to a concrete case it was not tuned to.</p>
         <p>The first C3 attempt had a three-hour construction cap. It didn't finish, and under the original rules that result stays a failure.</p>
-        <p>A postmortem found specific proof problems. A helper discarded a premise that was needed later. Facts about the loaded image had to be selected at the right intermediate state. Saved slots, frames and memory snapshots still had to be connected across the two calls. A separately authorized successor completed those obligations. It kept the supplier contracts, the frozen integration algorithms, the binary and the original caller domain.</p>
-        <p>At one instruction site, the convenience automation failed. A local proof established that site's behavior from the existing primitives instead, with no change to the instruction semantics or the general dispatch algorithm. That shows the foundation was usable where the automation was incomplete. It does not show that every new caller can be handled automatically.</p>
+        <p>A postmortem found specific proof problems: a helper discarded a premise needed later, facts about the loaded image had to be selected at the right intermediate state, and saved slots, frames and memory snapshots still had to be connected across the two calls. A separately authorized successor completed those obligations, keeping the supplier contracts, the frozen integration algorithms, the binary and the original caller domain.</p>
+        <p>At one instruction site the convenience automation failed, and a local proof established that site's behavior from the existing primitives without changing the instruction semantics or the general dispatch algorithm. The foundation was usable where the automation was incomplete, which does not mean every new caller can be handled automatically.</p>
         <p>The frozen layer was sufficient for this caller after additional caller-local work. The missed deadline says something different, about how much work that took. I'm reporting both.</p>
 
         <h2 id="checking">Rebuilding the packages from the delivery</h2>
-        <p>The final stage rebuilt all three accepted packages from the delivered checking sources, in a new filesystem location. Each passed its complete acceptance gate, including the inherited integrity controls and a fresh probe that the proofs fail when a required public interface is unavailable. No new caller and no proof repair was part of that stage.</p>
+        <p>The final stage rebuilt all three accepted packages from the delivered checking sources in a new filesystem location, with no new caller and no proof repair. Each passed its complete acceptance gate, including the integrity controls and a fresh binding probe.</p>
         <div class="table-wrap">
           <div class="table-label"><span class="id">Table 02</span>Later release checking, wall time</div>
           <table>
@@ -543,24 +548,30 @@ return 1 if second_equal else 0</code></pre>
             </tbody>
           </table>
         </div>
-        <p>The complete session includes the positive reconstruction, the controls, the binding probe and the gate, so the columns must not be added. These are checking times, not proof-construction times. Setup and image export are accounted for separately.</p>
-        <p>The controls reject changed package inputs and missing proofs, including a missing caller proof accompanied by stale success metadata. They test that the selected proofs are bound to the intended inputs. They do not prove that every binary mutation is semantically wrong, and they do not validate the instruction model.</p>
-        <p>What this stage adds is a checking-only delivery, so the proofs no longer exist only in a development session. This consumption run used the same machine and Docker service as the development work, and its operator was an agent with prior context. It shows the package can be rebuilt from its delivery. It is not yet evidence from an independent person or organization.</p>
+        <p>The complete session includes the positive reconstruction, the controls, the binding probe and the gate, so the columns must not be added. These are checking times, not proof-construction times; setup and image export are counted separately.</p>
+        <p>Inside each positive reconstruction, rebuilding the supplier proofs took 419 to 433 seconds and the caller's own proof 46 to 122 seconds: checking a package never skips the supplier proofs, and each caller proof then applies the freshly rebuilt contracts.</p>
+        <p>The controls reject changed package inputs and missing proofs, including a missing caller proof with stale success metadata. They test that the selected proofs are bound to the intended inputs, not that every binary mutation is semantically wrong, and they do not validate the instruction model.</p>
+        <p>What this stage adds is a checking-only delivery, so the proofs no longer exist only in a development session. The run used the same machine and Docker service as the development work, with an agent operator that had prior context, so it is not yet evidence from an independent person or organization.</p>
+
+        <h2 id="inspect">What you can inspect</h2>
+        <p>The public repository is a source and review edition. It contains the proof and caller sources, the checking scripts, a human-review packet with the literal contracts and trust assumptions, the release index and report, the original held-out failure record and postmortem, the successor's report, and compact receipts from the later rebuild. A reader can check what each theorem states and how the recorded evidence fits together.</p>
+        <p>It does not contain the sealed checking and review archives, the Docker runtime images, the compiled callers and library binaries, or the Intel manuals and their converted text. The <a href="https://github.com/scasella/binary-proofs/blob/04f48b759f345872d9bf136ae3ccbc58836c8e1f/PUBLICATION-SCOPE.md">publication scope</a> explains why: redistribution permission for the Intel manual text and the source and notice obligations for the runtime image are still pending. No license has been granted yet for the project's own code. So the public release offers source and recorded checking results, not an executable reproduction: the recorded checking commands do not run from a clone.</p>
 
         <h2 id="interpretation">Interpretation and limits</h2>
-        <p>The positive result is composable assurance. Public contracts for two unchanged, shipped routines were enough to verify three different linked experimental callers, including one chosen after the integration layer was frozen and completed by a separately recorded successor. I didn't replace the two library routines with friendlier implementations. The work went into specifications, caller proofs and binding the proofs to the artifacts.</p>
+        <p>The positive result is composable assurance. Public contracts for two unchanged, shipped routines were enough to verify three different linked experimental callers, including one chosen after the integration layer was frozen and completed by a separately recorded successor. The work went into specifications, caller proofs and binding the proofs to the artifacts, not into replacing the library routines with friendlier implementations.</p>
+        <p>The most consequential limit is that the result has only been checked inside the setup that produced it, and no person has reviewed whether the contracts and the architectural interpretation say what they should. The other limits are narrower:</p>
         <ul>
-          <li>The proofs hold in a pinned x86-64 model under explicit address, memory-permission, stack-separation and normal-entry conditions (RF = TF = 0). They assume the declared initialized images and architectural environment.</li>
+          <li>The proofs hold in a pinned x86-64 model under explicit address, memory-permission, stack-separation and normal-entry conditions (RF = TF = 0, so the call is not resuming from a debug fault or single-stepping). They assume the declared initialized images and architectural environment.</li>
           <li>They do not cover all of OpenSSL, library upgrades, arbitrary ASLR or the dynamic loader. There is no constant-time theorem for the callers, and clearing the destination is not a claim that every copy of a secret is physically erased.</li>
-          <li>The HOL Light kernel and runtime, the s2n-bignum instruction model and decoder, the added ABI state and the binary extraction and loading steps are trusted. Successful checking does not validate those tools in general.</li>
-          <li>That callers use only the public interfaces is supported by source and tactic inspection. Supplier theorems stayed accessible in the shared proof environment. There is no formal capability isolation and no certificate of every transitive proof dependency.</li>
-          <li>The held-out C3 trial failed within its cap. Its successor's completion does not turn it into an unchanged transfer within the original budget.</li>
-          <li>There is no matched construction baseline without the supplied interfaces, and construction cost, tokens and coordination time were not fully recorded. I am not claiming construction savings, and I haven't compared this with related work, so I make no novelty claim.</li>
+          <li>The HOL Light kernel and runtime, the s2n-bignum instruction model and decoder with this project's frozen additions to them, the processor state added to the model for the calling convention (ABI), and the binary extraction and loading steps are trusted. Successful checking does not validate those tools in general.</li>
+          <li>That the caller proofs use only the public interfaces is supported by agents' source and tactic inspection. Supplier theorems stayed accessible in the shared proof environment. There is no formal capability isolation and no certificate of every transitive proof dependency.</li>
+          <li>There is no matched construction baseline without the supplied interfaces, and construction cost, tokens and coordination time were not fully recorded, so the experiment says nothing yet about whether reuse saves effort. I have not compared this work with related binary verification, such as s2n-bignum's own machine-code proofs, SAW or Macaw.</li>
         </ul>
 
         <h2 id="next-experiment">Next experiment</h2>
+        <p>The next step is checking by someone outside this setup, not another caller.</p>
         <ul>
-          <li>Publish the replay assets, then have someone else rebuild the packages on another machine.</li>
+          <li>A minimal replay package that someone else can run on another machine to rebuild the three packages, once the redistribution questions are settled.</li>
           <li>Human review of the specifications and the architectural interpretation.</li>
           <li>Only then another caller, or a matched construction trial without the supplier interfaces to measure what reuse saves.</li>
         </ul>
@@ -569,11 +580,11 @@ return 1 if second_equal else 0</code></pre>
         <table class="repro">
           <tbody>
             <tr><th scope="row">Model</th><td>GPT-6.1 Sol agents. One failed review sub-agent ran gpt-5.4-mini.</td></tr>
-            <tr><th scope="row">Experiment</th><td>HOL Light with the s2n-bignum x86-64 model at revision <code>4d1356a</code>, in pinned Linux containers under Docker Desktop on an Apple Silicon Mac. Construction cap for the held-out caller: three hours.</td></tr>
+            <tr><th scope="row">Experiment</th><td>HOL Light with the s2n-bignum x86-64 model at revision <code>4d1356a</code>, in pinned Linux containers under Docker Desktop on an Apple Silicon Mac. Construction cap for the held-out caller: three hours. Agents worked from the <a href="https://github.com/scasella/binary-proofs/blob/04f48b759f345872d9bf136ae3ccbc58836c8e1f/PROMPT.md">brief for the wider glibc and OpenSSL project</a> and this study's preregistered <a href="https://github.com/scasella/binary-proofs/blob/04f48b759f345872d9bf136ae3ccbc58836c8e1f/development/approved-plan/reusable-assurance-v1/EXPERIMENT-v1.md">experiment plan</a>.</td></tr>
             <tr><th scope="row">Data</th><td>Unchanged <code>CRYPTO_memcmp</code> and <code>OPENSSL_cleanse</code> from Debian OpenSSL <code>3.0.22-1~deb12u1</code> (amd64), plus three experimental callers; C3 is assembly-authored.</td></tr>
             <tr><th scope="row">Results</th><td><a href="https://github.com/scasella/binary-proofs/blob/04f48b759f345872d9bf136ae3ccbc58836c8e1f/development/approved-plan/review-release-v1/release-index-v1.json">Release index</a>, <a href="https://github.com/scasella/binary-proofs/blob/04f48b759f345872d9bf136ae3ccbc58836c8e1f/development/approved-plan/review-release-v1/REPORT.md">release report</a>, <a href="https://github.com/scasella/binary-proofs/blob/04f48b759f345872d9bf136ae3ccbc58836c8e1f/development/approved-plan/review-release-v1/manuscript/CASE-STUDY-v1.md">case study</a> and <a href="https://github.com/scasella/binary-proofs/blob/04f48b759f345872d9bf136ae3ccbc58836c8e1f/development/approved-plan/review-release-v1/manuscript/claim-to-evidence-v1.json">claim-to-evidence map</a>. The <a href="https://github.com/scasella/binary-proofs/blob/04f48b759f345872d9bf136ae3ccbc58836c8e1f/development/approved-plan/held-out-transfer-v1/results/final-outcome-v1.json">failed held-out C3 outcome</a> stays separate from the <a href="https://github.com/scasella/binary-proofs/blob/04f48b759f345872d9bf136ae3ccbc58836c8e1f/development/approved-plan/c3-successor-v1/REPORT.md">accepted successor</a>.</td></tr>
             <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/binary-proofs">scasella/binary-proofs</a>: proof and caller sources, checking scripts, and the <a href="https://github.com/scasella/binary-proofs/blob/04f48b759f345872d9bf136ae3ccbc58836c8e1f/development/approved-plan/review-release-v1/human-review/README.md">human-review packet</a> with literal contracts and trust assumptions. The sealed checking archives, Docker images and binaries are not published (<a href="https://github.com/scasella/binary-proofs/blob/04f48b759f345872d9bf136ae3ccbc58836c8e1f/PUBLICATION-SCOPE.md">publication scope</a>), so the checking commands do not run from a clone.</td></tr>
-            <tr><th scope="row">Status</th><td>Published 2026-10-05 · Source and review edition public; no license granted yet; replay assets not published. Human review pending; no external validation.</td></tr>
+            <tr><th scope="row">Status</th><td>Published 2026-10-05 · updated 2026-10-23 · Source and review edition public (main is still at <code>04f48b7</code> as of 2026-10-23); no license granted yet; replay assets not published, so no executable public reproduction. Human review pending; no independent reproduction or external validation.</td></tr>
           </tbody>
         </table>
     <!-- PANES:NEXT:START -->

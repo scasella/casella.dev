@@ -3,32 +3,32 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Training on sometimes-solvable math problems: one RL run | Stephen Casella</title>
-  <meta name="description" content="A panel-of-experts Qwen3-30B-A3B-Base adapter was trained with RL on competition problems it solved on some sampled attempts. In one run its held-out score rose from 14% to 29%; the thinking-model run was not completed." />
+  <title>Exploratory RL on partially solved competition math problems | Stephen Casella</title>
+  <meta name="description" content="An exploratory note in my panel-reasoning project. One RL run on the competition problems a panel-format Qwen3-30B-A3B-Base adapter solved only some of the time raised its held-out score from 14% to 29% by the last evaluation. No other curriculum was compared." />
   <meta name="author" content="Stephen Casella" />
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#080c0f" />
   <link rel="canonical" href="https://casella.dev/blog_multipersona_rl.html" />
   <meta property="og:site_name" content="Stephen Casella" />
-  <meta property="og:title" content="Training on sometimes-solvable math problems: one RL run" />
-  <meta property="og:description" content="One RL run on the problems a panel-style Qwen adapter solved on some sampled attempts raised its held-out score from 14% to 29%. The thinking-model run was not completed." />
+  <meta property="og:title" content="Exploratory follow-up on training with partially solved math problems" />
+  <meta property="og:description" content="One RL run on the problems a panel-format Qwen3 adapter solved only some of the time raised its score on 100 held-out problems from 14% to 29% by the last evaluation. Exploratory: no comparison curriculum, and the thinking-model run was not completed." />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://casella.dev/blog_multipersona_rl.html" />
   <meta property="og:image" content="https://casella.dev/assets/og/blog_multipersona_rl.png" />
   <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_multipersona_rl.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Share card for the write-up: Training on sometimes-solvable math problems: one RL run." />
+  <meta property="og:image:alt" content="Share card for the write-up: Exploratory follow-up on training with partially solved math problems." />
   <meta property="article:author" content="Stephen Casella" />
   <meta property="article:published_time" content="2026-04-25" />
-  <meta property="article:modified_time" content="2026-09-23" />
+  <meta property="article:modified_time" content="2026-10-23" />
   <meta property="article:tag" content="multi-persona reasoning" />
   <meta property="article:tag" content="RLVR" />
   <meta property="article:tag" content="Qwen3" />
   <meta property="article:tag" content="GRPO" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Training on sometimes-solvable math problems: one RL run" />
-  <meta name="twitter:description" content="One RL run on the problems a panel-style Qwen adapter solved on some sampled attempts raised its held-out score from 14% to 29%. The thinking-model run was not completed." />
+  <meta name="twitter:title" content="Exploratory follow-up on training with partially solved math problems" />
+  <meta name="twitter:description" content="One RL run on the problems a panel-format Qwen3 adapter solved only some of the time raised its score on 100 held-out problems from 14% to 29% by the last evaluation. Exploratory: no comparison curriculum, and the thinking-model run was not completed." />
   <meta name="twitter:image" content="https://casella.dev/assets/og/blog_multipersona_rl.png" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
@@ -43,13 +43,13 @@
     {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
-      "headline": "Training on sometimes-solvable math problems: one RL run",
-      "description": "A panel-of-experts Qwen3-30B-A3B-Base adapter was trained with RL on competition problems it solved on some sampled attempts. In one run its held-out score rose from 14% to 29%; the thinking-model run was not completed.",
+      "headline": "Exploratory follow-up on training with partially solved math problems",
+      "description": "An exploratory note in my panel-reasoning project. One RL run on the competition problems a panel-format Qwen3-30B-A3B-Base adapter solved only some of the time raised its held-out score from 14% to 29% by the last evaluation. No other curriculum was compared.",
       "url": "https://casella.dev/blog_multipersona_rl.html",
       "mainEntityOfPage": "https://casella.dev/blog_multipersona_rl.html",
       "image": "https://casella.dev/assets/og/blog_multipersona_rl.png",
       "datePublished": "2026-04-25",
-      "dateModified": "2026-09-23",
+      "dateModified": "2026-10-23",
       "author": {
         "@type": "Person",
         "name": "Stephen Casella",
@@ -76,7 +76,7 @@
         "Qwen3-30B-A3B",
         "GRPO",
         "olympiad math",
-        "learning frontier"
+        "variance band"
       ],
       "codeRepository": "https://github.com/scasella/multi-model"
     }
@@ -379,7 +379,7 @@
   </style>
   <!-- PANES:HEAD:START -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
-  <link rel="stylesheet" href="panes.css?v=bbd7cc12" />
+  <link rel="stylesheet" href="panes.css?v=87bdb6c4" />
   <script src="ascii.js?v=6f1f421a" defer></script>
   <!-- PANES:HEAD:END -->
 </head>
@@ -432,37 +432,53 @@
   <main class="post-main">
   <article class="post">
 
-        <h1>Training on sometimes-solvable math problems: one RL run</h1>
+        <h1>Exploratory follow-up on training with partially solved math problems</h1>
 <!-- PANES:META:START -->
-    <p class="post-byline">[ <time datetime="2026-04-25">2026-04-25</time> · updated <time datetime="2026-09-23">2026-09-23</time> ] // Qwen3-30B-A3B // 6 MIN READ</p>
+    <p class="post-byline">[ <time datetime="2026-04-25">2026-04-25</time> · updated <time datetime="2026-10-23">2026-10-23</time> ] // Qwen3-30B-A3B // 8 MIN READ</p>
   <!-- PANES:META:END -->
-        <p class="subtitle">A panel-of-experts adapter on Qwen3-30B-A3B-Base was trained with RL on the competition problems it solved on some but not all sampled attempts. In a single run, its held-out score rose from 14% to 29%. The matching run for Qwen's thinking model was not completed.</p>
+        <p class="subtitle">One reinforcement-learning run on the competition problems a panel-format Qwen3 adapter solved only some of the time raised its score on 100 held-out problems from 14% to 29% by its last evaluation. With no comparison curriculum, it does not show that choosing those problems beats training on others.</p>
 
         <div class="paper-links">
+          <a href="blog_multipersona.html" class="btn-pill">Main study</a>
           <a href="https://github.com/scasella/multi-model" class="btn-pill">GitHub repo</a>
+        </div>
+
+        <div class="callout">
+          <span class="callout-label">Exploratory note</span>
+          <p>This note belongs to my panel-reasoning project, whose main study is <a href="blog_multipersona.html">A panel-format adapter produces shorter answers with lower accuracy</a>.</p>
         </div>
 
         <div class="tldr">
           <span class="tldr-label">TL;DR</span>
-          <p>I sampled each of 877 competition math problems 8 times from each model and counted the problems with mixed outcomes, where 1 to 7 of the 8 samples were right. The panel had 382 such problems and the thinking model 209. Only 72 were mixed for both. On 280 of the panel's mixed problems, the thinking model answered all 8 sampled attempts correctly.</p>
-          <p>One RL run on the panel's mixed problems raised its score on 100 held-out problems from 14% to 29%. The thinking model scored 54% to 61% on the same held-out set before any RL. Its RL run was not completed, so there is no curve to compare against.</p>
+          <p>Starting from the panel adapter after its GSM8K training stage, I ran 100 steps of reinforcement learning (RL) on the 354 of its mixed competition math problems (1 to 7 of 8 sampled answers right) that were not set aside in a 100-problem held-out set. Its held-out score, which I checked every 10 steps during the run, rose from 14% to 29% at step 90, the last evaluation (first reached at step 70). No other curriculum was compared.</p>
+          <p>Qwen's production thinking model had 209 mixed problems to the panel's 382, but on 280 of the panel's it was right 8 of 8 times: the counts show where each model is still learning, not wider search. The thinking model's RL run was not completed.</p>
         </div>
 
         <div class="callout">
-          <span class="callout-label">Revision</span>
-          <p>This first appeared as the second half of the <a href="blog_multipersona.html">panel-reasoning post</a>. That version read the band counts as evidence that the panel explores more widely. They do not show that, and this version drops that reading.</p>
+          <span class="callout-label">Corrections</span>
+          <p><strong>Correction, 23 October 2026.</strong> Table 02 gave each source's share of the training pool (88% OlympiadBench) as its share of training, but the loop drew two problems per source per step; the table now shows the draws, and the text no longer ties the gains to pool share. I also moved token entropy and length spread to the methods notes, since neither measures whether solutions used different strategies.</p>
+          <p><strong>Revision, 23 September 2026.</strong> This first appeared as the second half of the <a href="blog_multipersona.html">panel post</a>. That version read the band counts as evidence that the panel explores more widely, which they do not show.</p>
         </div>
+
+        <h2 id="question">The question</h2>
+
+        <p>
+          The training loop scores each sampled answer against the others for the same problem, as in GRPO: a sample's advantage is its reward (1 if correct, minus 0.2 for missing or malformed answer tags) minus its group's mean. When every sample is right, or every one wrong, the correctness part cancels and only the small tag penalty can differ, so mixed problems are where the learning signal comes from.
+        </p>
+        <p>
+          That suggests a curriculum (a rule for choosing what to train on) made of the problems a model solves some of the time. I ask where each model's mixed problems sit, and whether training the panel adapter on its own mixed problems raises its accuracy on problems it never trained on.
+        </p>
 
         <h2 id="setup">Setup</h2>
 
         <p>
-          The two models are described in the <a href="blog_multipersona.html">main post</a>: a rank-32 LoRA adapter on Qwen3-30B-A3B-Base that reasons as a panel of experts, and Qwen's production Qwen3-30B-A3B with thinking turned on. The run logs and band summary show that this work used the panel adapter from after the GSM8K stage (Tinker session <code>e1a9b8bf…</code>), not the post-MATH adapter evaluated in the main post, although the repo's write-up calls it the post-MATH adapter.
+          The two models are described in the <a href="blog_multipersona.html">main study</a>: a rank-32 LoRA adapter (a small set of trainable weights added to a frozen Qwen3-30B-A3B-Base) trained with RL to reason as a panel of experts, and Qwen's production Qwen3-30B-A3B with thinking on.
         </p>
         <p>
-          The pool has 877 problems: HMMT February 2024 and 2025 (60), AIME 2024 and 2025 (60), the English text-only math competition set from OlympiadBench (674), and AMC (83). I sampled each problem 8 times from each model at temperature 1.0, with a limit of 8,192 tokens for both. Each problem then falls into one of three bands: <code>all_zero</code> (0 of 8 correct), <code>variance_band</code> (1 to 7 of 8 correct, which I call mixed) and <code>all_one</code> (8 of 8 correct).
+          This run started from the panel adapter after its 128-step GSM8K stage (RL on grade-school math word problems, run on Tinker, the hosted training service I used), before the MATH stage (RL on MATH competition problems) that produced the adapter released with the main study. The band sweep and the RL log both load that checkpoint.
         </p>
         <p>
-          Mixed problems matter because group-relative RL methods such as GRPO score each sample against the other samples on the same problem. The reward in this run is 1 for a correct answer, minus 0.2 when the answer tags are missing or malformed. If every sample in a group gets the same correctness score, the correctness term gives each sample zero advantage relative to the group. The tag penalty can still differ within such a group, so a small format signal remains.
+          The pool has 877 problems: HMMT February 2024 and 2025 (60), AIME 2024 and 2025 (60), OlympiadBench's English text-only math competition set (674) and AMC (83). I sampled each problem 8 times from each model at temperature 1.0 with an 8,192-token limit and put it in one of three bands: <code>all_zero</code> (0 of 8 correct), <code>variance_band</code> (1 to 7, which I call mixed) or <code>all_one</code> (8 of 8).
         </p>
 
         <h2 id="bands">Where each model's mixed problems sit</h2>
@@ -536,19 +552,22 @@
         </div>
 
         <p>
-          Having more mixed problems is not the same as exploring more. If a model solves a problem with probability p on each independent sample, a group of G samples is mixed with probability 1 − p<sup>G</sup> − (1 − p)<sup>G</sup>, highest at p = 0.5. With G = 8, a problem at p = 0.5 is mixed 99% of the time, one at p = 0.9 57% of the time, and one at p = 0.05 34% of the time. A model gets many mixed problems when many problems sit near the middle of its ability.
+          Having more mixed problems is not the same as exploring more. A problem a model solves with probability p per sample is mixed in a group of G with probability 1 − p<sup>G</sup> − (1 − p)<sup>G</sup>: with G = 8, 99% at p = 0.5, 57% at p = 0.9 and 34% at p = 0.05. Many mixed problems means many problems near the middle of a model's ability.
         </p>
         <p>
-          Table 01 fits that reading. Most of the panel's mixed problems (280 of 382) are ones where the thinking model got 8 of 8. The thinking model's largest group of mixed problems (137) are ones where the panel got 0 of 8. The counts locate each model's frontier on this pool. They do not show that either model searches more widely.
+          Table 01 fits that reading: most of the panel's mixed problems (280 of 382) are ones the thinking model got 8 of 8, and the thinking model's largest mixed group (137) are ones the panel got 0 of 8. The counts show where each model is still learning on this pool. The models also differ in post-training (see the <a href="blog_multipersona.html">main study</a>), so this compares two models, not two formats.
         </p>
         <p>
-          Two details make these counts approximate. The bands were set with 8 samples, but the RL run below used groups of 16, so a problem at 0 of 8 can still give mixed groups of 16 and a mixed problem can give a group with no correct sample. And the 8,192-token limit was tighter for the thinking model: in the RL logs, at a 12,288-token limit, its samples averaged about 11,100 tokens at the first step against the panel's 586, so the band sweep likely cut off many thinking samples before an answer.
+          The counts are approximate. The bands used 8 samples but RL used groups of 16, so a problem at 0 of 8 can still give mixed groups of 16. And the 8,192-token limit was tight for the thinking model: its first-step RL samples averaged about 11,100 tokens (under a 12,288-token limit) against the panel's 586, so the sweep likely cut off many of its samples before an answer.
         </p>
 
         <h2 id="rl">One RL run on the panel's mixed problems</h2>
 
         <p>
-          I held out 100 problems from the pool, 25 from each source, and removed them from both models' training sets. That left 354 mixed problems for the panel and 180 for the thinking model. Settings: LoRA rank 32, learning rate 5×10⁻⁶, groups of 16 samples, 8 problems per step, temperature 1.0, a 12,288-token limit and 100 steps. I evaluated every 10 steps with one sample per held-out problem.
+          I set aside 100 problems, a random 25 from each source, and removed them from both models' training sets, leaving 354 mixed problems for the panel and 180 for the thinking model. No training step used the 100, but they are not an untouched test: I scored them every 10 steps during the run, with one sampled answer per problem.
+        </p>
+        <p>
+          Settings: LoRA rank 32, learning rate 5×10⁻⁶, groups of 16 samples, 8 problems per step, temperature 1.0, a 12,288-token limit and 100 steps. The loop drew two problems from each source at every step, so each source supplied 200 of the 800 draws regardless of its size.
         </p>
 
             <figure class="chart">
@@ -557,15 +576,15 @@
 
                 <text x="480" y="30" text-anchor="middle" fill="#3B3B39"
                       font-family="Inter, sans-serif" font-size="18" font-weight="400">
-                  Panel's test score over 100 training steps
+                  Panel's held-out score over 100 training steps
                 </text>
                 <text x="480" y="54" text-anchor="middle" fill="#969592"
                       font-family="Inter, Helvetica Neue, sans-serif" font-size="12">
-                  Held-out score rose from 14% to 29%, training on the panel's 354 mixed-outcome problems
+                  14% at the start, 29% at the last evaluation (step 90), training on the panel's 354 mixed-outcome problems
                 </text>
 
                 <line x1="350" y1="78" x2="382" y2="78" stroke="#5C8A95" stroke-width="2.5" />
-                <text x="388" y="82" fill="#3B3B39" font-family="Inter, sans-serif" font-size="12">test score (100 problems)</text>
+                <text x="388" y="82" fill="#3B3B39" font-family="Inter, sans-serif" font-size="12">held-out score (100 problems)</text>
                 <line x1="568" y1="78" x2="600" y2="78" stroke="#969592" stroke-width="1.5" stroke-dasharray="4 4" />
                 <text x="606" y="82" fill="#3B3B39" font-family="Inter, sans-serif" font-size="12">starting score</text>
 
@@ -623,21 +642,22 @@
                 </text>
               </svg>
               <figcaption>
-                <strong>Figure 1.</strong> The panel's held-out score over one 100-step RL run. The last evaluation was at step 90. The thinking model's pre-RL score (54% to 61%) is above the top of this chart.
+                <strong>Figure 1.</strong> The last evaluation was at step 90; training continued to step 99, and the final weights were not scored.
               </figcaption>
             </figure>
 
         <p>
-          The score dipped at step 10, rose to 21% by step 50 and reached 29% at step 70. It was 27% at step 80 and 29% at step 90, the last evaluation.
+          The score dipped at step 10, rose to 21% by step 50, and read 29%, 27% and 29% at steps 70, 80 and 90. I quote step 90 because it was the last evaluation, not because it was the best; it tied step 70.
         </p>
 
         <div class="table-wrap">
-          <div class="table-label"><span class="id">Table 02</span>Held-out score by source, against each source's share of the panel's training set</div>
+          <div class="table-label"><span class="id">Table 02</span>Held-out score by source, with each source's training problems and how often the loop drew them</div>
           <table>
             <thead>
               <tr>
                 <th>Source</th>
-                <th>Share of training</th>
+                <th>Training problems</th>
+                <th>Draws per problem</th>
                 <th>Step 0</th>
                 <th>Step 90</th>
                 <th>Change</th>
@@ -646,35 +666,40 @@
             <tbody>
               <tr class="highlight">
                 <td>OlympiadBench</td>
-                <td class="num">88% (311/354)</td>
+                <td class="num">311</td>
+                <td class="num">1 for 200, 0 for 111</td>
                 <td class="num">20%</td>
                 <td class="num">44%</td>
                 <td class="num">+24 points</td>
               </tr>
               <tr>
                 <td>AMC</td>
-                <td class="num">10% (35/354)</td>
+                <td class="num">35</td>
+                <td class="num">5 or 6</td>
                 <td class="num">32%</td>
                 <td class="num">52%</td>
                 <td class="num">+20 points</td>
               </tr>
               <tr>
                 <td>AIME</td>
-                <td class="num">2% (6/354)</td>
+                <td class="num">6</td>
+                <td class="num">33 or 34</td>
                 <td class="num">4%</td>
                 <td class="num">16%</td>
                 <td class="num">+12 points</td>
               </tr>
               <tr>
                 <td>HMMT</td>
-                <td class="num">0.6% (2/354)</td>
+                <td class="num">2</td>
+                <td class="num">100</td>
                 <td class="num">0%</td>
                 <td class="num">4%</td>
                 <td class="num">+4 points</td>
               </tr>
               <tr class="totals">
-                <td>All (100 problems)</td>
-                <td class="num">100%</td>
+                <td>All (100 held-out problems)</td>
+                <td class="num">354</td>
+                <td class="num">800 draws in all</td>
                 <td class="num">14%</td>
                 <td class="num">29%</td>
                 <td class="num">+15 points</td>
@@ -684,76 +709,56 @@
         </div>
 
         <p>
-          All four sources went up, most on OlympiadBench, which made up 88% of training. Each source has 25 held-out problems, so the AIME gain is 3 problems and the HMMT gain is 1.
-        </p>
-
-        <p>Two rough signals of how varied the panel's samples stayed during training:</p>
-
-        <div class="stat-row">
-          <div class="stat">
-            <span class="k">Token entropy, steps 0–9</span>
-            <div class="v">0.591</div>
-            <div class="s">Mean over the window</div>
-          </div>
-          <div class="stat">
-            <span class="k">Token entropy, steps 90–99</span>
-            <div class="v">0.158</div>
-            <div class="s">Down 73%</div>
-          </div>
-          <div class="stat">
-            <span class="k">Length spread, step 0</span>
-            <div class="v">0.36</div>
-            <div class="s">Coefficient of variation within a group of 16</div>
-          </div>
-          <div class="stat">
-            <span class="k">Length spread, step 90</span>
-            <div class="v">0.66</div>
-            <div class="s">Up 83%</div>
-          </div>
-        </div>
-
-        <p>
-          Length spread says nothing about content.
+          All four sources went up, by 6 of 25 held-out problems on OlympiadBench, 5 on AMC, 3 on AIME and 1 on HMMT. OlympiadBench made up 88% of the training pool but supplied only a quarter of the draws. With 25 problems per source and one sample per problem, these changes are noisy; the overall change is more reliable.
         </p>
 
         <h2 id="thinking-arm">The thinking arm</h2>
         <p>
-          I started the matching run on the thinking model's 180 mixed problems three times, with the same settings, and stopped each within its first three steps when I ran out of budget; its samples were about 19 times as long as the panel's. With no thinking-model training curve, this post cannot say which model improves faster under RL.
+          I started the matching run on the thinking model's 180 mixed problems three times, and each stopped within its first three steps, two of them when the compute budget ran out; the thinking model's samples were about 19 times as long as the panel's. Without a thinking-model curve, this note cannot say which model improves faster under RL.
         </p>
 
-        <h2 id="interpretation">Interpretation and limits</h2>
+        <h2 id="interpretation">What this shows, and what it does not</h2>
         <p>
-          On this pool, the two models are sometimes right on different problems: the panel mostly where the thinking model got 8 of 8, and the thinking model mostly where the panel got 0 of 8. One RL run on the panel's mixed problems raised its held-out score from 14% to 29%, still below the thinking model's score before RL.
+          The run establishes one result: from the GSM8K-stage adapter, RL on its own mixed problems raised its monitored held-out score from 14% to 29% at step 90, the last evaluation. That is still well below the thinking model's 54% to 61% on the same set before any RL. The band counts add a second result: on this pool, the two models' mixed problems mostly differ.
         </p>
-        <ul>
-          <li>The 15-point gain comes from one run with one seed, scored with one sample per held-out problem, and has no confidence interval.</li>
-          <li>The two models differ in post-training as well as in reasoning format (see the main post), so the band comparison is between these two models, not between formats.</li>
-        </ul>
+        <p>
+          The run does not show that selecting mixed problems beats another curriculum: RL on other problems from the same pool might have produced a similar gain. The missing comparison, the first item under Next experiment, is the same starting adapter trained on mixed-outcome problems and on a random sample or the full pool under one matched budget. Finishing the thinking-model arm would not isolate the selection, because that arm also changes the model, its reasoning format, its post-training and its training problems.
+        </p>
+        <p>
+          The gain rests on one completed run with one seed, scored with one sampled answer per problem and no confidence interval. Single-sample scores on 100 problems move by several points, so the exact size of the gain is uncertain.
+        </p>
 
         <h2 id="next-experiment">Next experiment</h2>
         <ul>
-          <li>Run the thinking arm: 100 steps on its 180 mixed problems (<code>data/olympiad_pool/thinking_train.jsonl</code>) with the same settings, and plot both models on the same held-out set.</li>
-          <li>First, recompute both models' bands with 16 samples per problem and a token limit that fits the thinking model's traces.</li>
-          <li>Repeat the panel run with a second seed, and once from the post-MATH adapter used in the main post.</li>
-          <li>Measure the panel's embedding dispersion after RL.</li>
+          <li><strong>Test the selection.</strong> From the GSM8K-stage adapter, train a mixed-outcome arm, a random-sample arm and a full-pool arm under one budget: 100 steps, 8 problems per step, 16 samples per problem, two problems per source per step, with at least two seeds per arm. Score a fixed final checkpoint of each arm with several samples per problem on problems no arm trained on or was monitored with.</li>
+          <li>Then run the thinking arm: recompute both models' bands with 16 samples and a token limit that fits the thinking model's traces, and train 100 steps on its mixed problems (<code>data/olympiad_pool/thinking_train.jsonl</code>) with the same settings.</li>
+          <li>Repeat the panel run once from the post-MATH adapter released with the main study.</li>
         </ul>
+
+        <h2 id="methods">Methods notes</h2>
+        <p>
+          <strong>Training-side metrics.</strong> On the training problems, the share of correct samples rose from 23% (steps 0–9) to 58% (steps 90–99). Mean per-token entropy fell from 0.591 to 0.158 over those windows and within-group length spread rose (coefficient of variation 0.36 at step 0, 0.66 at step 90); neither shows whether samples used different solution strategies, so they are not evidence about diversity.
+        </p>
+        <p>
+          <strong>Starting adapter.</strong> Reproducing this run means retraining the GSM8K stage to 128 steps (its script defaults to 80) and passing that checkpoint to <code>scripts/rl_panel_olympiad.py</code> as <code>load_checkpoint_path</code>, overriding its post-MATH default (<code>PANEL_MATH_CHECKPOINT</code>).
+        </p>
 
         <h2 id="reproducibility">Reproducibility</h2>
         <table class="repro">
           <tbody>
-            <tr><th scope="row">Model</th><td>Panel: <code>Qwen/Qwen3-30B-A3B-Base</code> + rank-32 LoRA after the 128-step GSM8K stage (Tinker session <code>e1a9b8bf…</code>, named in the band summary and the RL log). Thinking: <code>Qwen/Qwen3-30B-A3B</code> with <code>enable_thinking=True</code>.</td></tr>
-            <tr><th scope="row">Experiment</th><td><code>scripts/build_olympiad_pool.py</code>, <code>scripts/filter_variance_band.py</code> (8 samples, 8,192 tokens), <code>scripts/build_per_arm_splits.py</code> (seed 20260424), <code>scripts/rl_panel_olympiad.py</code> (seed 20260424, <code>tag_coef</code> 0.2, one completed run). <code>scripts/rl_thinking_olympiad.py</code> was started and not completed.</td></tr>
-            <tr><th scope="row">Data</th><td><code>data/olympiad_pool/all.jsonl</code> (877 problems), <code>panel_train.jsonl</code> (354), <code>thinking_train.jsonl</code> (180), <code>heldout_eval.jsonl</code> (100, 25 per source). Unit: a problem for the bands; one sample per held-out problem for evaluation.</td></tr>
-            <tr><th scope="row">Results</th><td><a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/variance_band">variance_band/</a> (<code>panel_g8</code>, <code>thinking_g8</code>), <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/data/olympiad_pool/split_summary.json">split_summary.json</a> (Table 01), <a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/olympiad_panel_only">olympiad_panel_only/</a> (held-out trajectory, per-step training metrics, length spread). Training logs, including the thinking model's first held-out scores, are not published.</td></tr>
-            <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7">scasella/multi-model @ a1ebbfc</a></td></tr>
-            <tr><th scope="row">Status</th><td>Published 2026-04-25 · updated 2026-09-23 · Open issues: thinking arm not completed; the repo write-up misnames the starting adapter (see Setup).</td></tr>
+            <tr><th scope="row">Model</th><td>Panel: <code>Qwen/Qwen3-30B-A3B-Base</code> + rank-32 LoRA after the 128-step GSM8K stage (Tinker session <code>e1a9b8bf…</code>). That adapter is not published; the <a href="https://huggingface.co/scasella91/qwen3-30b-a3b-multipersona-debate-lora">released adapter</a> is the later post-MATH one. Thinking: <code>Qwen/Qwen3-30B-A3B</code> with <code>enable_thinking=True</code>.</td></tr>
+            <tr><th scope="row">Experiment</th><td><code>scripts/build_olympiad_pool.py</code>, <code>scripts/filter_variance_band.py</code> (8 samples, 8,192 tokens), <code>scripts/build_per_arm_splits.py</code> (seed 20260424), <code>scripts/rl_panel_olympiad.py</code> (seed 20260424, <code>tag_coef</code> 0.2, round-robin sampling by source, one completed run). <code>scripts/rl_thinking_olympiad.py</code> was started and not completed.</td></tr>
+            <tr><th scope="row">Data</th><td><code>data/olympiad_pool/all.jsonl</code> (877 problems), <code>panel_train.jsonl</code> (354), <code>thinking_train.jsonl</code> (180), <code>heldout_eval.jsonl</code> (100, a random 25 per source, monitored every 10 steps). Unit: a problem for the bands; one sampled answer per held-out problem for evaluation.</td></tr>
+            <tr><th scope="row">Results</th><td><a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/variance_band">variance_band/</a> (<code>panel_g8</code>, <code>thinking_g8</code>), <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/data/olympiad_pool/split_summary.json">split_summary.json</a> (Table 01), <a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/olympiad_panel_only">olympiad_panel_only/</a> (held-out trajectory, per-step training metrics, length spread). The <a href="https://github.com/scasella/multi-model/blob/8232c336e29ac4aac4ce5652dffd45fa459966d0/reports/olympiad_panel_only/writeup.md">current repo write-up</a> withdraws its earlier reading of the result. Training logs, including the thinking model's held-out scores, are not published, and the run's final checkpoint is no longer available.</td></tr>
+            <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7">scasella/multi-model @ a1ebbfc</a>. Data and scripts are unchanged at <a href="https://github.com/scasella/multi-model/tree/8232c336e29ac4aac4ce5652dffd45fa459966d0">8232c33</a> (current main), which adds documentation corrections.</td></tr>
+            <tr><th scope="row">Status</th><td>Published 2026-04-25 · updated 2026-10-23 · Exploratory: one completed panel run, no comparison curriculum, thinking arm not completed. At a1ebbfc, the olympiad write-up and <code>summary.json</code> name the post-MATH adapter as the start; the run logs show the GSM8K-stage one. Dated corrections on main (2026-09-23) in the README, recipe and write-up name the GSM8K-stage adapter, but <code>summary.json</code>, the olympiad script's default checkpoint, the README and recipe setup steps, and the write-up's reproduction line still point to the post-MATH adapter.</td></tr>
           </tbody>
         </table>
 
 
             <!-- PANES:NEXT:START -->
     <nav class="post-next" aria-label="More research">
-      <a href="blog_multipersona.html"><span>next →</span><span>Panel-style reasoning trades accuracy for shorter completions</span></a>
+      <a href="blog_multipersona.html"><span>next →</span><span>A panel-format adapter produces shorter answers with lower accuracy</span></a>
       <a class="post-next__all" href="research.html">← all research</a>
     </nav>
   <!-- PANES:NEXT:END -->

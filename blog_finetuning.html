@@ -21,7 +21,7 @@
   <meta property="og:image:alt" content="Share card: Withdrawn: ten mined examples and a 1.5B bug fixer." />
   <meta property="article:author" content="Stephen Casella" />
   <meta property="article:published_time" content="2026-05-26" />
-  <meta property="article:modified_time" content="2026-09-23" />
+  <meta property="article:modified_time" content="2026-10-23" />
   <meta property="article:tag" content="LoRA fine-tuning" />
   <meta property="article:tag" content="automated program repair" />
   <meta property="article:tag" content="Qwen2.5-1.5B" />
@@ -47,8 +47,9 @@
       "url": "https://casella.dev/blog_finetuning.html",
       "mainEntityOfPage": "https://casella.dev/blog_finetuning.html",
       "image": "https://casella.dev/assets/og/blog_finetuning.png",
+      "creativeWorkStatus": "Withdrawn",
       "datePublished": "2026-05-26",
-      "dateModified": "2026-09-23",
+      "dateModified": "2026-10-23",
       "author": {
         "@type": "Person",
         "name": "Stephen Casella",
@@ -227,7 +228,7 @@
   </style>
   <!-- PANES:HEAD:START -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
-  <link rel="stylesheet" href="panes.css?v=bbd7cc12" />
+  <link rel="stylesheet" href="panes.css?v=87bdb6c4" />
   <script src="ascii.js?v=6f1f421a" defer></script>
   <!-- PANES:HEAD:END -->
 </head>
@@ -282,19 +283,19 @@
     <p class="meta">May 2026</p>
     <h1>Withdrawn: ten mined examples and a 1.5B bug fixer</h1>
 <!-- PANES:META:START -->
-    <p class="post-byline">[ <time datetime="2026-05-26">2026-05-26</time> ] // Qwen2.5-1.5B-Instruct // WITHDRAWN 2026-09-23</p>
+    <p class="post-byline">[ <time datetime="2026-05-26">2026-05-26</time> · updated <time datetime="2026-10-23">2026-10-23</time> ] // Qwen2.5-1.5B-Instruct // WITHDRAWN 2026-09-23</p>
   <!-- PANES:META:END -->
-    <p class="subtitle">I published this post on 2026-05-26 and withdrew it on 2026-09-23. It reported that a LoRA trained on ten mined fixes lifted Qwen2.5-1.5B-Instruct on a synthetic Python bug-repair benchmark, and that fixes mined with diagnostic test feedback carried over to unseen bug categories better than fixes mined with pass/fail feedback.</p>
+    <p class="subtitle">I published this post on 2026-05-26 and withdrew it on 2026-09-23. It made two claims about a synthetic Python bug-repair benchmark. The first was that a LoRA (a small set of added weights trained while the base model stays frozen), trained on ten mined fixes, lifted Qwen2.5-1.5B-Instruct from zero and repaired bugs in categories absent from its training. The mined fixes were patches the model itself wrote that the benchmark’s hidden tests accepted. The second was that fixes mined with diagnostic test feedback, which reported the failing tests and their errors, carried over to those unseen categories better than fixes mined with pass/fail feedback.</p>
 
     <h2 id="why">Why I withdrew it</h2>
-    <p>Rechecking the run records turned up three problems that careful wording could not repair:</p>
+    <p>Rechecking the run records turned up three problems that rewording could not fix:</p>
     <ul>
-      <li><strong>The test prompts named the bug category.</strong> Each test prompt carried the task ID and a "bug category hint". My own run notes flag the resulting scores as inflated by those hints.</li>
-      <li><strong>The feedback comparison was not isolated.</strong> The two mining conditions used differently worded prompts. The diagnostic prompt mentioned two of the three held-out categories (mutation and type conversion). And its training set covered five bug categories against three for the pass/fail set. Any of these could explain the held-out gap of 3–4 against 0–1 of 6 programs.</li>
-      <li><strong>The starting zero was mostly a format failure.</strong> 374 of the 384 baseline outputs contained no patch the harness could parse. So much of the lift from 0 came from learning the output format.</li>
+      <li><strong>The test prompts named the bug category.</strong> Each test prompt carried the task ID and a "bug category hint", so the model was told what kind of bug to look for. My own run notes flag the resulting scores as inflated by those hints.</li>
+      <li><strong>The feedback comparison was not isolated.</strong> The two mining conditions used differently worded prompts. The diagnostic prompt mentioned mutation and type conversion, two of the three held-out categories (bug types kept out of training to test transfer). And its training sets were drawn from mined fixes covering five bug categories, against three for the pass/fail set. Any of these, rather than the type of feedback, could explain the held-out gap of 3–4 against 0–1 of 6 programs.</li>
+      <li><strong>The starting zero was mostly a format failure.</strong> 374 of the 384 baseline outputs contained no patch that the evaluation harness, the code that applies each patch and runs the tests, could parse. So much of the lift from zero came from learning the output format.</li>
     </ul>
-    <p>Separately, a later evaluation on real code, not yet published, achieved 1 successful repair out of 40. Without a matching baseline that shows low absolute performance, not an absence of transfer, so it is not one of the reasons above.</p>
-    <p>The original text is archived <a href="archive/blog_finetuning_2026-05-26.html">here, marked as retracted</a>. If you cited it, please treat its conclusions as retracted. <a href="https://www.linkedin.com/in/stevecasella/">Corrections and questions are welcome.</a></p>
+    <p>One later result is not among these reasons. In a follow-up experiment, not yet published, a 1.5B Qwen2.5 model trained on fixes it had mined from real Python bugs repaired 1 of 40 held-out real programs. That figure came from real-bug training, not from the LoRA in this post, so it shows low absolute performance on real code, not a measured failure of transfer from the synthetic benchmark.</p>
+    <p>The original post is <a href="archive/blog_finetuning_2026-05-26.html">archived as last published</a>, under a withdrawal banner. If you cited it, please treat its conclusions as withdrawn. <a href="https://www.linkedin.com/in/stevecasella/">Corrections and questions are welcome.</a></p>
   <!-- PANES:NEXT:START -->
     <nav class="post-next" aria-label="More research">
       <a class="post-next__all" href="research.html">← all research</a>

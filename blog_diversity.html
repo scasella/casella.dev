@@ -3,31 +3,31 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>A 50-step RL update reduces categorical sampling bias | Stephen Casella</title>
-  <meta name="description" content="Fifty GRPO steps on one random-integer task moved Qwen3-30B-A3B-Instruct's scored answer distributions toward uniform on nine untrained categorical tasks. Small capability checks showed no observed decline." />
+  <title>Random-integer RL shifts fixed-list choices on other tasks | Stephen Casella</title>
+  <meta name="description" content="Fifty GRPO steps on one random-integer task moved Qwen3-30B-A3B-Instruct's scored choices over fixed answer lists toward uniform on all nine untrained tasks. On Llama-3.1-8B-Instruct the shift was narrower and concentrated on integer tasks." />
   <meta name="author" content="Stephen Casella" />
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#080c0f" />
   <link rel="canonical" href="https://casella.dev/blog_diversity.html" />
   <meta property="og:site_name" content="Stephen Casella" />
-  <meta property="og:title" content="A 50-step RL update reduces categorical sampling bias" />
-  <meta property="og:description" content="Training Qwen3-30B-A3B-Instruct on one random-integer task flattened measured answer distributions on nine others. Small capability checks showed no observed decline." />
+  <meta property="og:title" content="Training on random integers changes fixed-list choices across tasks" />
+  <meta property="og:description" content="Fifty RL steps on one random-integer task moved Qwen3-30B-A3B-Instruct's choices over fixed answer lists toward uniform on all nine untrained tasks; on Llama-3.1-8B-Instruct the shift was narrower and concentrated on integer tasks." />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://casella.dev/blog_diversity.html" />
   <meta property="og:image" content="https://casella.dev/assets/og/blog_diversity.png" />
   <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_diversity.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Share card for the write-up: A 50-step RL update reduces categorical sampling bias." />
+  <meta property="og:image:alt" content="Share card for the write-up: Training on random integers changes fixed-list choices across tasks." />
   <meta property="article:author" content="Stephen Casella" />
   <meta property="article:published_time" content="2026-05-26" />
-  <meta property="article:modified_time" content="2026-09-23" />
+  <meta property="article:modified_time" content="2026-10-23" />
   <meta property="article:tag" content="sampling bias" />
-  <meta property="article:tag" content="RLVR" />
+  <meta property="article:tag" content="GRPO" />
   <meta property="article:tag" content="Qwen3-30B-A3B" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="A 50-step RL update reduces categorical sampling bias" />
-  <meta name="twitter:description" content="Training Qwen3-30B-A3B-Instruct on one random-integer task flattened measured answer distributions on nine others. Small capability checks showed no observed decline." />
+  <meta name="twitter:title" content="Training on random integers changes fixed-list choices across tasks" />
+  <meta name="twitter:description" content="Fifty RL steps on one random-integer task moved Qwen3-30B-A3B-Instruct's choices over fixed answer lists toward uniform on all nine untrained tasks; on Llama-3.1-8B-Instruct the shift was narrower and concentrated on integer tasks." />
   <meta name="twitter:image" content="https://casella.dev/assets/og/blog_diversity.png" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
@@ -42,13 +42,13 @@
     {
       "@context": "https://schema.org",
       "@type": "Article",
-      "headline": "A 50-step RL update reduces categorical sampling bias",
-      "description": "Fifty GRPO steps on one random-integer task moved Qwen3-30B-A3B-Instruct's scored answer distributions toward uniform on nine untrained categorical tasks. Small capability checks showed no observed decline.",
+      "headline": "Training on random integers changes fixed-list choices across tasks",
+      "description": "Fifty GRPO steps on one random-integer task moved Qwen3-30B-A3B-Instruct's scored choices over fixed answer lists toward uniform on all nine untrained tasks. On Llama-3.1-8B-Instruct the shift was narrower and concentrated on integer tasks.",
       "url": "https://casella.dev/blog_diversity.html",
       "mainEntityOfPage": "https://casella.dev/blog_diversity.html",
       "image": "https://casella.dev/assets/og/blog_diversity.png",
       "datePublished": "2026-05-26",
-      "dateModified": "2026-09-23",
+      "dateModified": "2026-10-23",
       "author": {
         "@type": "Person",
         "name": "Stephen Casella",
@@ -71,9 +71,9 @@
       "keywords": [
         "sampling bias",
         "reinforcement learning",
-        "RLVR",
+        "GRPO",
         "Qwen3-30B-A3B",
-        "instruction tuning",
+        "Llama-3.1-8B",
         "distance from uniform",
         "LoRA"
       ],
@@ -253,7 +253,7 @@
   </style>
   <!-- PANES:HEAD:START -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
-  <link rel="stylesheet" href="panes.css?v=bbd7cc12" />
+  <link rel="stylesheet" href="panes.css?v=87bdb6c4" />
   <script src="ascii.js?v=6f1f421a" defer></script>
   <!-- PANES:HEAD:END -->
 </head>
@@ -305,11 +305,11 @@
   <!-- PANES:BAR:END -->
   <main class="post-main">
   <article class="post">
-    <h1>A 50-step RL update reduces categorical sampling bias</h1>
+    <h1>Training on random integers changes fixed-list choices across tasks</h1>
 <!-- PANES:META:START -->
-    <p class="post-byline">[ <time datetime="2026-05-26">2026-05-26</time> · updated <time datetime="2026-09-23">2026-09-23</time> ] // Qwen3-30B-A3B-Instruct // 7 MIN READ</p>
+    <p class="post-byline">[ <time datetime="2026-05-26">2026-05-26</time> · updated <time datetime="2026-10-23">2026-10-23</time> ] // Qwen3-30B-A3B-Instruct // 10 MIN READ</p>
   <!-- PANES:META:END -->
-    <p class="subtitle">Training on one random-integer task flattened measured answer distributions on nine others. Small capability checks showed no observed decline.</p>
+    <p class="subtitle">Fifty RL steps on one pick-a-number task moved Qwen3-30B-A3B-Instruct's choices toward uniform on all nine untrained pick-one tasks, measured over each task's fixed answer list. On Llama-3.1-8B-Instruct the shift was narrower and concentrated on integer tasks.</p>
 
     <div class="paper-links">
       <a href="https://github.com/scasella/research-uniform-random-from-llms" class="btn-pill">GitHub repo</a>
@@ -317,21 +317,30 @@
     </div>
 
     <div class="tldr">
-      <div class="label">What this measures</div>
-      <p>Each task gives the model a fixed list of valid answers, such as 20 colors. <strong>Candidate scoring</strong>, used for the main chart and table, takes the model's log-probability of every candidate, normalizes over the list and reports how far that distribution is from uniform. <strong>Sampled</strong> results generate answers and count them. Each figure and table is labelled with its method. Neither measures open-ended creativity.</p>
+      <div class="label">In short</div>
+      <p><strong>Finding.</strong> Asked for a random integer from 1 to 100, Qwen3-30B-A3B-Instruct put more than 95% of its probability on 4, 42 and 47. After 50 steps of reinforcement learning (GRPO) on that one task, its distance from uniform (how far its probabilities over a task's list are from an even spread) fell on all nine untrained tasks, from a mean of 0.74 to 0.38. On Llama-3.1-8B-Instruct the same recipe moved 7 of 9 untrained tasks toward uniform, with the large moves on integer ranges.</p>
+      <p><strong>What was measured.</strong> The main numbers are <strong>candidate scores</strong> over each task's fixed list of valid answers; <strong>sampled</strong> checks cover three tasks for the trained model. Neither measures open-ended writing.</p>
     </div>
 
+    <div class="callout">
+      <div class="callout-label">Update, 23 October 2026</div>
+      <p>Previously titled "A 50-step RL update reduces categorical sampling bias". I renamed it for what was measured, separated candidate scoring from sampling, narrowed the capability claims and marked the Llama report's stronger wording as superseded. The fruit uniform reference is corrected to 0.251 (previously 0.250), and the Qwen MMLU check is described as a subject-stratified subset (200 questions requested); other measurements are unchanged.</p>
+    </div>
+
+    <h2 id="why">Why this question</h2>
+    <p>Instruction-tuned models asked to pick at random from a list tend to return the same few favorites, which matters when a model is asked repeatedly to choose from a fixed set, as in simulating a random draw or producing many variants of a synthetic-data item. A per-task fix such as logit correction (offsetting each candidate's score until one task is exactly uniform) does not carry over: offsets for "integer 1 to 100" say nothing about "color". So I asked whether a small update on one choice task changes how the model spreads probability over other tasks' lists.</p>
+    <p>The starting observation follows <a href="https://github.com/exmergo/research-chatgpt-guesses-between-1-and-100">exmergo's experiment</a>, which asked gpt-4.1 10,000 times for a number between 1 and 100. <a href="https://arxiv.org/abs/2404.10859">Zhang et al. (2024)</a> fine-tuned models to spread probability over valid choices and reported that their method generalized across tasks. This run tests a different update: a 50-step RL pass on one integer task.</p>
+
     <h2 id="setup">The setup</h2>
-    <p>I asked Qwen3-30B-A3B-Instruct to pick a random integer between 1 and 100. It put more than 95% of its probability on three numbers: 4, 42 and 47. The model is a mixture of experts: 30 billion parameters, about 3 billion active per token.</p>
-    <p>I trained it for 50 steps of GRPO (Group Relative Policy Optimization) on that one task, rewarding answers spread across 1 to 100. GRPO samples a group of answers per prompt and moves the model toward those that scored above the group average. The update is a small, <a href="https://huggingface.co/scasella91/qwen3-30b-a3b-answer-diversity-lora">published</a> LoRA adapter and cost about $25 in Tinker compute. I then measured the trained task and nine untrained ones.</p>
-    <p>The exact prompt for one task, a flat string with no chat template:</p>
+    <p>I trained Qwen3-30B-A3B-Instruct, a mixture-of-experts model, for 50 steps of GRPO (Group Relative Policy Optimization) on the integer 1 to 100 task. GRPO samples a group of answers per prompt and moves the model toward those that score above the group average; here rarer answers within a group of 16 scored higher. The update is a LoRA adapter (a small set of low-rank weight changes to the frozen model), <a href="https://huggingface.co/scasella91/qwen3-30b-a3b-answer-diversity-lora">published</a> on Hugging Face; the run cost about $25 in Tinker compute.</p>
+    <p>The exact candidate-scoring prompt for one task, a flat string with no chat template:</p>
 <pre class="prompt">System: You are a uniform random sampler. Output ONLY one card suit from the list below, exactly as written. No punctuation, no extra words.
 
 Valid card suits: Spades, Hearts, Diamonds, Clubs
 User: Pick a random card suit.
 Assistant:</pre>
-    <p>Each candidate, with a leading space, is scored as the text after <code>Assistant:</code>. Results are averaged over paraphrases of the user line, such as "Produce one random card suit."</p>
-    <p><strong>Distance from uniform</strong> is the total variation (TV) distance to a uniform distribution: half the sum, over the K candidates, of |p − 1/K|. It is 0 when every candidate has the same probability and 1 − 1/K when one candidate has it all: 0.75 for four card suits, 0.999 for 1,000 integers.</p>
+    <p>Each candidate is scored as the text after <code>Assistant:</code>, averaged over paraphrases of the user line. Training used the same flat format and the first user line, with a random request ID added.</p>
+    <p><strong>Who did what.</strong> I chose the question, and Claude coding agents co-authored the code, the run reports and the Llama repeat. Their work was checked by the pipeline's own thresholds for transfer and capability regression, the repo's unit tests, and a September 2026 review, also run with a Claude coding agent, that checked the published claims against the run records. That review corrected the README and added a scoping note to the Llama report (<a href="https://github.com/scasella/research-uniform-random-from-llms/pull/1">PR #1</a>), and corrected the model card and this post. None of these checks is an outside human review.</p>
 
     <h2 id="results">Results on ten tasks</h2>
     <figure class="chart">
@@ -441,7 +450,7 @@ Assistant:</pre>
     </figure>
 
     <table>
-      <caption><strong>Candidate scoring.</strong> Distance from uniform (TV). K: number of candidates. Max: 1 − 1/K.</caption>
+      <caption><strong>Candidate scoring.</strong> Distance from uniform: total variation (TV), half the sum of |p − 1/K| over the K candidates. Max (1 − 1/K): all probability on one candidate. The Qwen per-task records behind this table are not published.</caption>
       <thead><tr><th>Task</th><th class="num">K</th><th class="num">Max</th><th class="num">Before</th><th class="num">After</th></tr></thead>
       <tbody>
         <tr><td>integer 1 to 10</td><td class="num">10</td><td class="num">0.900</td><td class="num">0.890</td><td class="num">0.115</td></tr>
@@ -456,16 +465,23 @@ Assistant:</pre>
         <tr><td>word</td><td class="num">50</td><td class="num">0.980</td><td class="num">0.770</td><td class="num">0.581</td></tr>
       </tbody>
     </table>
-    <p>Integer 1 to 10 moved most, from near its 0.90 ceiling to 0.115; animal moved least. A per-task fix such as logit correction, which offsets each candidate's score until one task is exactly uniform, does not carry over: offsets for "integer 1 to 100" say nothing about "color".</p>
-    <p><strong>Capability.</strong> I observed no decline on the capability subsets tested (200 MMLU questions, 50 GSM8K problems).</p>
+    <p>Every task moved toward uniform. Integer 1 to 10 moved most, from near its 0.90 ceiling to 0.115; animal moved least, from 0.620 to 0.522. Across the nine untrained tasks the mean fell from 0.74 to 0.38.</p>
+
+    <div class="callout">
+      <div class="callout-label">Scored lists versus sampled answers</div>
+      <p>The chart and table use candidate scoring, which renormalizes the listed answers' scores over the list. Probability outside the list, such as an unlisted fruit, a sentence or a refusal, is left out, so these numbers describe the model's preferences among the listed answers, not what it would write. Sampling generates and counts answers, and it used a different input: the same instruction in the model's chat template, where training and candidate scoring used the flat string above. A gap between scored and sampled numbers can come from either difference.</p>
+    </div>
+
+    <p><strong>Capability checks.</strong> I saw no decline on the small Qwen checks: a subject-stratified MMLU subset (200 questions requested), 50 GSM8K problems answered greedily, and the 25 GSM8K problems sampled at T=1.0 for the <a href="#reasoning">appendix</a>. These checks leave instruction following, calibration, safety and tool use untested.</p>
 
     <div class="callout">
       <div class="callout-label">Second model family</div>
-      <p>Llama-3.1-8B-Instruct (dense, 8B), same 50-step recipe and candidate scoring: distance from uniform fell on 7 of 9 held-out tasks, and 5 of 9 cleared my 0.05 transfer threshold (mean held-out drop 0.105). The transfer concentrated on integers (integer 1 to 10: 0.527 to 0.116; integer 1 to 1000: 0.386 to 0.123). First name and card suit each got 0.008 worse. Capability subsets (MMLU n = 57, GSM8K n = 30) showed no observed decline. <a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/reports/second_family_llama31_8b.md">Full report</a>.</p>
+      <p>Llama-3.1-8B-Instruct (dense, 8B), same 50-step recipe and candidate scoring: the trained task fell from 0.474 to 0.094. Distance from uniform fell on 7 of 9 untrained tasks, and 5 of 9 cleared my transfer threshold of a 0.05 drop (mean drop 0.105). The transfer concentrated on integers (integer 1 to 10: 0.527 to 0.116; integer 1 to 1000: 0.386 to 0.123). First name and card suit each got 0.008 worse; on Llama both started much closer to uniform (0.372 and 0.134) than on Qwen (0.607 and 0.712). The small checks showed no decline: 57 MMLU questions (one per subject), 54.4% before and after; 30 GSM8K problems, 13.3% before and after; and 60 prompts from four hand-written instructions (labeled IFEval in the code, but not the benchmark), 50.0% before and 56.7% after. <a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/reports/second_family_llama31_8b.md">Full report</a>.</p>
     </div>
+    <p><strong>Reading the Llama report.</strong> The report's stronger reading is superseded. It calls capability "preserved", but three small checks do not establish that; it calls the bias "shallowly encoded and cheaply correctable", but a 50-step LoRA does not show where a behavior is encoded; and it calls the correction "reproducible across architectures", but that rests on two model families, one of which transferred narrowly. Its Qwen mean of 0.79 to 0.43 mixes ten sampled tasks before training with three after; candidate scoring gives 0.76 to 0.38 over all ten.</p>
 
     <h2 id="sampled">Sampled answers</h2>
-    <p>A user sees sampled text, not probabilities. On three tasks I sampled 50 answers per cell, with the chat template and two paraphrases. Outputs that do not parse to a listed candidate are dropped, and distance from uniform is computed over the valid outputs only.</p>
+    <p>A user sees sampled text, not probabilities. I sampled 50 answers per cell from Qwen, with two paraphrases of the user line: the original model on all ten tasks at T=1.0 and 1.5, and the trained model on three tasks at T=1.0 before the run was cut short (23 of 40 planned cells). The comparison below covers those three. Outputs that do not parse to a listed candidate are dropped, and distance from uniform is computed over the valid outputs only.</p>
     <figure class="chart">
       <div class="specimens">
         <div class="specimen hl">
@@ -493,64 +509,43 @@ Assistant:</pre>
       <tbody>
         <tr><td>integer 1 to 100 (K&nbsp;=&nbsp;100)</td><td class="num">0.980<span class="nv">50/50</span></td><td class="num">0.940<span class="nv">46/50</span></td><td class="num">0.600<span class="nv">50/50</span></td><td class="num">0.605<span class="nv">0.56 to 0.65</span></td></tr>
         <tr><td>color (K&nbsp;=&nbsp;20)</td><td class="num">0.900<span class="nv">50/50</span></td><td class="num">0.741<span class="nv">46/50</span></td><td class="num">0.428<span class="nv">49/50</span></td><td class="num">0.253<span class="nv">0.18 to 0.34</span></td></tr>
-        <tr><td>fruit (K&nbsp;=&nbsp;20)</td><td class="num">0.510<span class="nv">50/50</span></td><td class="num">0.396<span class="nv">47/50</span></td><td class="num">0.250<span class="nv">50/50</span></td><td class="num">0.250<span class="nv">0.18 to 0.33</span></td></tr>
+        <tr><td>fruit (K&nbsp;=&nbsp;20)</td><td class="num">0.510<span class="nv">50/50</span></td><td class="num">0.396<span class="nv">47/50</span></td><td class="num">0.250<span class="nv">50/50</span></td><td class="num">0.251<span class="nv">0.18 to 0.33</span></td></tr>
       </tbody>
     </table>
-    <p><strong>What 50 samples can show.</strong> Even a perfectly uniform sampler does not produce uniform counts. With 50 draws over 100 integers its distance from uniform cannot fall below 0.50 and averages (1 − 1/100)<sup>50</sup> = 0.605. Trained integer 1 to 100 (0.600) and fruit (0.250) fall inside the uniform sampler's range: at this sample size the measurement is saturated and cannot tell the trained model from uniform. It does not show the model is uniform. Color (0.428) and every original-model cell are above the range. The sampling run was cut short, so the trained model was sampled on only these three tasks.</p>
+    <p><strong>What 50 samples can show.</strong> Even a perfectly uniform sampler does not produce uniform counts. With 50 draws over 100 integers its distance from uniform cannot fall below 0.50 and averages (1 − 1/100)<sup>50</sup> = 0.605. Trained integer 1 to 100 (0.600) and fruit (0.250) fall inside the uniform sampler's range: at this sample size the measurement is saturated and cannot tell the trained model from uniform. It does not show the model is uniform. Color (0.428) and every original-model cell are above the range.</p>
 
-    <h2 id="interpretation">Interpretation and limits</h2>
-    <p>Fifty GRPO steps on one random-integer task changed a measurable sampling behavior beyond that task. Under candidate scoring, all nine untrained tasks moved toward uniform on Qwen; on Llama the change stayed mostly within integers. How broad the change is, and whether it is useful, is not established.</p>
-    <p>Limits that affect the estimates above:</p>
-    <ul>
-      <li>Candidate scoring ignores probability on answers outside the list. Uniform is the right target for integers or card suits, but not clearly for fruit or words.</li>
-      <li>Sampled numbers cover three tasks, two of them saturated at 50 samples (see <a href="#sampled">Sampled answers</a>).</li>
-    </ul>
+    <h2 id="interpretation">What this shows, and what it does not</h2>
+    <p>Fifty GRPO steps on one random-integer task changed how Qwen3-30B-A3B-Instruct spreads probability over the fixed lists of all nine untrained tasks. Sampled at T=1.0 on the three tasks checked, the trained model was also closer to uniform than the original at T=1.0 or 1.5. On Llama-3.1-8B-Instruct the change was narrower, mostly on the other two integer ranges. The finding is about choices over fixed lists: the experiment did not measure open-ended writing or mode collapse in general (post-trained models concentrating on a few outputs), and the appendix's GSM8K proxy does not measure solution strategies.</p>
+    <p>The most consequential limitation is the gap between scores and samples: the scores leave out off-list probability, and the trained model was sampled on only three tasks, at 50 samples each and in a different prompt format, with two of those cells already inside the uniform sampler's range. Whether its sampled answers move as far as its scores on all ten tasks is open. Uniform is also the right target for integers or card suits, but not clearly for fruit or words.</p>
 
     <h2 id="next-experiment">Next experiment</h2>
     <ul>
-      <li>The full sampled comparison: all ten tasks, both models, T=1.0 and 1.5, with sample counts set by each task's K or each cell compared with a matched finite-sample uniform reference. A flat 200 samples would not do: a uniform sampler over 1,000 integers still averages 0.819 at that count.</li>
-      <li>One prompt format (chat template or flat string) for both scoring and sampling, so a scored-versus-sampled gap is not confounded by a change in model input.</li>
-      <li>Untested behaviors: instruction following, calibration, safety, tool use, JSON formatting, full capability benchmarks, and free-form generation such as essays (an earlier embedding-based pilot on free text was inconclusive).</li>
+      <li>The full sampled comparison, which would settle that limitation: all ten tasks, both models, T=1.0 and 1.5, one prompt format for training, scoring and sampling, and sample counts set by each task's K, or each cell compared with a matched finite-sample uniform reference. A flat 200 samples would not do: a uniform sampler over 1,000 integers still averages 0.819 at that count.</li>
+      <li>Untested behaviors: instruction following beyond the small Llama check, calibration, safety, tool use, JSON formatting, full capability benchmarks, and free-form generation such as essays (an earlier embedding-based pilot on free text was inconclusive).</li>
       <li>Inference-time baselines: contrastive decoding, base-model-assisted decoding, rejection sampling.</li>
       <li>Other training tasks, model sizes and families.</li>
-      <li>Settings where a fixed candidate list matters in practice: multiple-choice evaluation with shuffled options, and synthetic-data generation that asks one model for many variants of an item.</li>
+      <li>Settings where a fixed candidate list matters in practice, such as multiple-choice evaluation with shuffled options or synthetic-data generation.</li>
     </ul>
 
     <h2 id="reproducibility">Reproducibility</h2>
     <table class="repro">
       <tbody>
-        <tr><th scope="row">Model</th><td><code>Qwen/Qwen3-30B-A3B-Instruct-2507</code> plus the <a href="https://huggingface.co/scasella91/qwen3-30b-a3b-answer-diversity-lora">LoRA adapter</a> from step 50. Second family: <code>meta-llama/Llama-3.1-8B-Instruct</code>.</td></tr>
-        <tr><th scope="row">Experiment</th><td>50 GRPO steps on integer 1 to 100 (<a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/rng_bias/run_bee_v0_4_stage1.py"><code>run_bee_v0_4_stage1.py</code></a>, Tinker). Candidate scoring: <a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/rng_bias/v0_4/eval_lane_a.py"><code>eval_lane_a.py</code></a>. Sampling: <code>run_bee_v0_4_temp_ablation.py</code>, with distance from uniform computed over valid outputs in <a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/rng_bias/v0_4/sample_eval.py#L137-L142"><code>sample_eval.py</code></a>. Numeric signatures: <code>run_bee_v0_4_2_path_diversity.py</code>.</td></tr>
-        <tr><th scope="row">Data</th><td>Ten random-pick tasks with fixed candidate lists (<a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/rng_bias/v0_4/distribution_tasks.py"><code>distribution_tasks.py</code></a>): 1 trained, 9 held out. Unit: one task's distribution over its list. Sampled: 50 samples per cell, invalid outputs dropped. GSM8K test items 0 to 24, 10 samples each. Capability: 200 MMLU questions, 50 GSM8K problems.</td></tr>
-        <tr><th scope="row">Results</th><td>Qwen per-task table and capability checks: not published (my run records). Published: <a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/bee_v0_4_temp_ablation/data/bee_v0_4/metrics/bee_v0_4_temp_ablation_cells.csv">sampled cells (CSV)</a>, <a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/bee_v0_4_2_path_diversity/reports/bee_v0_4_2_path_diversity_report.md">numeric-signature report</a> with per-problem CSVs and completions, <a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/reports/second_family_llama31_8b.md">Llama report</a>.</td></tr>
-        <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/research-uniform-random-from-llms/tree/c11534fc7a9fed3542863dc155eb5a3051c8c144">scasella/research-uniform-random-from-llms @ c11534f</a></td></tr>
-        <tr><th scope="row">Status</th><td>Published 2026-05-26 · updated 2026-09-23 · Open issues affecting current estimates: the Qwen per-task and capability records are not published; the sampling run stopped at 23 of 40 planned cells; at 50 samples, sampled distance from uniform is saturated for integer 1 to 100 and fruit.</td></tr>
+        <tr><th scope="row">Model</th><td><code>Qwen/Qwen3-30B-A3B-Instruct-2507</code> plus the <a href="https://huggingface.co/scasella91/qwen3-30b-a3b-answer-diversity-lora">LoRA adapter</a> from step 50. Second family: <code>meta-llama/Llama-3.1-8B-Instruct</code>. The Llama step-50 adapter is not published.</td></tr>
+        <tr><th scope="row">Experiment</th><td>50 GRPO steps on integer 1 to 100 (<a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/rng_bias/run_bee_v0_4_stage1.py"><code>run_bee_v0_4_stage1.py</code></a>, Tinker): 8 groups of 16 samples per step, LoRA rank 16, learning rate 2e-5, at most 8 response tokens; reward −log of the answer's share of its group, with a fixed penalty for unparseable outputs (<a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/rng_bias/v0_4/grpo_env.py"><code>grpo_env.py</code></a>). Candidate scoring, flat prompt: <a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/rng_bias/v0_4/eval_lane_a.py"><code>eval_lane_a.py</code></a>. Sampling, chat template: <code>run_bee_v0_4_temp_ablation.py</code>, distance over valid outputs in <a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/rng_bias/v0_4/sample_eval.py#L137-L142"><code>sample_eval.py</code></a>. Capability checks: <a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/rng_bias/v0_4/capability_eval.py"><code>capability_eval.py</code></a>. Numeric signatures: <code>run_bee_v0_4_2_path_diversity.py</code>.</td></tr>
+        <tr><th scope="row">Data</th><td>Ten random-pick tasks with fixed candidate lists (<a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/rng_bias/v0_4/distribution_tasks.py"><code>distribution_tasks.py</code></a>): 1 trained, 9 held out. Unit: one task's distribution over its list. Sampled: 23 cells of 50 samples each, invalid outputs dropped. GSM8K test items 0 to 24, 10 samples each. Capability: Qwen, a subject-stratified MMLU subset (200 requested) and 50 GSM8K problems; Llama, 57 MMLU questions, 30 GSM8K problems and 60 instruction prompts.</td></tr>
+        <tr><th scope="row">Results</th><td>Not published: the Qwen per-task candidate scores, the Qwen capability checks, and the Llama run folders behind the Llama report (my run records). Published: <a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/bee_v0_4_temp_ablation/data/bee_v0_4/metrics/bee_v0_4_temp_ablation_cells.csv">sampled cells (CSV)</a>, <a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/bee_v0_4_2_path_diversity/reports/bee_v0_4_2_path_diversity_report.md">numeric-signature report</a> with per-problem CSVs and completions, <a href="https://github.com/scasella/research-uniform-random-from-llms/blob/c11534fc7a9fed3542863dc155eb5a3051c8c144/reports/second_family_llama31_8b.md">Llama report</a> with its per-task and capability tables (its stronger wording is superseded; see <a href="#results">Results</a>).</td></tr>
+        <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/research-uniform-random-from-llms/tree/c11534fc7a9fed3542863dc155eb5a3051c8c144">scasella/research-uniform-random-from-llms @ c11534f</a>. The README's Path 1 recomputes the appendix GSM8K signature averages from the committed CSVs without an API key. Retraining runs on Tinker (about $25 in compute); the published Qwen adapter loads on the base model with PEFT instead.</td></tr>
+        <tr><th scope="row">Status</th><td>Published 2026-05-26 · updated 2026-10-23 · Open issues: the Qwen per-task and capability records and the raw Llama run folders are not published; the sampling run stopped at 23 of 40 planned cells; at 50 samples, sampled distance from uniform is saturated for integer 1 to 100 and fruit.</td></tr>
       </tbody>
     </table>
 
-    <h2 id="reasoning">Appendix: numeric-signature diversity on GSM8K</h2>
-    <p>On a math problem the answer is fixed, so any variety is in the working. I sampled 10 solutions to each of 25 GSM8K problems (test items 0 to 24) under four conditions. For each correct solution, the <em>numeric signature</em> is every number in the body, sorted, excluding the final answer line. I counted distinct signatures among the correct solutions, so the count cannot exceed the number correct.</p>
-    <table>
-      <caption><strong>Sampled.</strong> Mean over 25 GSM8K problems, 10 samples each.</caption>
-      <thead><tr><th>Condition</th><th class="num">Distinct signatures</th><th class="num">Correct (of 10)</th></tr></thead>
-      <tbody>
-        <tr><td>original, T=1.0</td><td class="num">7.40</td><td class="num">9.80</td></tr>
-        <tr><td>original, T=1.5</td><td class="num">8.40</td><td class="num">9.68</td></tr>
-        <tr class="hl"><td>trained, T=1.0</td><td class="num">8.44</td><td class="num">9.80</td></tr>
-        <tr><td>trained, T=1.5</td><td class="num">8.72</td><td class="num">9.40</td></tr>
-      </tbody>
-    </table>
-    <p>At T=1.0 the trained model had 1.04 more distinct signatures per problem than the original (95% CI +0.40 to +1.68, paired bootstrap over the 25 problems). It was higher on 13 problems, tied on 9 and lower on 3. Against the original at T=1.5 the difference was +0.04 (CI −0.60 to +0.60): on this measure, training and a higher temperature did about the same thing.</p>
-    <p>The signature is a crude proxy. Two real pairs of correct solutions show what it counts:</p>
-    <ul>
-      <li><strong>Same arithmetic, two signatures.</strong> On problem 0 (Janet's ducks), two original-model samples at T=1.0 both compute 3 + 4 = 7, 16 − 7 = 9 and 9 × $2 = $18. The second numbers 7 steps instead of 4 and restates some quantities a different number of times, so they count as two paths.</li>
-      <li><strong>Different wording, one signature.</strong> On problem 1 (bolts of fiber), two trained-model samples write the halving step as <code>\frac{1}{2} \times 2 = 1</code> and <code>(1/2) × 2 = 1</code>. They share a signature. A third trained sample does the same arithmetic but also writes "half of 2 bolts", and that extra 2 makes it a separate path.</li>
-    </ul>
-    <p>So the count mixes layout with method: it splits solutions that differ only in step numbering or repeated givens, merges solutions that compute the same values in a different order, and says nothing about whether a path is better.</p>
+    <h2 id="reasoning">Appendix: a GSM8K side check, and how formatting misleads a proxy</h2>
+    <p>For 25 GSM8K problems (10 samples each) I counted distinct <em>numeric signatures</em> (every number in the body, sorted, excluding the final answer line) among correct solutions as a proxy for varied working. At T=1.0 the trained model averaged 8.44 per problem against the original's 7.40 (paired difference +1.04, 95% bootstrap CI +0.40 to +1.68), about the same as the original at T=1.5 (8.40; difference +0.04, CI −0.60 to +0.60). Both models averaged 9.80 of 10 correct at T=1.0 (at T=1.5: original 9.68, trained 9.40).</p>
+    <p>The signature tracks layout as much as method. On problem 0, two original-model solutions with the same arithmetic count twice because their step numbering and restated quantities differ. So the count says little about solution strategies.</p>
 
   <!-- PANES:NEXT:START -->
     <nav class="post-next" aria-label="More research">
-      <a href="blog_interp.html"><span>next →</span><span>Hidden-state probes outperform self-reported confidence</span></a>
+      <a href="blog_interp.html"><span>next →</span><span>Testing internal signals for factual accuracy in legal answers and biographies</span></a>
       <a class="post-next__all" href="research.html">← all research</a>
     </nav>
   <!-- PANES:NEXT:END -->
