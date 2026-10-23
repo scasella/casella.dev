@@ -438,6 +438,9 @@
     <p class="post-byline">[ <time datetime="2026-10-23">2026-10-23</time> ] // gpt-6-luna · Qwen3-0.6B · Qwen3-1.7B // 13 MIN READ</p>
   <!-- PANES:META:END -->
         <p class="subtitle">I wanted to know what happens inside a language model when it reads a few facts and answers a question about them. If Rowan is red and Lumen is blue, how does the model get from “What color is Rowan?” to “red”?</p>
+        <div class="paper-links">
+          <a href="https://github.com/scasella/qwen3-auto-interp" class="btn-pill">GitHub repo</a>
+        </div>
         <div class="tldr">
           <span class="tldr-label">TL;DR</span>
           <p>I used AI agents and a controlled experiment harness to trace that process in two sizes of Qwen3. The agents, Codex CLI calls running gpt-6-luna, proposed and reviewed explanations; frozen, executable tests decided which ones survived. The experiments identified a three-stage pathway: information about which record answers the question travels through the model, reaches components that choose where to read, and directs them to copy the corresponding value.</p>
