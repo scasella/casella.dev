@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tracing an in-context lookup pathway in Qwen3-0.6B and Qwen3-1.7B | Stephen Casella</title>
+  <meta name="description" content="Agents running gpt-6-luna traced a three-stage, twelve-head lookup pathway in Qwen3-0.6B with activation patching. Six heads fixed from the small model had the predicted effect in Qwen3-1.7B, without a new search." />
+  <meta name="author" content="Stephen Casella" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#080c0f" />
+  <link rel="canonical" href="https://casella.dev/blog_qwen_lookup.html" />
+  <meta property="og:site_name" content="Stephen Casella" />
+  <meta property="og:title" content="Agents traced a three-stage lookup pathway in Qwen3, and six heads found in the small model held up in the larger one" />
+  <meta property="og:description" content="A three-stage lookup pathway in Qwen3 gave the agents a concrete prediction to test in a larger model. Six heads found in Qwen3-0.6B, fixed before testing, had the predicted effect in Qwen3-1.7B." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://casella.dev/blog_qwen_lookup.html" />
+  <meta property="og:image" content="https://casella.dev/assets/og/blog_qwen_lookup.png" />
+  <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_qwen_lookup.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Share card for the write-up: Agents traced a three-stage lookup pathway in Qwen3, and six heads found in the small model held up in the larger one." />
+  <meta property="article:author" content="Stephen Casella" />
+  <meta property="article:published_time" content="2026-10-23" />
+  <meta property="article:modified_time" content="2026-10-23" />
+  <meta property="article:tag" content="AI agents" />
+  <meta property="article:tag" content="mechanistic interpretability" />
+  <meta property="article:tag" content="activation patching" />
+  <meta property="article:tag" content="attention heads" />
+  <meta property="article:tag" content="Qwen3" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Agents traced a three-stage lookup pathway in Qwen3, and six heads found in the small model held up in the larger one" />
+  <meta name="twitter:description" content="A three-stage lookup pathway in Qwen3 gave the agents a concrete prediction to test in a larger model. Six heads found in Qwen3-0.6B, fixed before testing, had the predicted effect in Qwen3-1.7B." />
+  <meta name="twitter:image" content="https://casella.dev/assets/og/blog_qwen_lookup.png" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-2RSWDWW67D');
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "Agents traced a three-stage lookup pathway in Qwen3, and six heads found in the small model held up in the larger one",
+      "description": "Agents running gpt-6-luna traced a three-stage, twelve-head lookup pathway in Qwen3-0.6B with activation patching. Six heads fixed from the small model had the predicted effect in Qwen3-1.7B, without a new search.",
+      "url": "https://casella.dev/blog_qwen_lookup.html",
+      "mainEntityOfPage": "https://casella.dev/blog_qwen_lookup.html",
+      "image": "https://casella.dev/assets/og/blog_qwen_lookup.png",
+      "datePublished": "2026-10-23",
+      "dateModified": "2026-10-23",
+      "author": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/",
+        "sameAs": [
+          "https://github.com/scasella",
+          "https://www.linkedin.com/in/stevecasella/"
+        ]
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Stephen Casella",
+        "url": "https://casella.dev/"
+      },
+      "keywords": [
+        "mechanistic interpretability",
+        "activation patching",
+        "attention heads",
+        "in-context retrieval",
+        "Qwen3-0.6B",
+        "Qwen3-1.7B",
+        "AI agents",
+        "gpt-6-luna"
+      ],
+      "codeRepository": "https://github.com/scasella/qwen3-auto-interp"
+    }
+  </script>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:           #fafaf8;
+      --paper:        #ffffff;
+      --fg:           #222;
+      --fg-mute:      #555;
+      --fg-faint:     #8a8a85;
+      --rule:         #e2e2dd;
+      --hi:           #f3f2ec;
+      --link:         #1a5fb4;
+      --link-visited: #5a3aa3;
+      --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono:    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      font-size: 16.5px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: rgba(0,0,0,0.08); color: inherit; }
+
+    .site-header {
+      max-width: 720px; margin: 0 auto; padding: 28px 24px 0;
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 13px; color: var(--fg-mute);
+    }
+    .site-header a {
+      color: var(--fg-mute); text-decoration: none;
+      border-bottom: 1px dotted var(--fg-faint); padding-bottom: 1px;
+    }
+    .site-header a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+
+    article {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 24px 64px;
+    }
+    .meta, .date {
+      color: var(--fg-faint); font-size: 13px;
+      margin-bottom: 8px; text-transform: none; letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: 32px; line-height: 1.22; font-weight: 600;
+      margin: 0 0 10px; letter-spacing: -0.01em; color: #111;
+    }
+    .subtitle {
+      color: var(--fg-mute); font-size: 17px; font-weight: 400;
+      line-height: 1.5; margin: 0 0 24px;
+    }
+    h2 {
+      font-size: 22px; font-weight: 600; line-height: 1.3;
+      margin: 1.9em 0 0.5em; letter-spacing: -0.005em; color: #111;
+    }
+    h3 { font-size: 17px; font-weight: 600; margin: 1.5em 0 0.35em; }
+
+    p { margin: 0 0 0.9em; }
+    ul, ol { margin: 0 0 1em; padding-left: 1.4em; }
+    li { margin-bottom: 0.35em; }
+    li::marker { color: var(--fg-faint); }
+
+    a { color: var(--link); text-decoration: underline; text-decoration-color: rgba(26,95,180,0.4); }
+    a:visited { color: var(--link-visited); }
+    a:hover { text-decoration-color: var(--link); }
+
+    code {
+      font-family: var(--font-mono); font-size: 0.85em;
+      background: var(--hi); padding: 1px 5px; border-radius: 3px;
+    }
+    pre {
+      background: var(--hi); padding: 14px 18px; border-radius: 8px;
+      overflow-x: auto; margin: 1em 0; font-size: 13px; line-height: 1.55;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    pre code { background: none; padding: 0; border-radius: 0; font-size: inherit; }
+    strong { font-weight: 600; color: var(--fg); }
+    em { font-style: italic; }
+
+    blockquote {
+      margin: 1em 0; padding: 6px 0 6px 18px;
+      border-left: 3px solid var(--rule); color: var(--fg-mute);
+    }
+    blockquote p { font-size: 15.5px; margin: 0; }
+
+    /* Paper links / pill button */
+    .paper-links {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 18px 0 8px; flex-wrap: wrap;
+    }
+    .paper-links .btn-pill {
+      font-size: 13px; line-height: 1; color: var(--fg);
+      text-decoration: none; background: var(--paper);
+      border: 1px solid var(--rule); border-radius: 999px;
+      padding: 0.55rem 0.95rem 0.65rem;
+      transition: background 200ms ease;
+    }
+    .paper-links .btn-pill:hover { background: var(--hi); }
+
+    /* TL;DR */
+    .tldr {
+      margin: 1.2em 0 1.6em;
+      padding: 14px 18px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      font-size: 15.5px;
+    }
+    .tldr-label, .tldr .label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .tldr p { font-size: 15.5px; line-height: 1.6; color: var(--fg); margin: 0; }
+    .tldr p + p { margin-top: 0.6em; }
+
+    /* Callout */
+    .callout {
+      margin: 1.5em 0; padding: 14px 18px;
+      background: var(--hi); border-radius: 6px;
+    }
+    .callout-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--fg-mute); margin-bottom: 8px;
+    }
+    .callout p { font-size: 15px; line-height: 1.55; color: var(--fg); margin: 0; }
+
+    /* Stat row */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0;
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+    @media (min-width: 600px) {
+      .stat-row { grid-template-columns: repeat(4, 1fr); }
+    }
+    .stat {
+      padding: 16px 18px;
+      border-right: 1px solid var(--rule);
+    }
+    .stat:first-child { padding-left: 0; }
+    .stat:last-child { border-right: 0; }
+    @media (max-width: 599px) {
+      .stat:nth-child(2n) { border-right: 0; }
+      .stat:nth-child(n+3) { border-top: 1px solid var(--rule); }
+    }
+    .stat .k {
+      display: block;
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .stat .v {
+      font-size: 22px; font-weight: 600; color: var(--fg);
+      line-height: 1.1; letter-spacing: -0.01em;
+    }
+    .stat .s {
+      font-size: 12px; color: var(--fg-faint);
+      margin-top: 6px; line-height: 1.4;
+    }
+
+    /* Mode grid */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin: 1.5em 0;
+    }
+    @media (min-width: 600px) { .mode-grid { grid-template-columns: repeat(2, 1fr); } }
+    .mode-card {
+      background: var(--paper);
+      border-radius: 8px;
+      padding: 16px 18px;
+      border: 1px solid var(--rule);
+    }
+    .mode-card .tag {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 8px;
+    }
+    .mode-card .t {
+      display: block;
+      font-size: 16px; font-weight: 600; color: var(--fg);
+      margin-bottom: 6px; letter-spacing: -0.005em;
+    }
+    .mode-card .desc {
+      font-size: 14px; line-height: 1.5; color: var(--fg-mute);
+    }
+
+    /* Table */
+    .table-wrap { margin: 1.5em 0; }
+    .table-label {
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin-bottom: 10px;
+    }
+    .table-label .id { color: var(--fg); margin-right: 12px; }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+    th, td {
+      padding: 8px 12px 8px 0; text-align: left;
+      border-bottom: 1px solid var(--rule); color: var(--fg);
+    }
+    th {
+      font-weight: 600; color: var(--fg-mute);
+      font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--fg-mute);
+    }
+    td.num { text-align: right; white-space: nowrap; }
+    td.pos { color: var(--fg); }
+    td.neg { color: var(--fg-faint); }
+    tr:last-child td { border-bottom: none; }
+    tr.highlight td { background: var(--hi); }
+    tr.totals td { border-top: 1px solid var(--fg-mute); }
+
+    /* Figure / chart */
+    figure.chart, figure { margin: 1.6em 0; }
+    figure svg, figure.chart svg {
+      display: block; width: 100%; height: auto;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+    }
+    figcaption {
+      font-size: 13px; color: var(--fg-mute);
+      line-height: 1.5; margin-top: 10px;
+    }
+    figcaption strong { color: var(--fg); font-weight: 500; }
+    @media (min-width: 960px) {
+      article > figure.chart, .body-main > figure.chart {
+        width: min(1100px, calc(100vw - 3rem));
+        max-width: none;
+        margin-left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+
+    /* Neg list */
+    .neg-list {
+      margin: 1.5em 0;
+      border-top: 1px solid var(--rule);
+    }
+    .neg-list-label {
+      display: block;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-faint); margin: 14px 0 6px;
+    }
+    .neg-list ul { list-style: none; padding: 0; margin: 0; }
+    .neg-list li {
+      padding: 14px 0; border-bottom: 1px solid var(--rule);
+      font-size: 15px; line-height: 1.6; color: var(--fg-mute);
+      margin-bottom: 0;
+    }
+    .neg-list li:last-child { border-bottom: 0; }
+    .neg-list li strong { color: var(--fg); font-weight: 600; }
+
+    /* Break */
+    .break {
+      display: flex; align-items: center; justify-content: center;
+      margin: 3rem 0 2.5rem;
+      color: var(--fg-faint);
+      font-size: 11px; letter-spacing: 0.6em;
+    }
+
+    hr { border: 0; border-top: 1px solid var(--rule); margin: 1.8em 0; }
+    .footer { font-size: 12.5px; color: var(--fg-faint); }
+
+    /* Reproducibility panel */
+    table.repro { margin: 1em 0 1.5em; }
+    table.repro th {
+      width: 7.5em; vertical-align: top; text-transform: none; letter-spacing: 0;
+      font-size: 13px; border-bottom: 1px solid var(--rule);
+    }
+    table.repro td { font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+    table.repro tr:last-child th { border-bottom: none; }
+
+    @media (max-width: 480px) {
+      .site-header { padding: 22px 20px 0; }
+      article { padding: 16px 20px 56px; }
+      h1 { font-size: 28px; }
+      .subtitle { font-size: 16px; }
+      .stat-row { grid-template-columns: 1fr; }
+      .mode-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+    <!-- PANES:HEAD:START -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
+  <link rel="stylesheet" href="panes.css?v=bbd7cc12" />
+  <script src="ascii.js?v=6f1f421a" defer></script>
+  <!-- PANES:HEAD:END -->
+</head>
+<body class="pn-body panes-post">
+  <!-- PANES:BAR:START -->
+  <div class="split split--inner">
+    <aside class="side">
+      <div class="side__pin">
+        <figure class="side__art">
+          <pre data-landscape data-rows="22" aria-hidden="true">                                             
+                                             
+                                             
+                                             
+                       ==                    
+                    -======                  
+                 :----=======                
+          ::::::::::----=======              
+   :::::----:::::,,,:::--=================   
+    :::-----:::::,..,,:--==================  
+     :::::::::::::,...,:-===-============    
+       ::::::::::::::,,<b>@</b><b>@</b>------========      
+         ,,,,,,,:::--======----------        
+           ,,,..,,::-======-------           
+             ,,...,:-====------              
+              :::,,,::::---                  
+                 ::::::                      
+                                             
+                                             
+                                             
+                                             
+                                             </pre>
+        </figure>
+        <p class="side__name"><a href="/">Stephen<br> Casella<span class="accent">_</span></a></p>
+        <p class="side__bio">I study how language models reason and respond to training, and put AI agents to work on hard, checkable problems: formal proofs, faster code, real bugs.</p>
+        <nav class="side__nav" aria-label="Site">
+          <a href="research.html" aria-current="true">research</a>
+          <a href="projects.html">software</a>
+          <a href="/#contact">contact</a>
+        </nav>
+      </div>
+      <div class="side__links">
+        <a class="side__grid" href="blog_diversity.html" title="pick a random integer between 1 and 100." aria-label="Pick a random integer between 1 and 100. It put more than 95% of its probability on three numbers: 4, 42, and 47. Read the write-up."><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></a>
+        <a href="https://github.com/scasella" rel="me">github.com/scasella</a>
+        <a href="https://huggingface.co/scasella91" rel="me">huggingface.co/scasella91</a>
+        <a href="https://www.linkedin.com/in/stevecasella/" rel="me">linkedin</a>
+      </div>
+    </aside>
+    <div class="split__main">
+  <!-- PANES:BAR:END -->
+  <main class="post-main">
+  <article class="post">
+<h1>Agents traced a three-stage lookup pathway in Qwen3, and six heads found in the small model held up in the larger one</h1>
+<!-- PANES:META:START -->
+    <p class="post-byline">[ <time datetime="2026-10-23">2026-10-23</time> ] // gpt-6-luna · Qwen3-0.6B · Qwen3-1.7B // 13 MIN READ</p>
+  <!-- PANES:META:END -->
+        <p class="subtitle">I wanted to know what happens inside a language model when it reads a few facts and answers a question about them. If Rowan is red and Lumen is blue, how does the model get from “What color is Rowan?” to “red”?</p>
+        <div class="tldr">
+          <span class="tldr-label">TL;DR</span>
+          <p>I used AI agents and a controlled experiment harness to trace that process in two sizes of Qwen3. The agents, Codex CLI calls running gpt-6-luna, proposed and reviewed explanations; frozen, executable tests decided which ones survived. The experiments identified a three-stage pathway: information about which record answers the question travels through the model, reaches components that choose where to read, and directs them to copy the corresponding value.</p>
+          <p>Then the investigation made a prediction. Six component locations found in the smaller model were carried into the larger one, without a new search for those locations. Interventions there produced the predicted effects, and that study passed every registered gate. That is the result I find most encouraging. An explanation of one model became useful enough to guide an experiment in another.</p>
+          <p>Not everything passed. The smaller model’s own three-stage study met all 63 of its mechanism criteria but failed its overall verdict, because the unmodified model answered 101 of 128 test prompts correctly against a required 103. A repair built on the findings also failed its preregistered test. Both are reported below. The scope is short, controlled lookup prompts in two related models.</p>
+        </div>
+        <div class="stat-row">
+          <div class="stat">
+            <span class="k">Heads in the pathway</span>
+            <div class="v">12</div>
+            <div class="s">Three groups of attention heads in Qwen3-0.6B</div>
+          </div>
+          <div class="stat">
+            <span class="k">Carried to 1.7B</span>
+            <div class="v">6 heads</div>
+            <div class="s">Fixed before any Qwen3-1.7B test, with no new search</div>
+          </div>
+          <div class="stat">
+            <span class="k">Predicted direction</span>
+            <div class="v">92.2–100%</div>
+            <div class="s">Of held-out Qwen3-1.7B prompts, across comparisons and datasets</div>
+          </div>
+          <div class="stat">
+            <span class="k">Readout right, model wrong</span>
+            <div class="v">13 / 13</div>
+            <div class="s">Model errors where one retrieval head still favored the correct value</div>
+          </div>
+        </div>
+        <div class="callout">
+          <span class="callout-label">Status</span>
+          <p>The transfer to Qwen3-1.7B passed all of its registered gates, as did the six-head route in the smaller model and the independent route search in the larger one. The smaller model’s three-stage study and the repair failed their overall verdicts. The source code is public under Apache-2.0 in <a href="https://github.com/scasella/qwen3-auto-interp">scasella/qwen3-auto-interp</a>, with a <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/RESULTS_INDEX.md">results ledger</a> for every study. The frozen reports, prompt sets and saved arrays are private, so a public clone cannot rerun the audits. No one outside the project has checked the results.</p>
+        </div>
+
+        <h2 id="task">A small task with a revealing change</h2>
+        <p>The task is deliberately simple. Here is an illustrative example:</p>
+        <blockquote><p>Rowan is red.<br />Lumen is blue.<br />What color is Rowan?</p></blockquote>
+        <p>Now swap the names in the facts:</p>
+        <blockquote><p>Lumen is red.<br />Rowan is blue.<br />What color is Rowan?</p></blockquote>
+        <p>The question is identical. The colors appear in the same order. Only the relationship between names and colors has changed, and the answer must change with it.</p>
+        <p>This gives us a useful way to investigate the model. A signal that only carries the name “Rowan” would be the same in both cases. A signal that incorporates which record belongs to Rowan must reflect the changed context.</p>
+        <p>To test that distinction, the harness runs the model on both versions, then copies selected internal signals from one run into the other. Researchers call this <em>activation patching</em>. The practical question is straightforward: when we transplant this particular piece of the computation, does the model start favoring the answer associated with the other version?</p>
+        <p>One especially informative experiment changed the signal used by later retrieval components to choose where to read, while keeping their other lookup inputs fixed. Their attention shifted toward the record selected by the transplanted signal: in the six-head study, the three heads’ average attention to that record moved by a median of 14 to 21 percentage points, depending on the comparison. Their contribution to the answer shifted with it.</p>
+        <p>Even though the question’s wording had stayed the same, that internal signal had changed in a way that affected which record was selected. It was carrying information about the relationship between the question and the facts.</p>
+
+        <h2 id="three-stages">Following the answer through three stages</h2>
+        <p>Inside a transformer, <em>attention heads</em> are small components that read information from other positions in the text and contribute to the model’s next computation. The investigation found twelve heads, arranged in three groups, that participated in a linked lookup pathway.</p>
+        <p>The three groups had different roles:</p>
+        <ol>
+          <li><strong>Connect the question to the facts.</strong> Six earlier heads, operating around the question and the text following it, influenced a signal that depended on which record answered the question.</li>
+          <li><strong>Carry that information to the answer position.</strong> Three intermediate heads read from the question region and brought the relevant information to the position where the model was about to produce its answer.</li>
+          <li><strong>Select the source and copy its value.</strong> Three later heads used the resulting signal to direct attention toward a value in the facts and contribute that value to the answer.</li>
+        </ol>
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 01</span>The twelve heads, as layer:head (zero-based)</div>
+          <table>
+            <thead>
+              <tr><th>Stage</th><th>Qwen3-0.6B</th><th>Qwen3-1.7B</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1. Connect the question to the facts</td><td>13:6, 12:6, 13:14, 14:12, 11:9, 13:15</td><td>The same six, fixed from 0.6B</td></tr>
+              <tr><td>2. Carry it to the answer position</td><td>15:4, 16:4, 17:1</td><td>16:4, 17:1, 18:7 (found by search)</td></tr>
+              <tr><td>3. Select the source and copy its value</td><td>19:5, 21:13, 22:9</td><td>19:5, 21:13, 22:9 (found by search)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The experiments followed these connections by allowing changes to travel through the proposed route while holding other inputs fixed. That helped distinguish a direct effect from an effect that passed through the particular intermediate components being tested.</p>
+        <p>In the smaller model, the full three-stage intervention moved the model’s answer preference in the predicted direction on all <strong>192 held-out prompts</strong>, and on the 64 prompts used to select the heads. Here, “predicted direction” means moving its preference toward the answer associated with the transplanted signal. That study passed all 63 of its mechanism criteria but failed its overall verdict. Its registered prerequisite was that the unmodified model answer at least 103 of the 128 main held-out prompts correctly, and it answered 101. The mechanism results stand as measured, but the smaller model’s three-stage pathway did not receive a full confirmation.</p>
+        <p>Separate tests also isolated the copying step. Changing the internal value information at the color positions had a strong effect; making the corresponding change at other positions had very little effect. In the six-head study, the model’s preference between the two answers moved by a median of 4.14 logits at the color positions, against a median absolute 0.02 elsewhere. Several of the findings carried over to fresh color words without refitting the selected components.</p>
+        <p>An address is a useful analogy for the routing signal: it helps determine where to read before the value is copied. Its exact internal representation remains an open question. The causal experiments establish its role in selecting a source; they do not decode a literal address stored somewhere in the network.</p>
+
+        <h2 id="transfer">The smaller model supplied a prediction for the larger one</h2>
+        <p>The two models were Qwen3-0.6B and Qwen3-1.7B: roughly 600 million and 1.7 billion parameters, respectively. These are the numerical settings learned during training. They are related models with matching layer and attention-head layouts (28 layers of 16 query heads each), which makes component locations directly comparable.</p>
+        <p>An independent search in the larger model recovered the same three final retrieval-head locations found in the smaller one. Two of the three intermediate locations also matched.</p>
+        <p>The stronger test concerned the six earlier heads around the question. After finding them in the smaller model, the investigation froze those six locations and tested them in the larger model without searching for replacements.</p>
+        <p>The rest of the pathway had already been located in the larger model. The prediction was specific: would these six transferred locations connect into it in the expected way?</p>
+        <p>They did. Across the tested comparisons and datasets, interventions through the proposed route had the predicted direction on <strong>92.2% to 100% of held-out prompts</strong>. The size of the effects varied, but the earlier discovery successfully identified a group of components that played the expected causal role in the larger model. The study passed every registered gate, and the unmodified larger model answered 127 of the 128 main held-out prompts correctly.</p>
+        <p>One caution about what transferred. The relay the six heads fed into had been found by searching the larger model, and one of its three heads differs from the smaller model’s. So this is six locations carried into a partly rediscovered pathway, not all twelve carried over unchanged.</p>
+        <p>This is a practical form of reusable understanding. A search in one model supplied concrete targets for an experiment in another, removing the need to repeat that particular search.</p>
+        <p>That connects to a question from my <a href="blog_reusable_binary_assurance.html">recent work on reusing proofs of OpenSSL code</a>: can a result become something the next investigation starts with? Here, the reusable object was a tested account of part of a model’s computation.</p>
+
+        <h2 id="retrieval-vs-answer">A model can retrieve the right value and still answer incorrectly</h2>
+        <p>The investigation also exposed a useful distinction between finding the answer internally and producing it at the output.</p>
+        <p>On the original evaluation of 128 two-record prompts, the full model made thirteen errors. A readout of one retrieval head favored the correct value on all thirteen. In a separate test using “gold” and “silver,” the same head favored the correct value on all nine errors. Neither study passed its own overall test: the first missed its accuracy prerequisite by one prompt, and the gold/silver follow-up failed a calibration prerequisite. The readouts are descriptive findings from those runs.</p>
+        <p>Interventions showed that this head also pushed the output toward the correct answer. The useful signal was participating in the computation, and later processing could outweigh it.</p>
+        <p>That suggested a possible repair: strengthen the useful retrieval contribution.</p>
+        <p>The four-record experiments made the problem more interesting. Different retrieval heads had different preferences for where to look. One leaned toward recent records; others helped with earlier records. Simply amplifying a useful head could also amplify the value it retrieved from the wrong position.</p>
+        <p>The resulting repair accounted for those position preferences and adjusted the balance between heads. Its settings were chosen on calibration prompts and then frozen. On the held-out four-record prompts, it fixed six errors and introduced one new error, a net gain of five prompts out of 192. It still failed its preregistered test. On the main held-out set it did not improve the margins of the recency errors it targeted, and on fresh colors its net gain only tied naive amplification. A separate repair on the gold/silver task fixed two errors and broke two.</p>
+        <p>This was a small repair pilot, and it did not pass. Its value was the connection between explanation and intervention: understanding how the heads divided up the task suggested a more targeted intervention than amplifying every head, and it caused fewer new errors than that naive approach on both four-record sets.</p>
+        <p>My <a href="blog_fact_probe.html">recent post on factual-confidence probes</a> investigated what model activations reveal about answer correctness. This project adds a different view: tracing how a particular answer is selected, transported, and sometimes outweighed before it reaches the output.</p>
+
+        <h2 id="harness">What the agent harness enabled</h2>
+        <p>By <em>harness</em>, I mean the software surrounding the agents’ research work: tools for generating controlled examples, changing selected internal computations, measuring the effects, and recording exactly what was tested. The agents proposed explanations and reviewed results. They could not turn a failed test into a pass.</p>
+        <p>Its most useful capability was supporting a connected sequence of experiments.</p>
+        <p>Finding the components that copied the value raised a new question: what told them which value to copy? Tracing that signal backward raised another: where did it pick up information about the relationship between the question and the facts? Once the earlier group was identified, the next question became whether those same locations would work in the larger model.</p>
+        <p>Each answer narrowed the next search. The agents could keep working through that sequence, carrying forward a specific account of the computation.</p>
+        <p>Several features made the sequence scientifically useful.</p>
+        <h3>An explanation had to make a prediction</h3>
+        <p>Before confirmation runs, the harness froze the selected components, interventions, and evaluation criteria. Fresh examples then tested whether the proposed mechanism behaved as expected.</p>
+        <p>This matters because it is easy to find an interesting pattern and invent an explanation that fits it. A prediction on examples kept out of discovery asks more of the explanation.</p>
+        <p>The six-head transfer was an especially clear version of this: name the locations first, then measure what happens there in the other model.</p>
+        <h3>The tools could be checked against known mechanisms</h3>
+        <p>The harness included synthetic controls with deliberately simple behavior. For example, a control that only passed along the literal name in the question should behave differently from a system that incorporated the changed name-to-color relationship.</p>
+        <p>These controls tested whether the experiments could distinguish the competing explanations they were supposed to distinguish. They gave the agents a way to check the measuring instrument as well as the model.</p>
+        <h3>Failed ideas remained part of the investigation</h3>
+        <p>The first amplification idea was useful even when it made answers worse. That result pointed toward a missing part of the explanation: a head could move values effectively while favoring the wrong record position.</p>
+        <p>Preserving unsuccessful experiments made it possible to follow that clue. The later repair could use what the earlier attempt had revealed.</p>
+        <h3>The measurements could be recomputed</h3>
+        <p>The harness saved the experimental plans, inputs, and raw results. File fingerprints made changes detectable. Separate numerical checks recomputed reported measurements from the saved data, and fresh-process runs checked that results could be repeated.</p>
+        <p>These checks make the evidence easier to inspect and build on. They also help an agent distinguish a model behavior worth investigating from a problem in the experiment itself.</p>
+        <p>The model experiments ran on consumer Apple Silicon, one 24 GB M4 Pro MacBook Pro, making this a concrete example of agent-assisted interpretability research on accessible hardware.</p>
+
+        <h2 id="related">Where this fits</h2>
+        <p>There is an existing research foundation here. Earlier work on <a href="https://finetuning.baulab.info/">entity-tracking circuits</a> traced multi-stage pathways that connect a question to the correct value. More recent work on <a href="https://arxiv.org/html/2510.06182v2">mixing retrieval mechanisms</a> shows that models can combine different strategies for looking things up.</p>
+        <p>The contribution of this project is a detailed causal account in two Qwen3 models, a successful test using locations transferred from one size to another, and an agent research process that connected those findings across a series of experiments.</p>
+
+        <h2 id="limits">Limits</h2>
+        <p>The scope is short, controlled lookup tasks. These two related models give a useful setting for testing transfer. Longer contexts, different model families, and more complicated questions will test how much of the account survives.</p>
+        <ul>
+          <li>“Answer preference” and accuracy here mean the model’s preference between two specified answer words, such as red and blue, at the next token. Free-form generation was not tested.</li>
+          <li>Verdicts by study: the six-head route in the smaller model, the route search in the larger model and the six-head transfer passed their registered gates. The first study was inconclusive (115 of 128 correct against a required 116), the gold/silver follow-up failed a calibration prerequisite, the smaller model’s three-stage study failed its accuracy prerequisite, the repair failed three of its four gates, and a version with structured, JSON-like records failed both of its tracks.</li>
+          <li>The six-head route passed after three of its thresholds were revised before the run, using earlier outcomes: accuracy from 85% to 80%, and two attention-shift bars. Earlier failed studies were not regraded.</li>
+          <li>Heads were selected on calibration prompts, so calibration results are selection evidence, not confirmation. The selected heads are not shown to be unique or exclusive, and this is not a complete account of how the model does lookup.</li>
+          <li>Matching locations across the two sizes do not prove the heads are the same component. The pathway that passed in the larger model uses 18:7 in place of 15:4.</li>
+          <li>The two fresh runs per confirmation show the numbers repeat exactly; they are not extra samples. The independent audits reuse some of the same NumPy arithmetic as the production code. No one outside the project has reviewed the work.</li>
+        </ul>
+
+        <h2 id="next-experiment">Next experiment</h2>
+        <p>The experiments also leave a precise question for the next investigation: what does the routing signal represent? It may encode position, aspects of the requested record, or a combination. Moving records around independently of their names and values can help distinguish those possibilities.</p>
+        <p>For the harness, the next question is whether giving agents an existing causal map lets them solve a new research task with less search. This campaign demonstrated one concrete reuse of that kind. Measuring the broader benefit will require comparing investigations that start with the map against investigations that start without it.</p>
+        <p>The larger-model experiment began with six places to look and a specific prediction about what changing them would do. That prediction held. The next step is to give agents more of those tested starting points, then measure how much they help with the next discovery.</p>
+
+        <h2 id="reproducibility">Reproducibility</h2>
+        <table class="repro">
+          <tbody>
+            <tr><th scope="row">Model</th><td>Agents: Codex CLI calls running gpt-6-luna, which proposed and reviewed explanations. Targets: <code>Qwen/Qwen3-0.6B</code> at revision <code>c1899de</code> and <code>Qwen/Qwen3-1.7B</code> at <code>70d244c</code>, BF16 weights.</td></tr>
+            <tr><th scope="row">Experiment</th><td>Activation patching with preregistered protocols, planted controls, two fresh processes per confirmation and a separate NumPy audit of the saved arrays, on one 24 GB Apple M4 Pro MacBook Pro (MPS). Twelve numbered studies plus follow-ups.</td></tr>
+            <tr><th scope="row">Data</th><td>Synthetic key–value prompts with two or four records (red/blue, green/yellow and gold/silver answers), built from response-blind key lists. The frozen prompt sets are private.</td></tr>
+            <tr><th scope="row">Results</th><td><a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/RESULTS_INDEX.md">Results ledger</a>, <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/PAPER.md">manuscript</a>, <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/ARCHITECTURE.md">harness and mathematics</a> and the repository’s <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/BLOG_POST.md">longer write-up</a>, including the failed studies. The per-study reports, saved arrays and audit evidence are private (<a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/OMISSIONS.md">what is left out</a>).</td></tr>
+            <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/qwen3-auto-interp">scasella/qwen3-auto-interp</a>, Apache-2.0, source only: harness, experiment runners, auditors and tests. The historical runners have fixed paths and are not turnkey replays, and the master audit stops without the private evidence.</td></tr>
+            <tr><th scope="row">Status</th><td>Published 2026-10-23 · Source public, evidence private. The six-head route, the larger-model route search and the transfer passed; the other studies were inconclusive or failed. No external validation.</td></tr>
+          </tbody>
+        </table>
+    <!-- PANES:NEXT:START -->
+    <nav class="post-next" aria-label="More research">
+      <a href="blog_gemma_blind_search.html"><span>next →</span><span>Agents built a label-free search for what Gemma 3 1B tracks as it reads, and confirmed one direction by steering</span></a>
+      <a class="post-next__all" href="research.html">← all research</a>
+    </nav>
+  <!-- PANES:NEXT:END -->
+  </article>
+  </main>
+  <!-- PANES:FOOT:START -->
+    <footer class="pn-foot">
+      <p>Personal projects. Not affiliated with or endorsed by my employer. No employer data, infrastructure, or confidential information used.</p>
+    </footer>
+    </div>
+  </div>
+  <!-- PANES:FOOT:END -->
+</body>
+</html>
