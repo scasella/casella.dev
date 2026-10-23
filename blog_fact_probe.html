@@ -3,25 +3,25 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Where a claim-correctness probe’s signal lives in Llama 3.1 8B | Stephen Casella</title>
-  <meta name="description" content="A follow-up on Llama 3.1 8B: a layer-19 probe ranks FActScore claims better than the model's stated confidence and combines with P(True) in an exploratory test, and a preregistered decomposition finds its signal spread over attention heads and thousands of neurons. With an interactive explorer." />
+  <title>Llama 3.1 8B factuality probe: baselines, confounds, components | Stephen Casella</title>
+  <meta name="description" content="The second stage of a probe study on Llama 3.1 8B: on held-out FActScore claims a layer-19 probe reaches AUROC 0.802, against 0.735 for P(True) and 0.740 for subject popularity. It is tested for popularity and position confounds and decomposed into heads and neurons. With an interactive explorer." />
   <meta name="author" content="Stephen Casella" />
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#080c0f" />
   <link rel="canonical" href="https://casella.dev/blog_fact_probe.html" />
   <meta property="og:site_name" content="Stephen Casella" />
-  <meta property="og:title" content="A probe on Llama’s hidden states beats its stated confidence, and the signal is spread across the network" />
-  <meta property="og:description" content="On 742 held-out claims a layer-19 probe reaches AUROC 0.802 against 0.541 for Llama’s stated confidence. Attention heads carry 79% of its position-residualized signal, and the top 50 of 286,720 neurons hold 1.25% of the neurons’ positive mass." />
+  <meta property="og:title" content="What Llama’s internal signals reveal about factual accuracy" />
+  <meta property="og:description" content="On 742 held-out claims a probe on Llama 3.1 8B’s layer-19 activations reaches AUROC 0.802, against 0.735 for P(True) and 0.740 for subject popularity. Within biographies it survives position controls and, in an exploratory test, adds to P(True); heads carry 79% of its direct, signed separation." />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://casella.dev/blog_fact_probe.html" />
   <meta property="og:image" content="https://casella.dev/assets/og/blog_fact_probe.png" />
   <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_fact_probe.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Share card for the write-up: A probe on Llama’s hidden states beats its stated confidence, and the signal is spread across the network." />
+  <meta property="og:image:alt" content="Share card for the write-up: What Llama’s internal signals reveal about factual accuracy." />
   <meta property="article:author" content="Stephen Casella" />
   <meta property="article:published_time" content="2026-10-18" />
-  <meta property="article:modified_time" content="2026-10-18" />
+  <meta property="article:modified_time" content="2026-10-23" />
   <meta property="article:tag" content="interpretability" />
   <meta property="article:tag" content="probing" />
   <meta property="article:tag" content="Llama 3.1 8B" />
@@ -29,8 +29,8 @@
   <meta property="article:tag" content="calibration" />
   <meta property="article:tag" content="preregistration" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="A probe on Llama’s hidden states beats its stated confidence, and the signal is spread across the network" />
-  <meta name="twitter:description" content="On 742 held-out claims a layer-19 probe reaches AUROC 0.802 against 0.541 for Llama’s stated confidence. Attention heads carry 79% of its position-residualized signal, and the top 50 of 286,720 neurons hold 1.25% of the neurons’ positive mass." />
+  <meta name="twitter:title" content="What Llama’s internal signals reveal about factual accuracy" />
+  <meta name="twitter:description" content="On 742 held-out claims a probe on Llama 3.1 8B’s layer-19 activations reaches AUROC 0.802, against 0.735 for P(True) and 0.740 for subject popularity. Within biographies it survives position controls and, in an exploratory test, adds to P(True); heads carry 79% of its direct, signed separation." />
   <meta name="twitter:image" content="https://casella.dev/assets/og/blog_fact_probe.png" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
@@ -45,13 +45,13 @@
     {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
-      "headline": "A probe on Llama’s hidden states beats its stated confidence, and the signal is spread across the network",
-      "description": "A follow-up on Llama 3.1 8B: a layer-19 probe ranks FActScore claims better than the model's stated confidence and combines with P(True) in an exploratory test, and a preregistered decomposition finds its signal spread over attention heads and thousands of neurons. With an interactive explorer.",
+      "headline": "What Llama’s internal signals reveal about factual accuracy",
+      "description": "The second stage of a probe study on Llama 3.1 8B: on held-out FActScore claims a layer-19 probe reaches AUROC 0.802, against 0.735 for P(True) and 0.740 for subject popularity. It is tested for popularity and position confounds and decomposed into heads and neurons. With an interactive explorer.",
       "url": "https://casella.dev/blog_fact_probe.html",
       "mainEntityOfPage": "https://casella.dev/blog_fact_probe.html",
       "image": "https://casella.dev/assets/og/blog_fact_probe.png",
       "datePublished": "2026-10-18",
-      "dateModified": "2026-10-18",
+      "dateModified": "2026-10-23",
       "author": {
         "@type": "Person",
         "name": "Stephen Casella",
@@ -78,6 +78,8 @@
         "FActScore",
         "P(True)",
         "stated confidence",
+        "subject popularity",
+        "sentence position",
         "Llama 3.1 8B Instruct",
         "direct-effect decomposition",
         "attention heads",
@@ -387,7 +389,7 @@
   </style>
     <!-- PANES:HEAD:START -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
-  <link rel="stylesheet" href="panes.css?v=bbd7cc12" />
+  <link rel="stylesheet" href="panes.css?v=87bdb6c4" />
   <script src="ascii.js?v=6f1f421a" defer></script>
   <!-- PANES:HEAD:END -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..650;1,8..60,400..500&display=swap" />
@@ -444,58 +446,62 @@
   <!-- PANES:BAR:END -->
   <main class="post-main">
   <article class="post">
-<h1>A probe on Llama’s hidden states beats its stated confidence, and the signal is spread across the network</h1>
+<h1>What Llama’s internal signals reveal about factual accuracy</h1>
 <!-- PANES:META:START -->
-    <p class="post-byline">[ <time datetime="2026-10-18">2026-10-18</time> ] // Llama 3.1 8B // 20 MIN READ</p>
+    <p class="post-byline">[ <time datetime="2026-10-18">2026-10-18</time> · updated <time datetime="2026-10-23">2026-10-23</time> ] // Claude Opus 5.5 · Llama 3.1 8B // 20 MIN READ</p>
   <!-- PANES:META:END -->
-        <p class="subtitle">In April I <a href="blog_interp.html">reported</a> that a linear probe on Llama 3.1 8B’s hidden states ranks factual claims better than the model’s own stated confidence. This follow-up tests that result against a stronger way of reading the model’s confidence and against two confounds, then asks, in a preregistered analysis, where in the network the probe’s signal comes from. The data behind it can be explored in an interactive page.</p>
+        <p class="subtitle">This is the second stage of a project that began with <a href="blog_interp.html">Testing internal signals for factual accuracy in legal answers and biographies</a>. There, a probe, a small readout trained on Llama 3.1 8B’s internal activity, separated correct from incorrect biography claims far better than the model’s stated confidence, a weak comparison. Such a readout could cheaply flag likely false claims in long answers, but only if it carries information simpler signals don’t. Here I test it against stronger baselines, check whether it only tracks a subject’s fame or a claim’s position, and ask which components write the signal it reads.</p>
         <div class="tldr">
           <span class="tldr-label">TL;DR</span>
-          <p>On 742 held-out claims from 24 FActScore biographies, the probe reaches AUROC 0.802. Llama’s stated probability reaches 0.541, because it gives exactly 1.0 to 650 of the 742 claims. The probe’s lead over the stated probability holds when only claims about the same person are compared, which keeps subject popularity fixed. Reading the probability that Llama answers “True” about one claim at a time (P(True)) is a much stronger baseline, at 0.735, and in an exploratory test a two-weight combination of the probe and P(True) beats both. Removing what sentence position and year mentions explain leaves 0.645 within biographies, cross-fitted over all 157, which passed a 0.60 bar set before the analysis was run.</p>
-          <p>A preregistered, exact decomposition puts 79% of the position-residualized probe’s within-biography signal in attention heads. The neuron part is dense: the 50 most important of 286,720 neurons hold 1.25% of the neurons’ positive contribution. Knocking out the top 200 neurons hurt the probe more than knocking out random ones, but by 0.026, short of the preregistered 0.03. An LLM rater found the top neurons legible, and no more so than matched random neurons.</p>
+          <p>On 742 held-out FActScore claims the probe reaches AUROC 0.802 (0.5 is chance), against 0.541 for Llama’s stated probability, a weak baseline. Stronger baselines are closer: P(True), a separate way of asking Llama whether one claim is true, reaches 0.735, and the subject’s Wikipedia pageviews reach 0.740; with whole biographies resampled, no clear advantage over pageviews is detected. Within biographies, where popularity is fixed, the probe keeps a signal beyond what sentence position and year mentions explain (0.645 over all 157, above a 0.60 bar set before the decomposition). No clear advantage over P(True) is detected there, but in an exploratory test the two combined reach 0.745, above either alone, so they carry partly different information.</p>
+          <p>A preregistered, exact decomposition credits attention heads (components that route information between positions) with 79% of that residualized signal’s direct, signed separation of correct from incorrect claims, not 79% of Llama’s factual knowledge or of the computation behind it; the neuron part is spread over tens of thousands of neurons. Knocking out the top 200 neurons had a measurable effect, but it did not meet the effect-size criterion set before the test; larger exploratory knockouts cut the signal steeply, while random ones barely moved it. Automatic descriptions did not clearly set the top neurons apart from random ones.</p>
         </div>
         <div class="stat-row">
           <div class="stat">
-            <span class="k">Probe vs. stated</span>
-            <div class="v">0.802 / 0.541</div>
-            <div class="s">AUROC on 742 held-out claims</div>
+            <span class="k">Probe, test split</span>
+            <div class="v">0.802</div>
+            <div class="s">AUROC on 742 held-out claims; P(True) 0.735, pageviews 0.740, stated 0.541</div>
           </div>
           <div class="stat">
-            <span class="k">Stated exactly 1.0</span>
-            <div class="v">650 / 742</div>
-            <div class="s">Claims Llama called certain</div>
+            <span class="k">Position removed</span>
+            <div class="v">0.645</div>
+            <div class="s">Within-biography AUROC, all 157 cross-fitted; bar 0.60, set before the decomposition</div>
           </div>
           <div class="stat">
             <span class="k">Probe + P(True)</span>
             <div class="v">0.745</div>
-            <div class="s">Within-biography AUROC, all 157 (exploratory)</div>
+            <div class="s">Within-biography AUROC, all 157 (exploratory); probe alone 0.689</div>
           </div>
           <div class="stat">
             <span class="k">Heads’ share</span>
             <div class="v">79%</div>
-            <div class="s">Of the residualized probe’s signal; the top 50 neurons hold 1.25% of the neurons’ positive mass</div>
+            <div class="s">Of the probe’s direct, signed separation, not of Llama’s factual knowledge</div>
           </div>
         </div>
         <div class="paper-links">
           <a href="explorer/fact-probe/" class="btn-pill">Open the interactive explorer</a>
-          <a href="blog_interp.html" class="btn-pill">The April write-up</a>
+          <a href="blog_interp.html" class="btn-pill">The initial study (April)</a>
+        </div>
+        <div class="callout">
+          <span class="callout-label">Correction, 23 October 2026</span>
+          <p>An earlier version said that, by the preregistered rule, the top 200 neurons are not necessary. The targeted knockout had a measurable effect, but it did not meet the effect-size criterion set before the test. I also rewrote the post around the stronger baselines and qualified the 79% figure.</p>
         </div>
         <div class="callout">
           <span class="callout-label">Status</span>
-          <p>The decomposition, the knockout test and the neuron ratings were preregistered. The plan, its first three amendments and the plans for the exploratory analyses were each committed before the data they cover; a fourth amendment records a data error found after all results. The earlier comparisons with the stated probability, P(True), popularity and position were not part of the preregistration. A workshop paper is in draft and not peer reviewed. The code and results are on a branch of <a href="https://github.com/scasella/activation-probes-claim-correctness">scasella/activation-probes-claim-correctness</a> that is not public yet.</p>
+          <p>The decomposition, the 200-neuron knockout test and the neuron ratings were preregistered; the baseline, popularity and position comparisons were not. The probe–P(True) combination, head knockouts, dose-response curves and description test are exploratory, each chosen after related results were known and fixed in a dated plan before its own data existed. A workshop paper is in draft and not peer reviewed, and this stage’s code, plans and result files are on an unpublished branch of the public <a href="https://github.com/scasella/activation-probes-claim-correctness">scasella/activation-probes-claim-correctness</a> repository.</p>
         </div>
 
-        <h2 id="setup">Setup</h2>
-        <p>FActScore (Min et al., 2023) has 157 biographies written by ChatGPT, split into 4,886 atomic facts that annotators marked as supported or not. Llama 3.1 8B Instruct reads each biography. For each fact, I average Llama’s layer-19 residual stream over the fact’s source sentence and fit an L2 logistic regression on 133 biographies. The probe is then scored once on the 24 held-out biographies, 742 facts, of which 233 are wrong.</p>
-        <p>I compare it with two ways of reading Llama’s own confidence:</p>
+        <h2 id="setup">Setup and baselines</h2>
+        <p>FActScore (Min et al., 2023) has 157 ChatGPT-written biographies split into 4,886 atomic facts, each marked supported or not by human annotators; those labels are the ground truth for every score here. For each fact, I average Llama 3.1 8B Instruct’s layer-19 residual stream (the running state each layer reads from and adds to) over the fact’s source sentence. The probe is an L2 logistic regression fitted on 133 biographies and scored once on 24 held-out ones: 742 facts, 233 of them wrong. I compare it with four baselines, two from Llama itself:</p>
         <ul>
-          <li><strong>Stated probability.</strong> Llama sees the biography and the facts, in chunks of up to 20, and gives a probability that each is correct. In April I called this self-report and described it as one claim at a time; on FActScore it actually saw the whole biography and up to 20 claims at once. Llama did not write these biographies, so this measures Llama verifying someone else’s claims. The explorer calls it Llama-as-verifier.</li>
-          <li><strong>P(True).</strong> Llama sees one fact at a time, with the subject named, and I read the probability that its first answer token is “True”.</li>
+          <li><strong>Stated probability.</strong> Llama sees the biography and up to 20 facts at a time and writes a probability that each is correct. It did not write the biographies, so this is Llama verifying ChatGPT’s claims (the explorer’s Llama-as-verifier).</li>
+          <li><strong>P(True).</strong> A separate way of asking Llama whether a claim is true: I show it one fact, with the subject named, and read how strongly its first answer token favours “True” over “False” (the logit difference).</li>
+          <li><strong>Popularity and position.</strong> The subject’s Wikipedia pageviews, and the fact’s sentence position, scoring earlier sentences as safer.</li>
         </ul>
-        <p>The scores are AUROC: the chance that a randomly chosen correct claim is scored above a randomly chosen incorrect one, where 0.5 is a coin flip and 1.0 is perfect. Within-biography AUROC compares only claims about the same person. Brackets are 95% bootstrap intervals, resampling claims or whole biographies as stated.</p>
-        <p>This is not the first probe of its kind. <a href="https://doi.org/10.18653/v1/2025.findings-emnlp.880">Han et al. (2025)</a> trained claim-level probes on Llama hidden states, tested them on FActScore and compared them with verbalized confidence and P(True). What this study adds is a paired comparison with stated and token-probability confidence on human labels, popularity and position controls, the probe–P(True) combination, and the decomposition.</p>
+        <p>Scores are AUROC, the chance that a random correct claim outscores a random incorrect one (0.5 is chance). Within-biography AUROC compares only claims about the same person. Brackets are 95% bootstrap intervals over claims or whole biographies, as stated.</p>
+        <p><a href="https://doi.org/10.18653/v1/2025.findings-emnlp.880">Han et al. (2025)</a> also probed Llama hidden states for claim correctness, testing on FActScore against verbalized confidence and P(True). Their Llama 3.1 8B probe, trained on LongFact, reaches AUROC 0.698 on ChatGPT claims from the same human-annotated FActScore release; my 0.802 comes from a probe trained on FActScore itself, so it is not an improvement on theirs. This study adds paired comparisons with stated confidence and popularity, within-biography controls, the probe–P(True) combination and a decomposition with knockouts.</p>
 
-        <h2 id="stated">The model calls almost every claim certain</h2>
+        <h2 id="stated">Stronger baselines narrow the gap</h2>
         <div class="fx" data-fx data-fx-build="c545644ee271">
 <div class="panel scoreboard">
     <div class="chart" id="scoreboard" role="img" aria-label="AUROC of each signal on the 742 test claims"></div>
@@ -523,7 +529,7 @@
         </div>
 </details>
 
-        <p>The stated probability fails by saturating: 650 of the 742 claims get exactly 1.0 and 39 get exactly 0.0. The probe leads it by +0.262 [0.180, 0.332] with whole biographies resampled, and by +0.155 [0.057, 0.244] when only claims about the same person are compared.</p>
+        <p>The stated probability fails by saturating: 650 of the 742 claims get exactly 1.0 and 39 exactly 0.0. The probe leads it by +0.262 [0.180, 0.332] with whole biographies resampled, and by +0.155 [0.057, 0.244] within biographies. Over P(True), the stronger read of Llama’s judgement, its lead is +0.067 [0.003, 0.124] with biographies resampled, an interval that nearly reaches zero.</p>
 <div class="fx" data-fx data-fx-build="c545644ee271" id="reader">
 <div class="status"><span class="chip">Test split</span><span class="chip">Human labels</span></div>
 <div class="panel" style="display:grid; gap:16px">
@@ -563,7 +569,7 @@
 <p class="fx-fail caption">This interactive figure could not load. The same view is in the <a href="explorer/fact-probe/#reader">explorer</a>.</p>
 </div>
 
-        <p>Popularity is the obvious confound. Facts about obscure people are wrong more often, and a probe could rank claims by how familiar the subject is without reading anything about the claim. A free pageview lookup reaches 0.740, and across the whole test set the probe’s lead over it, +0.062 [−0.017, 0.155] with biographies resampled, cannot be told from zero. Within a biography the subject is fixed, so the within-biography column is the cleaner test, and there the probe’s lead over the stated probability holds.</p>
+        <p>Popularity is the obvious confound. Facts about obscure people are wrong more often, so a signal could rank claims by fame without reading them. Pageviews alone reach 0.740. The probe leads them by +0.062 [0.024, 0.097] with claims resampled, but popularity belongs to a whole biography, and with whole biographies resampled the interval is [−0.017, 0.155]: no clear advantage detected. Comparing claims within each of the 24 test biographies holds popularity fixed; there the probe’s lead over the stated probability holds, while over P(True), +0.068 [−0.049, 0.158], no clear advantage is detected.</p>
 <div class="fx" data-fx data-fx-build="c545644ee271" id="ranking">
 <div class="status"><span class="chip">Test split</span><span class="chip">742 claims · 233 incorrect</span></div>
 <div class="cols">
@@ -575,7 +581,7 @@
     </div>
     <div class="panel" style="display:grid; gap:12px">
       <h3>Within one biography</h3>
-      <p class="caption">Pooled over all claims, popularity alone does well: a subject's Wikipedia pageviews reach 0.740 [0.701, 0.780], and the probe's margin over them, +0.062 [−0.017, 0.155] with whole biographies resampled, cannot be told from zero. Comparing only claims about the same person holds popularity fixed.</p>
+      <p class="caption">Pooled over all claims, popularity alone does well: a subject's Wikipedia pageviews reach 0.740 [0.701, 0.780], and with whole biographies resampled no clear advantage of the probe over them is detected (+0.062 [−0.017, 0.155]). Comparing only claims about the same person holds popularity fixed.</p>
       <div class="chart" id="withinChart"></div>
       <p class="caption">Within-biography AUROC on the 24 test biographies, with whole biographies resampled. The probe leads Llama-as-verifier by +0.155 [0.057, 0.244]. Sentence position scores earlier sentences as more likely correct; it needs no model and, unlike popularity, varies within a biography.</p>
     </div>
@@ -592,11 +598,11 @@
 
 
         <h2 id="position">Position is a confound too, and the signal survives it</h2>
-        <p>Later sentences in a biography are wrong more often, and the probe partly encodes that. Cross-fitted over all 157 biographies in five folds, position alone reaches 0.654 within biographies, against 0.689 for the probe. A gate fixed before it was run removed the probe’s linear dependence on sentence position and year mentions, using slopes fitted on the other folds. The residualized score still reaches 0.645 [0.614, 0.675], above the gate’s 0.60 bar, and passing it licensed the preregistered analysis below. This is the claim-level signal I can defend, and the score that the decomposition and the knockouts below take apart.</p>
+        <p>Later sentences in a biography are wrong more often, and the probe’s score partly tracks that. Twenty-four test biographies are too few for this question, so I cross-fitted five probes, each scoring the fifth of all 157 biographies it never saw; the 24 test biographies now also help train the other folds’ probes. Position alone then reaches 0.654 within biographies, against 0.689 for the probe. Removing the probe’s linear dependence on position and year mentions, with slopes fitted on the other folds, leaves a residualized score that still reaches 0.645 [0.614, 0.675], above the 0.60 bar that gated the preregistered analysis below. This is the claim-level signal I can defend, and the one the decomposition takes apart.</p>
 
-        <h2 id="combine">Two signals beat one (exploratory)</h2>
-        <p>P(True) closes most of the stated probability’s gap. The probe leads it across the test set, +0.067 [0.003, 0.124] with biographies resampled, but not within biographies over all 157 (+0.029 [−0.009, 0.068]). The two scores are only weakly correlated (0.35), so I tested a linear stack of the two, with two weights fitted within biographies on the training folds.</p>
-        <p>Within biographies over all 157, the stack reaches 0.745 [0.719, 0.769], against 0.689 for the probe and 0.660 for P(True). That is +0.055 [0.039, 0.072] over the probe and +0.085 [0.056, 0.113] over P(True). Claims from one sentence share the probe’s score, so part of the gain is the stack breaking those ties. Leaving out same-sentence pairs, the gain over the probe is +0.042 [0.025, 0.059]. On the test split the stack reaches 0.834 against the probe’s 0.802. I planned this test after the single-score results were known, and committed the plan before computing any combined score.</p>
+        <h2 id="combine">The probe and P(True) carry partly different information (exploratory)</h2>
+        <p>Over all 157 biographies the probe scores 0.689 within biographies and P(True) 0.660: no clear advantage for the probe is detected (+0.029 [−0.009, 0.068]). The two are only weakly correlated (0.35 on the test split), so I tested a linear stack with two weights fitted within biographies on the training folds.</p>
+        <p>Within biographies over all 157, the stack reaches 0.745 [0.719, 0.769]: +0.055 [0.039, 0.072] over the probe and +0.085 [0.056, 0.113] over P(True). Part of the gain is breaking ties among claims from one sentence, which share the probe’s score; without same-sentence pairs the gain over the probe is +0.042 [0.025, 0.059]. On the test split the stack reaches 0.834 against 0.802. I chose this test after seeing the single scores: it shows the signals are complementary on this data, but confirming the gain’s size needs biographies that played no part in choosing it.</p>
 <div class="fx" data-fx data-fx-build="c545644ee271" id="fx-combine">
 <div class="status"><span class="chip explor">Exploratory</span><span class="chip">Planned after the single scores, committed before any combined score</span></div>
 <div class="cols">
@@ -626,12 +632,12 @@
 </div>
 
 
-        <h2 id="anatomy">Where the signal lives</h2>
-        <p>The probe reads one direction in Llama’s layer-19 residual stream. Everything in that stream was written there by an attention head, an MLP neuron or the token embedding, so the probe’s score splits exactly into a direct contribution from each of 286,720 neurons, 640 heads and the embedding. I measured each component’s share of the residualized probe’s within-biography separation between correct and incorrect claims. I wanted to test a claim from Cammarata’s essay “Neural Networks Are Already Clean”, that probe-like directions break down into a few readable neurons.</p>
+        <h2 id="anatomy">Which components write the signal</h2>
+        <p>I tested a claim from Cammarata’s essay “Neural Networks Are Already Clean”: that probe-like directions break down into a few readable neurons. Everything in Llama’s layer-19 residual stream was written by an attention head (a component that routes information between positions), an MLP neuron (one unit of a layer’s feed-forward block) or the token embedding, so the probe’s score splits exactly into direct contributions from 286,720 neurons, 640 heads and the embedding. I measured each one’s share of the residualized probe’s within-biography separation of correct from incorrect claims: a direct, signed share, crediting only what a component writes straight into layer 19 and netting out opposite contributions. It is not a share of what Llama knows or of the computation behind the signal.</p>
         <div class="fx" data-fx data-fx-build="c545644ee271" id="fx-anatomy">
 <div class="status"><span class="chip prereg">Preregistered decomposition</span><span class="chip desc">Descriptive: no test</span><span class="chip">All 157 biographies, cross-fitted</span></div>
 <div class="panel" style="display:grid; gap:12px">
-    <h3>Heads carry 79%; neurons nearly cancel out</h3>
+    <h3>Heads carry 79% of the direct separation; neurons nearly cancel out</h3>
     <div class="chart" id="tugChart"></div>
     <p class="caption">Bars show the summed contributions that push correct claims above incorrect ones (right) and the reverse (left); the dot is the net. Neurons push 18.23 one way and 18.06 the other, leaving a net 0.173, or 21% of the total 0.814. The embedding's share is 0.01%.</p>
   </div>
@@ -656,7 +662,7 @@
         </div>
 </details>
 
-        <p>The heads’ part is somewhat concentrated: the strongest head carries 5.0% of the separation and the top ten 33%. The neurons’ part is not. Neurons push hard in both directions and nearly cancel. The 50 neurons with the most positive contribution hold 1.25% of the positive neuron mass, half of it takes 16,307 neurons, and 80% takes 46,127. The top-50 sets chosen in different folds overlap with Jaccard 0.53 on average. These shares, the head shares included, are preregistered descriptives, not tests. No test on heads was preregistered, and the head knockouts below are exploratory.</p>
+        <p>Heads carry 79% of the direct separation and neurons 21%. The heads’ part is somewhat concentrated: the top head carries 5.0% and the top ten 33%. The neurons’ part is not: they push hard both ways and nearly cancel. The top 50 hold 1.25% of the positive neuron mass, half of it takes 16,307 neurons and 80% takes 46,127, and top-50 sets chosen in different folds overlap with a Jaccard index of 0.53 on average (neurons in both over neurons in either). These shares are preregistered descriptives, not tests.</p>
         <div class="fx" data-fx data-fx-build="c545644ee271">
 <div class="cols">
     <div class="panel" style="display:grid; gap:10px">
@@ -692,13 +698,13 @@
 <noscript>
 <figure>
           <a href="explorer/fact-probe/#anatomy"><img src="assets/explorer/fact-probe-field.jpg" width="1600" height="1135" loading="lazy" style="display:block;width:100%;height:auto;border-radius:4px" alt="The explorer's neuron field: twenty squares, one per layer, each holding that layer's 14,336 neurons as pixels in pink and blue noise, with the 50 neurons of most positive mass lit in amber, beside a curve of cumulative share against the number of top neurons." /></a>
-          <figcaption><strong>All 286,720 neurons, one pixel each</strong>, from the explorer. Pink neurons rank correct claims above incorrect ones, net, and blue neurons do the reverse. The 50 with the most positive mass are lit in amber; together they hold 1.25% of the positive neuron mass.</figcaption>
+          <figcaption><strong>All 286,720 neurons, one pixel each</strong>: pink neurons rank correct claims higher, net, blue ones the reverse, and amber marks the top 50 by positive mass.</figcaption>
         </figure>
 </noscript>
 
         <h2 id="knockouts">Knocking components out</h2>
-        <p>If a set of components carries the signal, replacing their output with its average (mean ablation) should hurt the probe more than doing the same to random components from the same layers. Random neurons were also matched on how much their contribution varies; random heads only on layer. Scores here are within-biography AUROCs of the residualized probe, which starts at 0.644 (the fp32 counterpart of the gate’s 0.645).</p>
-        <p>The preregistered test knocked out the 200 neurons with the most held-out mass. That cost 0.032 [0.016, 0.046] of AUROC, against 0.006 for matched random neurons. The difference, 0.026 [0.013, 0.038], is clearly above zero but short of the 0.03 I set in advance, so by the preregistered rule these neurons are not necessary.</p>
+        <p>If a set of components carries the signal, replacing their outputs with their average (mean ablation) should hurt the probe more than doing the same to random components from the same layers. Selection and scoring were split by fold: for each fifth of the biographies, components were chosen by mass on the other four-fifths, knocked out while Llama read that fifth, and scored with that fold’s probe, though the probes that weight the other folds’ contributions were trained with this fifth included. Over all 157 biographies the residualized probe’s within-biography AUROC starts at 0.644 (the 0.645 above, recomputed in full precision).</p>
+        <p>The preregistered test knocked out each fold’s 200 neurons with the most mass. That cost 0.032 [0.016, 0.046] of AUROC, about a fifth of the residualized probe’s lift above chance and five times the 0.006 removed by matched random neurons. The targeted intervention had a measurable effect, 0.026 [0.013, 0.038] beyond random, but it did not meet the 0.03 effect-size criterion set before the test.</p>
         <div class="fx" data-fx data-fx-build="c545644ee271" id="fx-knockouts">
 <div class="status"><span class="chip prereg">Preregistered: 200 neurons</span><span class="chip explor">Exploratory: head knockouts (E1), dose curves (E2)</span></div>
 <div class="panel" style="display:grid; gap:12px">
@@ -738,22 +744,22 @@
             </tbody>
           </table>
         </div>
-<p>The random column averages three sets per size. The preregistered 200-neuron test used five, which is why the text above gives 0.006 where the table gives 0.007.</p>
+<p>The random column averages three sets per size. The preregistered test used five, hence the text’s 0.006 against the table’s 0.007.</p>
 </details>
 
-        <p>In exploratory follow-ups, each planned before its data, the cost grows steadily with set size, while random sets averaged over three per size never cost more than 0.010. At the largest sizes the residualized score falls below chance: 0.425, 0.376 and 0.431 after 5,000 neurons, 20,000 neurons and 160 heads. On the raw probe score, which starts at 0.689, the same knockouts leave 0.485, 0.406 and 0.534, so only the 20,000-neuron set is clearly below chance on both scales. Why is untested. The selection took only components with positive mass, so those pushing the wrong way stayed in place, and the residualized score subtracts fixed position slopes. I read these points as showing dependence, not measuring it.</p>
+        <p>In exploratory follow-ups the cost grows steadily with set size, while random sets never cost more than 0.010. The largest sets push the residualized score below chance (0.425, 0.376 and 0.431 after 5,000 neurons, 20,000 neurons and 160 heads); on the raw score, which starts at 0.689, they leave 0.485, 0.406 and 0.534, so only the 20,000-neuron set is clearly below chance on both. Why is untested, so I read these points as showing dependence, not measuring it.</p>
 
-        <h2 id="neurons">The top neurons read like random ones</h2>
-        <p>For the legibility test I took the 100 carriers, the 50 neurons with the most positive and the 50 with the most negative mass. I paired each with a random neuron from the same layer whose contribution varies about as much, drawn from outside the top 1,000. A rater saw the 200 in shuffled order, with no layer, mass or role. For each neuron it saw the 10 highest- and 10 lowest-activating biography sentences, shaded token by token, and the highest- and lowest-activating web-text contexts from a FineWeb sample. It wrote a description, judged whether the description fits at least 14 of the 20 sentences, and labelled the neuron as tracking knowledge (epistemic), a confound such as topic or format, or a mix.</p>
-        <p>Before any rating existed, I made an LLM (Claude Opus 5.5) the rater of record instead of myself, in a dated amendment. That brings back the circularity raised against the essay, whose neuron explanations are also written and judged by models. A second, independent pass of the same model agreed with κ 0.83 on fit and 0.76 on category, which shows consistency, not validity.</p>
+        <h2 id="neurons">Neuron descriptions did not set the top neurons apart</h2>
+        <p>To test readability, an LLM rater (Claude Opus 5.5, made rater of record by an amendment before any rating existed) described the 100 carriers, the 50 neurons with the most positive and 50 with the most negative mass, alongside 100 matched random neurons, shuffled and unlabelled. Plausible descriptions proved weak evidence of readability. These are LLM judgements; the claims’ correct and incorrect labels are FActScore’s human annotations.</p>
         <ul>
-          <li><strong>Nearly everything is legible.</strong> 98 of 100 carriers and 95 of 100 random neurons got a description that fits, so the test sits near its ceiling.</li>
-          <li><strong>Confound-led, like random neurons.</strong> Weighted by mass, the coherent carriers are 90% confound, 9% mixed and 1.2% epistemic. Confound labels are no more common among carriers than among random neurons (87 of 98 against 91 of 95, Fisher p = 0.10). The rubric counts a claim type or topic, such as awards or family, as a confound, so both groups come out confound-heavy. The label reflects the rubric as much as the neurons.</li>
-          <li><strong>Descriptions predict carriers no better.</strong> In an exploratory test, a second model (gpt-6.1-sol) used each description to predict the neuron’s activations on held-out sentences. Spearman correlations were 0.33 for carriers and 0.27 for random neurons, a difference of 0.062 [−0.014, 0.137] with neuron pairs resampled. No human wrote or checked either side, and the control that would set a chance level was not run.</li>
-          <li><strong>Activation is not effect.</strong> A neuron’s contribution is its activation times its readout. For 32 of the 50 positive carriers, higher activation lowers the probe’s score; they rank correct claims higher by being less active on them. Eight carriers change readout sign across folds. The rater saw activation only, so its descriptions say what a neuron fires on, not how firing moves the score.</li>
+          <li><strong>Carriers and random neurons read alike.</strong> Nearly all got a fitting description, so the test sits near its ceiling, and both came out mostly confound-led, partly because the rubric files topics such as awards as confounds.</li>
+          <li><strong>No clear advantage for carriers’ descriptions.</strong> In an exploratory simulation test, a second model used them to predict activations on unseen sentences; carriers’ Spearman correlation exceeded random neurons’ by 0.062 [−0.014, 0.137].</li>
+          <li><strong>Activation is not effect.</strong> The rater saw activation only, yet for 32 of the 50 positive carriers higher activation lowers the probe’s score.</li>
         </ul>
 <div class="fx" data-fx data-fx-build="c545644ee271" id="fx-neurons">
 <div class="status"><span class="chip prereg">Preregistered: category (A), legibility (B)</span><span class="chip explor">Exploratory: description simulation (E3)</span><span class="chip warn">LLM rater of record</span></div>
+<p class="notice prose">The rater of record is an LLM (Claude Opus 5.5). A second pass of the same model agreed with κ 0.83 on fit and 0.76 on category, which shows consistency, not validity. That is the same circularity raised against the claim being tested. <span id="keyNote">This version leaves out which neurons were carriers, so the packet can still be rated blind.</span></p>
+<details class="fx-more"><summary>Rating results and all 200 rated neurons</summary>
 <div class="cols">
     <div class="panel" style="display:grid; gap:8px">
       <h3>Legible, and read like random neurons</h3>
@@ -761,12 +767,10 @@
       <p class="caption">Primary B asks whether the top carriers are as legible as Cammarata's essay “Neural Networks Are Already Clean” predicts. It reads <b>ESSAY-CONSISTENT</b> for the top carriers of a dense probe, on a test near its ceiling: 2% of carriers got a description that did not fit their sentences, against 5% of random neurons. But the 50 positive carriers hold only 1.25% of the positive neuron mass, and neurons carry 21% of the total separation.</p>
     </div>
     <div class="panel" style="display:grid; gap:8px">
-      <h3>Descriptions predict carriers no better than random neurons</h3>
-      <p class="caption">A second model (gpt-6.1-sol) used each description to predict the neuron's activations on held-out sentences. The descriptions predicted carriers no better than random neurons: Spearman 0.33 against 0.27, a difference of 0.062 [−0.014, 0.137] with neuron pairs resampled. The interval rules out a carrier disadvantage beyond 0.014, but not an advantage of up to 0.14. The control that would set a chance level was not run. Both sides are LLM judgements: no human wrote or checked either.</p>
+      <h3>No clear advantage for carriers' descriptions</h3>
+      <p class="caption">A second model (gpt-6.1-sol) used each description to predict the neuron's activations on held-out sentences. No clear advantage was detected for carriers' descriptions: Spearman 0.33 against 0.27, a difference of 0.062 [−0.014, 0.137] with neuron pairs resampled. The interval rules out a carrier disadvantage beyond 0.014, but not an advantage of up to 0.14. The control that would set a chance level was not run. Both sides are LLM judgements: no human wrote or checked either.</p>
     </div>
   </div>
-<p class="notice prose">The rater of record is an LLM (Claude Opus 5.5). A second, independent pass of the same model agreed with κ 0.83 on fit and 0.76 on category, which shows consistency, not validity. That is the same circularity raised against the claim being tested. <span id="keyNote">This version leaves out which neurons were carriers, so the packet can still be rated blind.</span></p>
-<details class="fx-more"><summary>Browse all 200 rated neurons</summary>
 <div class="panel" style="display:grid; gap:14px">
     <div class="controls">
       <div class="ctl" hidden><span class="lbl">Show</span><div class="seg" id="roleSeg" role="group" aria-label="Neuron set"><button aria-pressed="true" data-r="all">All 200</button><button aria-pressed="false" data-r="carrier">Carriers</button><button aria-pressed="false" data-r="random">Matched random</button></div></div>
@@ -787,43 +791,47 @@
 
 
         <h2 id="explorer">Explore it</h2>
-        <p>The <a href="explorer/fact-probe/">Fact Probe Explorer</a> holds the data behind this post. You can read any of the 24 test biographies and flag the claims each signal trusts least, to see which errors it catches. It shows how many errors each signal catches as more claims are flagged, every claim plotted by probe score against P(True), and a grid of all 640 heads. All 286,720 neurons are drawn one pixel each, with a slider that lights up the top N. There are the knockout curves, and a browser for the 200 rated neurons, with each neuron’s sentences, web-text contexts and description. Every number on the page is read from the study’s result files, and a sources table lists the file and key for each one.</p>
-        <p>The public explorer leaves out which of the 200 neurons were carriers, along with their layers, masses and readouts, so the same packet can still be rated blind by people.</p>
+        <p>The <a href="explorer/fact-probe/">Fact Probe Explorer</a> holds the data behind this post, from per-claim scores on the 24 test biographies to every head and neuron, the knockout curves and the 200 rated neurons. It leaves out which neurons were carriers, with their layers, masses and readouts, so the packet can still be rated blind.</p>
+
+        <h2 id="who-did-what">Who did what, and what checked it</h2>
+        <p>I ran this stage with Claude Opus 5.5 as a coding agent; it co-authored every commit, from analysis code and GPU jobs to the preregistration and paper draft, and fresh Claude subagents did the ratings. The plan records two decisions as mine: an LLM as rater of record, and gpt-6.1-sol, from another model family, as simulator. The checks were mechanical: the plan and amendments A1–A3 predate the data they cover, scoring scripts stop on a failed hash or replication check, and an audit of all 40 rater transcripts found no access to the key. No human reviewed the ratings.</p>
 
         <h2 id="interpretation">Interpretation and limits</h2>
-        <p>The positive result is that a simple probe on Llama’s hidden states ranks claims much better than Llama’s stated confidence. The lead holds up when popularity and position are controlled, and the probe adds to P(True), the strongest read of Llama’s own confidence I tested. What the probe reads is distributed: most of it comes through attention heads, and the neuron part is spread over tens of thousands of neurons that mostly cancel. I found no small, readable set of neurons that carries it.</p>
+        <p>A simple probe on Llama’s hidden states ranks human-labelled claims much better than Llama’s stated confidence and ahead of P(True) on the pooled test set, with no clear advantage detected over a popularity lookup. Within biographies it survives position controls and shows no clear advantage over P(True), though the two combined beat either alone (exploratory). What it reads is distributed: most of the direct contribution comes through attention heads, and I found no small, readable set of neurons that carries it.</p>
+        <p>The most consequential limitation is that no untouched biographies remain. The comparisons that hold popularity fixed rest on the 24 test biographies, or on a cross-fit over all 157 that includes them and was designed after their results were seen. The probe was also trained on pooled claims, so it can lean partly on popularity. Other limits:</p>
         <ul>
-          <li>One model, one layer and one pooling choice. Llama 3.1 8B Instruct, layer 19 and sentence pooling were fixed in advance, so facts from one sentence share a score.</li>
-          <li>The test split is small: 24 biographies. The probe scored 0.728 on validation and 0.802 on test, and with whole test biographies resampled its interval is [0.748, 0.848].</li>
-          <li>Popularity explains much of the pooled score. The within-biography comparisons are the ones that hold it fixed.</li>
-          <li>The stated probability is Llama verifying text ChatGPT wrote. P(True) is the stronger read of its confidence, and sampled self-consistency is still untested.</li>
-          <li>The decomposition counts direct effects only. Each component is credited with what it writes straight into the layer-19 stream; influence that passes through later components is credited to those components.</li>
-          <li>The preregistered knockout test missed its bar. The stack, the head knockout, the dose-response curves and the simulation test are exploratory. Each was chosen after related results were known, then fixed in a dated plan before its own data existed.</li>
-          <li>Legibility was judged by an LLM, near the coherence ceiling and under a rubric that files topics as confounds.</li>
-          <li>In one training biography, a decoding clean-up made three sentence windows one token too long, which affects 12 of the 4,886 facts. Refitting the probes moves the test AUROC and the 0.645 by under 0.001. With the probes held fixed, no within-biography AUROC can move by more than 0.0055. The error is recorded as a dated amendment.</li>
+          <li>One model, layer and pooling choice, fixed in advance.</li>
+          <li>The test split is small: the probe scored 0.728 on validation and 0.802 on test, [0.748, 0.848] with whole test biographies resampled.</li>
+          <li>The decomposition counts direct effects only.</li>
         </ul>
 
         <h2 id="next-experiment">Next experiment</h2>
         <ul>
-          <li>Human ratings of the same packet, by raters who haven’t seen which neurons are carriers.</li>
-          <li>A probe trained to ignore position, instead of a residualized score, and one trained within biographies so it can’t lean on subject popularity.</li>
+          <li>A probe trained within biographies, so it cannot lean on popularity, and trained to ignore position, scored against P(True) and the stack on human-labelled biographies none of these analyses has touched.</li>
+          <li>Blind human ratings of the same neuron packet.</li>
           <li>Sampled self-consistency and a semantic-entropy-probe baseline.</li>
         </ul>
+
+        <h2 id="methods">Methods details</h2>
+        <p><strong>Decomposition.</strong> Llama was re-run in fp32, capturing for layers 0–19 the inputs to each MLP down-projection and attention output projection and the token embeddings, mean-pooled over the probe’s sentence spans. These projections have no biases, so the pooled layer-19 residual is exactly their sum, and the components reproduce the probe’s score to within 0.002 logit. Each fact is scored with its own fold’s probe; a component’s mass is its mean true-minus-false difference over the 27,276 within-biography pairs.</p>
+        <p><strong>Knockouts.</strong> Random neurons, here and in the ratings, come from the same layers, are matched on contribution variance and exclude the top 1,000 by absolute mass. Each knocked-out output is replaced at every answer token with its mean over all answer tokens of the 157 biographies.</p>
+        <p><strong>Neuron ratings.</strong> The 100 carriers, unlike the knockout sets, were picked by mass over all 157 biographies, as the preregistration specified. The rater saw each neuron’s highest- and lowest-activating biography sentences and web-text contexts, wrote a description, judged its fit, and labelled the neuron epistemic (tracking knowledge), confound (such as topic or format) or mixed. A second pass of the same model agreed with chance-corrected κ 0.83 on fit and 0.76 on category: consistency, not validity. The simulation test had no chance-level control.</p>
+        <p><strong>A data error.</strong> In one training biography a decoding clean-up made three sentence windows one token too long, affecting 12 of the 4,886 facts. Refitting the probes moves the test AUROC and the 0.645 by under 0.001, and with the probes fixed no within-biography AUROC can move by more than 0.0055. Amendment A4, dated after all results, records it.</p>
 
         <h2 id="reproducibility">Reproducibility</h2>
         <table class="repro">
           <tbody>
             <tr><th scope="row">Model</th><td>Llama 3.1 8B Instruct (<code>meta-llama/Llama-3.1-8B-Instruct</code>); this study’s forward passes ran on one A100-80GB on Modal. Rater of record: Claude Opus 5.5. Simulator for the exploratory description test: gpt-6.1-sol.</td></tr>
-            <tr><th scope="row">Experiment</th><td>Layer-19 residual stream, mean-pooled over each fact’s source sentence; L2 logistic regression, C&nbsp;=&nbsp;0.01; trained on 109 + 24 biographies, scored once on 24. Cross-fit: five biography folds. Intervals: 1,000 bootstrap resamples over claims or whole biographies, seed 20260424; the description-simulation interval uses 10,000 resamples over neuron pairs. The decomposition reproduces the probe’s score to within 0.002 logit; knockouts replace outputs with their mean at answer tokens.</td></tr>
+            <tr><th scope="row">Experiment</th><td>Layer-19 residual stream, mean-pooled over each fact’s source sentence; L2 logistic regression, C&nbsp;=&nbsp;0.01, fitted on 109 training and 24 validation biographies, scored once on 24 test biographies. Five-fold biography cross-fit over all 157 and 1,000 bootstrap resamples, both seed 20260424; the description-simulation interval uses 10,000 resamples over neuron pairs. See <a href="#methods">Methods details</a>.</td></tr>
             <tr><th scope="row">Data</th><td><a href="https://github.com/shmsw25/FActScore">FActScore</a>’s ChatGPT biographies and human labels (Min et al., 2023): 157 biographies, 4,886 facts after dropping 540 marked irrelevant. Neuron contexts: 5M tokens of FineWeb <code>sample/10BT</code> (ODC-By 1.0).</td></tr>
-            <tr><th scope="row">Results</th><td>The <a href="explorer/fact-probe/">interactive explorer</a>, built from the result files; its sources table names the file and key behind each number. The probe’s test AUROC and its lead over the stated probability with whole biographies resampled come from the April release’s 10,000-resample run (<code>factscore_grouped_bootstrap_ci.json</code>), so they match the <a href="blog_interp.html">April post</a>.</td></tr>
-            <tr><th scope="row">Code</th><td>Branch <code>workshop-revision</code> of <a href="https://github.com/scasella/activation-probes-claim-correctness">scasella/activation-probes-claim-correctness</a>, not public yet. The April release is public.</td></tr>
-            <tr><th scope="row">Status</th><td>Published 2026-10-18 · Decomposition, knockout test and neuron ratings preregistered (amendments A1–A4); other analyses labelled; workshop paper in draft; not peer reviewed.</td></tr>
+            <tr><th scope="row">Results</th><td>The <a href="explorer/fact-probe/">interactive explorer</a>, built from the result files; its sources table names the file and key behind each number. The probe’s test AUROC and its lead over the stated probability with whole biographies resampled come from the public repository’s 10,000-resample run (<a href="https://github.com/scasella/activation-probes-claim-correctness/blob/665dc2580c924a3ba53841e15f86acd35d0b7f46/artifacts/runs/factscore_grouped_bootstrap_ci.json">factscore_grouped_bootstrap_ci.json</a>, added in September), matching the <a href="blog_interp.html">initial study</a>.</td></tr>
+            <tr><th scope="row">Code</th><td>This stage’s code, preregistration and result files are on branch <code>workshop-revision</code>, which has not been pushed to the public <a href="https://github.com/scasella/activation-probes-claim-correctness">scasella/activation-probes-claim-correctness</a> repository. Its public main branch holds the April release and the September biography-grouped bootstrap, not this analysis.</td></tr>
+            <tr><th scope="row">Status</th><td>Published 2026-10-18 · updated 2026-10-23 · Decomposition, knockout test and neuron ratings preregistered (amendments A1–A3; A4, dated after all results, records a data error); other analyses labelled exploratory; workshop paper in draft; not peer reviewed; code and plans for this stage not public.</td></tr>
           </tbody>
         </table>
     <!-- PANES:NEXT:START -->
     <nav class="post-next" aria-label="More research">
-      <a href="blog_reusable_binary_assurance.html"><span>next →</span><span>Verified once, reused three times: agents carried proofs of shipped OpenSSL code into new callers</span></a>
+      <a href="blog_reusable_binary_assurance.html"><span>next →</span><span>Agents reused proofs of OpenSSL routines across three callers</span></a>
       <a class="post-next__all" href="research.html">← all research</a>
     </nav>
   <!-- PANES:NEXT:END -->

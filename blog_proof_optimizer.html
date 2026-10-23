@@ -3,32 +3,32 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Agent-written, formally verified speedups in Dafny | Stephen Casella</title>
-  <meta name="description" content="Claude Opus 5.5 rewrote four deliberately slow Dafny routines under a frozen, machine-checked spec it could not edit. Seven rewrites verified, and one ran 105× faster on a workload it never saw." />
+  <title>Agents speed up naive Dafny code under frozen specs | Stephen Casella</title>
+  <meta name="description" content="An early pilot: Claude Opus 5.5 rewrote four deliberately naive Dafny routines while the verifier held every change to a frozen spec. Seven rewrites verified; one ran 105× faster than its naive start on a held-out workload." />
   <meta name="author" content="Stephen Casella" />
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#080c0f" />
   <link rel="canonical" href="https://casella.dev/blog_proof_optimizer.html" />
   <meta property="og:site_name" content="Stephen Casella" />
-  <meta property="og:title" content="I used formal verification and agents to make an algorithm 105× faster and prove it behaves the same" />
-  <meta property="og:description" content="Seven agent-written rewrites of deliberately slow Dafny code verified against a frozen spec. One ran 105× faster on a workload it never saw; held-out inputs also caught two slowdowns." />
+  <meta property="og:title" content="Agents optimized four naive routines without changing their specifications" />
+  <meta property="og:description" content="An early pilot: agents changed only the implementations of four naive Dafny routines while Dafny held each change to a frozen spec. Seven rewrites verified; one ran 105× faster than its naive start on a held-out workload, and held-out inputs caught two small-input slowdowns." />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://casella.dev/blog_proof_optimizer.html" />
   <meta property="og:image" content="https://casella.dev/assets/og/blog_proof_optimizer.png" />
   <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_proof_optimizer.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Share card for the write-up: I used formal verification and agents to make an algorithm 105× faster and prove it behaves the same." />
+  <meta property="og:image:alt" content="Share card for the write-up: Agents optimized four naive routines without changing their specifications." />
   <meta property="article:author" content="Stephen Casella" />
   <meta property="article:published_time" content="2026-09-24" />
-  <meta property="article:modified_time" content="2026-09-24" />
+  <meta property="article:modified_time" content="2026-10-23" />
   <meta property="article:tag" content="formal verification" />
   <meta property="article:tag" content="Dafny" />
   <meta property="article:tag" content="AI agents" />
   <meta property="article:tag" content="Claude Opus 5.5" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="I used formal verification and agents to make an algorithm 105× faster and prove it behaves the same" />
-  <meta name="twitter:description" content="Seven agent-written rewrites of deliberately slow Dafny code verified against a frozen spec. One ran 105× faster on a workload it never saw; held-out inputs also caught two slowdowns." />
+  <meta name="twitter:title" content="Agents optimized four naive routines without changing their specifications" />
+  <meta name="twitter:description" content="An early pilot: agents changed only the implementations of four naive Dafny routines while Dafny held each change to a frozen spec. Seven rewrites verified; one ran 105× faster than its naive start on a held-out workload, and held-out inputs caught two small-input slowdowns." />
   <meta name="twitter:image" content="https://casella.dev/assets/og/blog_proof_optimizer.png" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
@@ -43,13 +43,13 @@
     {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
-      "headline": "I used formal verification and agents to make an algorithm 105× faster and prove it behaves the same",
-      "description": "Claude Opus 5.5 rewrote four deliberately slow Dafny routines under a frozen, machine-checked spec it could not edit. Seven rewrites verified, and one ran 105× faster on a workload it never saw.",
+      "headline": "Agents optimized four naive routines without changing their specifications",
+      "description": "An early pilot: Claude Opus 5.5 rewrote four deliberately naive Dafny routines while the verifier held every change to a frozen spec. Seven rewrites verified; one ran 105× faster than its naive start on a held-out workload.",
       "url": "https://casella.dev/blog_proof_optimizer.html",
       "mainEntityOfPage": "https://casella.dev/blog_proof_optimizer.html",
       "image": "https://casella.dev/assets/og/blog_proof_optimizer.png",
       "datePublished": "2026-09-24",
-      "dateModified": "2026-09-24",
+      "dateModified": "2026-10-23",
       "author": {
         "@type": "Person",
         "name": "Stephen Casella",
@@ -378,7 +378,7 @@
   </style>
     <!-- PANES:HEAD:START -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
-  <link rel="stylesheet" href="panes.css?v=bbd7cc12" />
+  <link rel="stylesheet" href="panes.css?v=87bdb6c4" />
   <script src="ascii.js?v=6f1f421a" defer></script>
   <!-- PANES:HEAD:END -->
 </head>
@@ -431,15 +431,16 @@
   <main class="post-main">
   <article class="post">
 
-        <h1>I used formal verification and agents to make an algorithm 105× faster and prove it behaves the same</h1>
+        <h1>Agents optimized four naive routines without changing their specifications</h1>
 <!-- PANES:META:START -->
-    <p class="post-byline">[ <time datetime="2026-09-24">2026-09-24</time> ] // Claude Opus 5.5 · Dafny 4.11 // 7 MIN READ</p>
+    <p class="post-byline">[ <time datetime="2026-09-24">2026-09-24</time> · updated <time datetime="2026-10-23">2026-10-23</time> ] // Claude Opus 5.5 · Dafny 4.11 // 9 MIN READ</p>
   <!-- PANES:META:END -->
-        <p class="subtitle">Across four deliberately slow Dafny routines, Claude Opus 5.5 produced seven faster implementations, each verified against a frozen specification it could not edit. On a held-out run-length encoding workload it never saw, the accepted version ran 105× faster. Held-out workloads also caught small-input slowdowns the acceptance gate could not see, and failed proofs, not the speed gate, ended three of the four runs.</p>
+        <p class="subtitle">This early pilot tested a workflow: an agent may change a routine's implementation, but every change must still verify against a frozen specification and is kept only if it runs faster. On four deliberately naive Dafny routines, Claude Opus 5.5 produced seven rewrites that passed every check: six known algorithmic improvements and one fitted to the benchmark, none of them new algorithms. On a workload the agent never saw, the run-length encoder ran 105× faster than its naive start, both compiled from Dafny to Python.</p>
 
         <div class="tldr">
           <span class="tldr-label">TL;DR</span>
-          <p>I let Claude Opus 5.5 edit only the implementation and proof annotations of four naive Dafny routines: integer square root, population count, run-length encoding and sort. A harness accepted a change only if the frozen spec still verified, the compiled Python matched the naive output on every workload, and the search workloads got faster. Seven changes were accepted. On sort and RLE, held-out speedups ran from 3.8× to 105×, with one exception at 1.07×. Every number is Dafny-compiled Python from a single run per routine, and the run recorded about $18.12 in Claude charges.</p>
+          <p><a href="https://dafny.org/">Dafny</a> lets you state what a routine must guarantee and have a solver prove that the code meets it for every input. Here it checked an agent's rewrites of integer square root, population count, run-length encoding (RLE) and sort.</p>
+          <p>On sort and RLE, held-out speedups over the naive start ran from 3.8× to 105×, with one exception at 1.07×. Python's built-ins are still faster than every final version. Held-out workloads also caught small-input slowdowns the speed gate, which timed only the search workloads, could not see: ISqrt's first rewrite at 0.44×, popcount ending at 0.76×. Verification, never the speed gate, ended three of the four runs. Each routine had one optimization run; each speedup compares median times from seven interleaved timing repeats.</p>
         </div>
 
         <div class="stat-row">
@@ -451,7 +452,7 @@
           <div class="stat">
             <span class="k">RLE, held-out</span>
             <div class="v">105×</div>
-            <div class="s">10,000 ints, a workload the agent never saw</div>
+            <div class="s">Against the naive start, on 10,000 ints the agent never saw</div>
           </div>
           <div class="stat">
             <span class="k">Speed-gate rejections</span>
@@ -461,19 +462,27 @@
           <div class="stat">
             <span class="k">Claude cost</span>
             <div class="v">$18.12</div>
-            <div class="s">Whole run, failed attempts included</div>
+            <div class="s">Optimizer calls, failed attempts included</div>
           </div>
+        </div>
+
+        <div class="callout">
+          <span class="callout-label">Update, 23 October 2026</span>
+          <p>This post was first titled "I used formal verification and agents to make an algorithm 105× faster and prove it behaves the same." I retitled it and rewrote the opening to put the workflow first and tie the 105× to its naive baseline; the measurements are unchanged.</p>
         </div>
 
         <h2 id="setup">Setup</h2>
 
         <p>
-          Each routine is a pair of Dafny files. <a href="https://dafny.org/">Dafny</a> is a programming language with a built-in program verifier: you write code plus statements about what it must guarantee, and a solver checks them for every possible input. <code>Spec.dfy</code> holds the contract and is frozen. <code>Impl.dfy</code> refines it and starts deliberately naive. It is the only file the agent could change.
+          The hard part of letting an agent optimize code is trusting that the faster version still does the same thing on every input, not just those someone thought to test. The pilot asked whether an agent can change an implementation and its proof while the specification stays fixed, and whether its speedups hold on workloads it was not tuned on.
+        </p>
+        <p>
+          Each routine is a pair of Dafny files. <code>Spec.dfy</code> holds the frozen contract. <code>Impl.dfy</code>, the only file the agent could change, starts deliberately naive and refines the contract, meaning Dafny must prove it meets every guarantee in the spec.
         </p>
         <p>For sorting, the whole contract is two lines:</p>
 <pre><code>ensures Sorted(b)
 ensures multiset(b) == multiset(a)</code></pre>
-        <p>The output must be in order, and it must contain exactly the elements of the input, with the same number of copies of each.</p>
+        <p>The output must be in order and contain exactly the input's elements, with the same number of copies of each.</p>
 
         <div class="table-wrap">
           <div class="table-label"><span class="id">Table 01</span>Routines, contracts and naive starting points</div>
@@ -491,16 +500,21 @@ ensures multiset(b) == multiset(a)</code></pre>
         </div>
 
         <p>
-          Claude ran through the <code>claude -p</code> CLI with read and edit tools on a scratch copy. It could not run Dafny or the benchmarks. It saw the spec, the current implementation, a description of the search workloads and the latest timings. A harness then applied four checks in order:
+          The agent edited a scratch copy and could not run Dafny or the benchmarks; it saw the spec, the current implementation, a description of the search workloads and the latest timings. A harness, the software that ran each round and kept the records behind the results below, then applied four checks in order:
         </p>
         <ol>
-          <li>Reject the candidate if <code>Spec.dfy</code> changed by a single byte, or if the implementation used an escape hatch: <code>assume</code>, <code>{:axiom}</code>, <code>{:verify false}</code>, <code>{:extern}</code>, <code>{:only}</code>, <code>expect</code> or <code>decreases *</code>.</li>
-          <li>Run the Dafny verifier with a 60 s solver limit. On failure, send the errors back, for up to three attempts per round.</li>
+          <li>Reject the candidate if <code>Spec.dfy</code> changed by a single byte or the implementation used an escape hatch: <code>assume</code>, <code>{:axiom}</code>, <code>{:verify false}</code>, <code>{:extern}</code>, <code>{:only}</code>, <code>expect</code> or <code>decreases *</code>.</li>
+          <li>Run the Dafny verifier with a 60 s solver time limit; on failure, send the errors back, up to three attempts per round. A time-out means the solver ran out of time, not that it found an error.</li>
           <li>Compile to Python and check that the output matches the naive version on every workload, held-out ones included.</li>
-          <li>Time the search workloads with seven interleaved repeats, each in a fresh process. Accept only if the geometric-mean speedup is at least 1.10× and no search workload falls below 0.95×.</li>
+          <li>Time the search workloads with seven interleaved repeats, each in a fresh process. Accept only if the geometric-mean speedup (the average per-workload ratio, taken on a log scale) is at least 1.10× and no search workload falls below 0.95×.</li>
         </ol>
         <p>
-          Each routine got at most three rounds and stopped at the first rejected one. Each routine also had held-out workloads with different sizes and shapes. Their outputs were checked in step 3, but their timings were only reported afterward, never used for acceptance.
+          Each routine got at most three rounds and stopped at the first rejected one. Held-out workloads had different sizes and shapes; the agent never saw them and was told only that other inputs existed. Their outputs were part of the correctness check in step 3, but their timings were only reported afterward and never used to accept or reject a change.
+        </p>
+
+        <h3>Who did what</h3>
+        <p>
+          A Claude agent proposed this experiment, and I asked for it to be specified and run. A Claude Opus 5.5 session wrote the plan, the frozen contracts, the naive starting code and the harness, reusing the structure of my earlier Dafny pipeline, and ran the loops; a fresh instance optimized each round. The four checks, not anything an agent reported, decided every acceptance. They take two things on trust: the contracts themselves, and Dafny's compiler to Python and its runtime, which step 3 checks only cheaply.
         </p>
 
         <h2 id="accepted">Accepted changes</h2>
@@ -520,14 +534,17 @@ ensures multiset(b) == multiset(a)</code></pre>
           </table>
         </div>
 
-        <p>Each speedup is the naive median time over the new median time, from seven repeats. About $12 of the $18.12 total was one failed popcount round.</p>
+        <p>Each speedup is naive median time over new median time (seven repeats). About $12 of the optimizer's $18.12 total was one failed popcount round.</p>
         <p>
-          On sort, the agent replaced insertion sort with a top-down merge sort and wrote the loop invariants Dafny needed to accept it. The first proof attempt passed. On RLE, the naive version rebuilt its output for every element. The accepted version finds where each run ends and appends the whole run at once, and it also verified on the first attempt.
+          Six of the seven accepted changes are textbook improvements (Table 02). The RLE rewrite appends each whole run at once instead of rebuilding the output for every element; it produced the 105× held-out result against the naive start and, like the merge sort, verified on the first attempt. The seventh, ISqrt's third round, was shaped around the benchmark (see <a href="#held-out">Held-out workloads</a>). The agent's work was choosing the changes and, harder, writing the loop invariants (facts that hold on every pass through a loop) and helper lemmas (small supporting proofs) that let Dafny prove them.
+        </p>
+        <p>
+          Because the starting points were deliberately slow, the size of each speedup mostly measures how poor the start was; ISqrt's naive version counted up from zero, so its numbers run into the thousands. Python's built-ins are still faster than every final version: about 5–20× for square root (<code>math.isqrt</code>), 90–7,400× for population count (<code>int.bit_count</code>), 10–14× for RLE (<code>itertools.groupby</code>) and 200–3,000× for sort (<code>sorted</code>). They run mostly in C, and Dafny's Python output carries runtime overhead, so this is not a fair race, but it shows what the pilot measured: progress from a naive start, not a win over production libraries.
         </p>
 
         <h2 id="held-out">Held-out workloads</h2>
 
-        <p>Sort and RLE each had one accepted round, so every workload in Table 03 compares that round directly with the naive start.</p>
+        <p>Sort and RLE each had one accepted round, so Table 03 compares that round directly with the naive start.</p>
 
         <div class="table-wrap">
           <div class="table-label"><span class="id">Table 03</span>Sort and RLE, per workload</div>
@@ -551,51 +568,52 @@ ensures multiset(b) == multiset(a)</code></pre>
           </table>
         </div>
 
-        <p>Range runs from slowest-before over fastest-after to fastest-before over slowest-after. The five-element-list result at 1.07× is not a difference the timing noise can resolve.</p>
+        <p>The range is the widest spread the seven repeats allow, not a confidence interval. The 1.07× on five-element lists is within the timing noise.</p>
         <p>
-          The held-out sets also caught what the gate could not. ISqrt round 1, a binary search, ran tiny inputs (0 to 100) at 0.44× and was accepted, because tiny inputs were not a search workload. Later rounds brought that to 0.97×. Popcount rounds 1 and 2 ran inputs below 256 at 0.92× and then 0.83× against their predecessors, which ends at 0.76× against the naive start. A proof fixes behavior. It does not fix speed on every input.
+          The held-out sets also caught what the gate could not. ISqrt round 1, a binary search, ran tiny inputs (0 to 100) at 0.44× and was accepted, because tiny inputs were not a search workload; later rounds brought that to 0.97×. Popcount rounds 1 and 2 ran inputs below 256 at 0.92× and then 0.83× against their predecessors, ending at 0.76× against the naive start. A proof fixes behavior, not speed on every input.
         </p>
         <p>
-          ISqrt round 3 hard-coded a comparison tree sized to the search range, up to about 1.7×10¹⁰. It is still proven correct, but it is shaped around the benchmark.
+          ISqrt round 3 hard-coded a comparison tree sized to the search range, up to about 1.7×10¹⁰: proven correct, but fitted to the benchmark.
         </p>
 
         <h2 id="interpretation">Interpretation and limits</h2>
         <p>
-          No accepted change broke its contract: each one verified against the unchanged spec and matched the naive output on every workload. The speed gate never rejected a candidate. Every early stop came from verification. RLE round 2 had real proof errors, but the final attempts for popcount and sort had no errors, only time-outs. Rerun afterward with a 300 s solver limit, sort round 2 verified and popcount round 3 still had one time-out. Sort round 2 stays rejected under the fixed rules and was never timed. So part of where each run stopped reflects the harness's proof budget, not the code.
+          The speed gate never rejected a candidate: every early stop came from verification. RLE round 2 had real proof errors, but the final popcount and sort attempts had no errors, only time-outs. Rerun afterward with a 300 s solver limit, sort round 2 verified (it stays rejected under the fixed rules and was never timed) and popcount round 3 still had one time-out, so part of where each run stopped reflects the proof budget, not the code.
         </p>
-        <p>Limits that affect the estimates above:</p>
         <ul>
-          <li>Everything timed is Python compiled from Dafny, which adds runtime overhead. The final versions are still about 5× to 7000× slower than Python's built-ins (<code>math.isqrt</code>, <code>int.bit_count</code>, <code>sorted</code>) and, for RLE, <code>itertools.groupby</code>. Those run in C and show scale only.</li>
-          <li>The baselines were deliberately slow, so large speedups against them say little about real code.</li>
-          <li>One run per routine, with Claude Opus 5.5, the CLI's default model. The A/A noise floor (naive against itself) was within ±4% for ISqrt, popcount and RLE, but sort reached 0.84× on one workload, and another experiment may have been running on the same Mac.</li>
+          <li>Everything timed is Python compiled from Dafny, against deliberately slow starting points; the speedups describe that setting, not hand-written Python or production code.</li>
+          <li>Each routine had one optimization run, and repeated timing within it does not show how much a second run would differ. The A/A noise floor (naive against itself) was within ±4% for ISqrt, popcount and RLE, but sort reached 0.84× on one workload. A second experiment was started on the same Mac in parallel, so the timings may include interference.</li>
           <li>Popcount round 2 passed on median speedups of 1.47× and 1.57×, with min–max ranges of 0.78–1.93× and 1.09–1.97×. A rule requiring the whole range above 1.0× would have rejected it.</li>
           <li>Some ISqrt workloads now finish in microseconds, below reliable timing resolution.</li>
-          <li>"Correct" means correct against these frozen contracts, nothing broader.</li>
+          <li>"Correct" means correct against these frozen contracts, with the Dafny-to-Python compiler trusted; nothing broader.</li>
         </ul>
 
         <h2 id="next-experiment">Next experiment</h2>
         <ul>
-          <li>Give the verifier a longer solver limit, such as the 300 s that let sort round 2 verify, and see where each routine stops.</li>
-          <li>Add small and tiny inputs to the search workloads, or a no-regression floor for them to the gate, so slowdowns like ISqrt's 0.44× are rejected rather than reported.</li>
-          <li>Require the whole min–max range above 1.0×, not just the median.</li>
+          <li>Repeat the whole optimization run several times per routine on an idle machine, with many more paired, interleaved timings, so each speedup gets an uncertainty estimate instead of a seven-repeat min–max range.</li>
+          <li>Start from stronger baselines, such as a standard algorithm already verified in Dafny, so a speedup measures more than replacing a deliberately slow start.</li>
+          <li>Give the verifier a longer solver limit and see where each routine stops.</li>
+          <li>Add small and tiny inputs to the search workloads, or a no-regression floor for them, so slowdowns like ISqrt's 0.44× are rejected rather than reported.</li>
           <li>Lengthen the ISqrt workloads before running more rounds.</li>
-          <li>Repeat each routine several times, on an otherwise idle machine.</li>
         </ul>
+        <p>
+          Two later posts carry the same division of labor (agents change the code; a proof fixes what must be preserved) to a more realistic workload: code PyTorch's compiler actually generates. In <a href="blog_pytorch_narrowing.html">A Lean proof let agents cut a compiled PyTorch workload’s runtime by 26%</a>, agents moved one <code>torch.compile</code> GPU kernel's size arguments from 64-bit to 32-bit, and a Lean proof shows when that is exact; <a href="blog_certified_narrowing.html">Agents turned a one-kernel Lean proof into a checker that certified 25 PyTorch kernels</a> generalizes that proof.
+        </p>
 
         <h2 id="reproducibility">Reproducibility</h2>
         <table class="repro">
           <tbody>
-            <tr><th scope="row">Model</th><td>Claude Opus 5.5 (the CLI's default model) through the <code>claude -p</code> CLI, limited to read and edit tools (Read, Edit, Write, Glob, Grep).</td></tr>
-            <tr><th scope="row">Experiment</th><td>Dafny 4.11 verifier with a 60 s solver limit. Up to 3 proof attempts per round and 3 rounds per routine, stopping at the first rejected round. Timing: 7 interleaved repeats, each in a fresh process. Acceptance: geometric-mean speedup of at least 1.10× on search workloads, none below 0.95×.</td></tr>
+            <tr><th scope="row">Model</th><td>Claude Opus 5.5 (the CLI's default model) through the <code>claude -p</code> CLI, limited to Read, Edit, Write, Glob and Grep.</td></tr>
+            <tr><th scope="row">Experiment</th><td>Dafny 4.11, 60 s solver limit. Up to 3 proof attempts per round and 3 rounds per routine, stopping at the first rejected round. Timing: 7 interleaved repeats, each in a fresh process. Acceptance: geometric-mean speedup of at least 1.10× on search workloads, none below 0.95×.</td></tr>
             <tr><th scope="row">Data</th><td>Four routines (ISqrt, popcount, RLE, sort), each with seeded search workloads and held-out workloads. Unit: one workload's median time over 7 repeats.</td></tr>
-            <tr><th scope="row">Status</th><td>Published 2026-09-24 · Results and code are not published. Open issue: one run per routine on a noisy machine.</td></tr>
+            <tr><th scope="row">Status</th><td>Published 2026-09-24 · updated 2026-10-23 · The harness, Dafny sources and run records are not published, so the pilot cannot be rerun from public materials. Open issue: one optimization run per routine.</td></tr>
           </tbody>
         </table>
 
 
             <!-- PANES:NEXT:START -->
     <nav class="post-next" aria-label="More research">
-      <a href="blog_diversity.html"><span>next →</span><span>A 50-step RL update reduces categorical sampling bias</span></a>
+      <a href="blog_diversity.html"><span>next →</span><span>Training on random integers changes fixed-list choices across tasks</span></a>
       <a class="post-next__all" href="research.html">← all research</a>
     </nav>
   <!-- PANES:NEXT:END -->

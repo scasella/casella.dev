@@ -3,31 +3,31 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Panel-style reasoning trades accuracy for shorter completions | Stephen Casella</title>
-  <meta name="description" content="A panel-of-experts LoRA on Qwen3-30B-A3B-Base was less accurate than Qwen&#39;s thinking model on MATH500 level 5 and AIME, and its completions were several times shorter. The two models also differ in post-training." />
+  <title>Panel-format Qwen3 adapter: shorter answers, lower accuracy | Stephen Casella</title>
+  <meta name="description" content="Exploratory study: an RL-only panel-of-experts LoRA on Qwen3-30B-A3B-Base wrote much shorter completions than Qwen&#39;s thinking model and was less accurate on MATH500 level 5 and a 20-problem AIME subset. Training history differs as well as format." />
   <meta name="author" content="Stephen Casella" />
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#080c0f" />
   <link rel="canonical" href="https://casella.dev/blog_multipersona.html" />
   <meta property="og:site_name" content="Stephen Casella" />
-  <meta property="og:title" content="Panel-style reasoning trades accuracy for shorter completions" />
-  <meta property="og:description" content="A panel-style Qwen adapter was less accurate than Qwen&#39;s thinking model and wrote several times shorter completions. Post-training differs as well as format." />
+  <meta property="og:title" content="A panel-format adapter produces shorter answers with lower accuracy" />
+  <meta property="og:description" content="Exploratory: a panel-format Qwen adapter wrote several times shorter completions than Qwen&#39;s thinking model and was less accurate. The two models differ in training history as well as format." />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://casella.dev/blog_multipersona.html" />
   <meta property="og:image" content="https://casella.dev/assets/og/blog_multipersona.png" />
   <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_multipersona.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Share card for the write-up: Panel-style reasoning trades accuracy for shorter completions." />
+  <meta property="og:image:alt" content="Share card for the write-up: A panel-format adapter produces shorter answers with lower accuracy." />
   <meta property="article:author" content="Stephen Casella" />
   <meta property="article:published_time" content="2026-04-24" />
-  <meta property="article:modified_time" content="2026-09-23" />
+  <meta property="article:modified_time" content="2026-10-23" />
   <meta property="article:tag" content="multi-persona reasoning" />
   <meta property="article:tag" content="RLVR" />
   <meta property="article:tag" content="Qwen3" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Panel-style reasoning trades accuracy for shorter completions" />
-  <meta name="twitter:description" content="A panel-style Qwen adapter was less accurate than Qwen&#39;s thinking model and wrote several times shorter completions." />
+  <meta name="twitter:title" content="A panel-format adapter produces shorter answers with lower accuracy" />
+  <meta name="twitter:description" content="Exploratory: a panel-format Qwen adapter wrote several times shorter completions than Qwen&#39;s thinking model and was less accurate. The two models differ in training history as well as format." />
   <meta name="twitter:image" content="https://casella.dev/assets/og/blog_multipersona.png" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
@@ -42,13 +42,13 @@
     {
       "@context": "https://schema.org",
       "@type": "Article",
-      "headline": "Panel-style reasoning trades accuracy for shorter completions",
-      "description": "A panel-of-experts LoRA on Qwen3-30B-A3B-Base compared with Qwen's production thinking model on matched samples: 31.5 points less accurate on MATH500 level 5 and 50.6 on AIME, with 2.5 to 5 times fewer completion tokens per correct answer. Post-training differs as well as format.",
+      "headline": "A panel-format adapter produces shorter answers with lower accuracy",
+      "description": "An exploratory comparison of an RL-only panel-of-experts LoRA on Qwen3-30B-A3B-Base with Qwen's production thinking model. On matched samples it was 31.5 points less accurate on MATH500 level 5 and 50.6 points on a 20-problem AIME 2024–2025 subset; where both models answered correctly, the thinking model's completions were a median 6.9 and 5.9 times longer. Training history differs as well as format.",
       "url": "https://casella.dev/blog_multipersona.html",
       "mainEntityOfPage": "https://casella.dev/blog_multipersona.html",
       "image": "https://casella.dev/assets/og/blog_multipersona.png",
       "datePublished": "2026-04-24",
-      "dateModified": "2026-09-23",
+      "dateModified": "2026-10-23",
       "author": {
         "@type": "Person",
         "name": "Stephen Casella",
@@ -75,7 +75,7 @@
         "Qwen3-30B-A3B",
         "MATH500",
         "AIME",
-        "token efficiency"
+        "completion length"
       ],
       "codeRepository": "https://github.com/scasella/multi-model"
     }
@@ -378,7 +378,7 @@
   </style>
   <!-- PANES:HEAD:START -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
-  <link rel="stylesheet" href="panes.css?v=bbd7cc12" />
+  <link rel="stylesheet" href="panes.css?v=87bdb6c4" />
   <script src="ascii.js?v=6f1f421a" defer></script>
   <!-- PANES:HEAD:END -->
 </head>
@@ -431,11 +431,11 @@
   <main class="post-main">
   <article class="post">
 
-        <h1>Panel-style reasoning trades accuracy for shorter completions</h1>
+        <h1>A panel-format adapter produces shorter answers with lower accuracy</h1>
 <!-- PANES:META:START -->
-    <p class="post-byline">[ <time datetime="2026-04-24">2026-04-24</time> · updated <time datetime="2026-09-23">2026-09-23</time> ] // Qwen3-30B-A3B // 7 MIN READ</p>
+    <p class="post-byline">[ <time datetime="2026-04-24">2026-04-24</time> · updated <time datetime="2026-10-23">2026-10-23</time> ] // Qwen3-30B-A3B // 10 MIN READ</p>
   <!-- PANES:META:END -->
-        <p class="subtitle">On MATH500 level 5 and AIME, a small adapter on Qwen3-30B-A3B-Base that reasons as a panel of experts was less accurate than Qwen's production thinking model, and its completions were several times shorter.</p>
+        <p class="subtitle">An exploratory study. I trained a small adapter that makes Qwen3-30B-A3B-Base reason as a panel of debating experts. On MATH500 level 5 and a 20-problem AIME subset, it wrote completions several times shorter than those of Qwen's production thinking model and was less accurate. The two models differ in training history as well as format.</p>
 
         <div class="paper-links">
           <a href="https://github.com/scasella/multi-model" class="btn-pill">GitHub repo</a>
@@ -444,22 +444,28 @@
 
         <div class="tldr">
           <span class="tldr-label">TL;DR</span>
-          <p>I trained a LoRA adapter on Qwen3-30B-A3B-Base to reason as a panel of experts and compared it with Qwen's production thinking model. On matched samples, the panel was <strong>31.5 points less accurate</strong> on MATH500 level 5 (318 against 487 correct of 536 matched samples: 59.3% against 90.9%) and <strong>50.6 points less accurate</strong> on AIME 2024–2025 (22.5% against 73.1%). Per correct sampled answer, the thinking model used <strong>5.07×</strong> as many completion tokens on MATH500 level 5 and <strong>2.48×</strong> on AIME.</p>
-          <p>The two models differ in post-training as well as in reasoning format, so these results describe the two models, not the effect of the format alone.</p>
+          <p>Where both models answered correctly, Qwen's thinking model wrote the longer completion in 306 of 306 pairs on MATH500 level 5 and 67 of 68 on the AIME subset, by a median <strong>6.91×</strong> and <strong>5.89×</strong>.</p>
+          <p>The panel was less accurate. On matched samples it was <strong>31.5 points lower</strong> on MATH500 level 5 (59.3% against 90.9%) and <strong>50.6 points lower</strong> on the 20-problem AIME 2024–2025 subset (22.5% against 73.1%).</p>
+          <p>These results compare two models, not two formats. The adapter, code and summary results are public.</p>
         </div>
 
         <div class="callout">
-          <span class="callout-label">Revision</span>
-          <p>The RL follow-up that used to close this post is now <a href="blog_multipersona_rl.html">its own post</a>. I removed a per-character dispersion ratio, a sensitivity check that did not test what it claimed, a training-compute estimate and my reading of the pass@k curves as evidence of wider search.</p>
+          <span class="callout-label">Revisions</span>
+          <p><strong>Correction, 23 October 2026.</strong> I labelled the study exploratory, credited the DeepSeek-R1-Zero recipe, added the AIME selection rule, and recast tokens per correct sampled answer as an evaluation measure and the dispersion appendix as a lesson about measurement. The results are unchanged.</p>
+          <p><strong>Revision, 23 September 2026.</strong> The reinforcement-learning follow-up became <a href="blog_multipersona_rl.html">its own post</a>, and I removed a per-character dispersion ratio, a sensitivity check that did not test what it claimed, a training-compute estimate and my reading of the pass@k curves as evidence of wider search.</p>
         </div>
 
-        <h2 id="setup">What was compared</h2>
+        <h2 id="setup">The question and the comparison</h2>
 
         <p>
-          The panel model is a rank-32 LoRA adapter on Qwen3-30B-A3B-Base, a mixture-of-experts model with 30 billion parameters, about 3 billion active per token. I trained it with reinforcement learning only, with no example answers or distillation. The prompt asks for a debate inside one tag and a final answer inside another. The reward is answer correctness, minus 0.2 when the tags are missing or malformed. Training had two stages: 128 steps on GSM8K, grade-school math word problems, then 128 steps on MATH. Each step used 16 problems with 8 samples per problem, at learning rate 5×10⁻⁶.
+          DeepSeek-R1-Zero (<a href="https://arxiv.org/abs/2501.12948">DeepSeek-AI, 2025</a>) showed that reinforcement learning (RL) applied directly to a base model, rewarding only a correct answer in the expected format, can produce long step-by-step reasoning. Its prompt, the recipe's only instruction on how to reason, casts the model as a single assistant, so the prompt is where that framing can be changed. I kept the recipe and changed only the prompt, to ask for a panel-of-experts debate. The question was what a short RL run learns under that framing, and how it compares with Qwen's thinking model on accuracy and completion length.
         </p>
 
-<pre><code><span class="c"># Panel prompt template (used at both train and eval time)</span>
+        <p>
+          The panel model is Qwen3-30B-A3B-Base, a mixture-of-experts model with 30 billion parameters (about 3 billion active per token), plus a rank-32 LoRA adapter, a small set of low-rank weight updates on the frozen model. I trained it with RL only (no example answers or distillation) on Tinker, Thinking Machines' hosted training service. The prompt is abridged below (full text in <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/envs/multipersona_gsm8k.py">envs/multipersona_gsm8k.py</a>); the reward is answer correctness, minus 0.2 for missing or malformed tags. Training ran 128 steps on <a href="https://arxiv.org/abs/2110.14168">GSM8K</a> grade-school word problems, then 128 on the training split of <a href="https://arxiv.org/abs/2103.03874">MATH</a>, competition problems rated level 1 to 5 (hardest), with 16 problems × 8 samples per step at learning rate 5×10⁻⁶. The released adapter is the post-MATH checkpoint.
+        </p>
+
+<pre><code><span class="c"># Panel prompt template, abridged (used at both train and eval time)</span>
 <span class="k">A conversation between User and Multi-Persona Panel of Experts.</span>
 <span class="k">The user asks a question, and the Panel solves it. The Panel first</span>
 <span class="k">deliberates and debates the reasoning process with each other and</span>
@@ -469,10 +475,12 @@
 <span class="k">Assistant:</span> <span class="s">&lt;mutipersonaDebate&gt; … &lt;/mutipersonaDebate&gt; &lt;answer&gt; … &lt;/answer&gt;</span></code></pre>
 
         <p>
-          The comparison model is Qwen/Qwen3-30B-A3B, Qwen's production hybrid model, run with <code>apply_chat_template(enable_thinking=True)</code> so that it writes a <code>&lt;think&gt;</code> block before answering. It has the same architecture but went through Qwen's full post-training, not my two RL stages.
+          The comparison model is Qwen/Qwen3-30B-A3B, Qwen's production hybrid model, run with <code>apply_chat_template(enable_thinking=True)</code> so that it writes a <code>&lt;think&gt;</code> block before answering. It shares the architecture but went through Qwen's full post-training instead of my two RL stages.
         </p>
 
-        <p>Both models were sampled at temperature 1.0 and graded by the same answer checker. Token limits and sample counts were not the same:</p>
+        <p>
+          MATH500 is a 500-problem subset of the MATH test set chosen by <a href="https://arxiv.org/abs/2305.20050">Lightman et al. (2023)</a>; AIME is the American Invitational Mathematics Examination, a high-school competition with whole-number answers from 0 to 999. Both models were sampled at temperature 1.0 and graded by the same answer checker, with different token limits and sample counts:
+        </p>
 
         <div class="table-wrap">
           <div class="table-label"><span class="id">Table 01</span>Evaluation settings</div>
@@ -499,7 +507,7 @@
                 <td class="num">4,096 / 16,384</td>
               </tr>
               <tr>
-                <td>AIME 2024 + 2025</td>
+                <td>AIME 2024 + 2025, 20-problem subset</td>
                 <td class="num">20</td>
                 <td class="num">16 / 16</td>
                 <td class="num">8,192 / 16,384</td>
@@ -508,14 +516,22 @@
           </table>
         </div>
 
+        <p>
+          Both subsets were taken in dataset order: the first 10 problems at each MATH500 level, and the first 10 of each AIME year, listed with answers in the <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/eval_aime_vibecheck/aime_panel_postmath_n16/summary.json">AIME summary file</a>.
+        </p>
+
+        <p>
+          The panel framing and its prompt wording are mine. Claude Opus 4.7 was my coding agent; the repository's commit history credits it as co-author of the token-efficiency analysis, README updates and public-release clean-up. The evaluation scripts graded the answers, and every result here comes from summary files the evaluation and analysis scripts saved; I rechecked the post against those files with Claude Opus 5.5 in September and October 2026.
+        </p>
+
         <h2 id="accuracy">Accuracy and completion length</h2>
 
         <p>
-          Token counts are completion tokens as the sampler recorded them. Tokens per correct sampled answer is the total over a set of samples divided by the number that were correct. Table 02 computes both accuracy and tokens on one set of matched samples: each thinking sample paired with the panel sample of the same index on the same problem. That gives 536 pairs on MATH500 level 5 (the panel's first 4 of 8 samples per problem) and 320 on AIME.
+          Token counts are completion tokens as the sampler recorded them. Table 02 pairs each thinking sample with the panel sample of the same index on the same problem: 536 pairs on MATH500 level 5 (the panel's first 4 of 8 samples per problem) and 320 on AIME.
         </p>
 
         <div class="table-wrap">
-          <div class="table-label"><span class="id">Table 02</span>Accuracy and completion tokens per correct answer, matched samples</div>
+          <div class="table-label"><span class="id">Table 02</span>Accuracy and completion tokens per correct sampled answer, matched samples</div>
           <table>
             <thead>
               <tr>
@@ -537,7 +553,7 @@
                 <td class="num">5.07×</td>
               </tr>
               <tr>
-                <td>AIME 2024 + 2025 (320)</td>
+                <td>AIME 2024 + 2025 subset (320)</td>
                 <td class="num">22.5%</td>
                 <td class="num">73.1%</td>
                 <td class="num">6,257</td>
@@ -549,10 +565,14 @@
         </div>
 
         <p>
-          The panel was right on 318 of 536 MATH500 pairs and the thinking model on 487; on AIME, 72 and 234 of 320. All-sample pass@1 differs only on MATH500 level 5, where it adds the panel's other 4 samples per problem: 58.4% against 90.9%, a 32.5-point gap. On AIME every sample is in the matched set.
+          On MATH500 level 5 the matched estimate (318 against 487 correct of 536, a 31.5-point gap) differs from the all-sample estimate, which adds the panel's other 4 samples per problem: 626 of 1,072 (58.4%) against 487 of 536 (90.9%), a 32.5-point gap and the k = 1 value in Table 04. On AIME every sample is matched (72 and 234 correct of 320). Those are 16 draws on each of 20 problems, and the MATH500 pairs come from 134 problems; repeated samples of a problem are not independent tests.
         </p>
 
-        <p>The length difference holds pair by pair, not just on average:</p>
+        <p>
+          Tokens per correct sampled answer divides the tokens a model spent by its number of correct samples. It is a retrospective evaluation measure, not a deployment cost: in use nobody knows which sample is right, and the panel's samples are wrong more often. A cost comparison needs a fixed answer-selection procedure, which I did not run.
+        </p>
+
+        <p>The length difference holds pair by pair, not only in the means (on AIME, panel 1,408 against thinking 11,328 tokens):</p>
 
         <div class="table-wrap">
           <div class="table-label"><span class="id">Table 03</span>Completion tokens, matched by problem and sample index</div>
@@ -593,7 +613,7 @@
                 <td class="num">534 / 536</td>
               </tr>
               <tr class="highlight">
-                <td>AIME 24+25, both correct</td>
+                <td>AIME subset, both correct</td>
                 <td class="num">68</td>
                 <td class="num">1,034</td>
                 <td class="num">5,510</td>
@@ -601,7 +621,7 @@
                 <td class="num">67 / 68</td>
               </tr>
               <tr>
-                <td>AIME 24+25, panel-only correct</td>
+                <td>AIME subset, panel-only correct</td>
                 <td class="num">4</td>
                 <td class="num">1,116</td>
                 <td class="num">16,384</td>
@@ -609,7 +629,7 @@
                 <td class="num">4 / 4</td>
               </tr>
               <tr>
-                <td>AIME 24+25, all pairs</td>
+                <td>AIME subset, all pairs</td>
                 <td class="num">320</td>
                 <td class="num">1,069</td>
                 <td class="num">11,977</td>
@@ -620,28 +640,24 @@
           </table>
         </div>
 
-        <p>
-          On AIME the mean completion was 1,408 tokens for the panel and 11,328 for the thinking model, about one-eighth as many.
-        </p>
-
         <div class="callout">
           <span class="callout-label">Token limits affect tokens per correct</span>
-          <p>Many thinking samples that ended wrong stopped at the 16,384-token limit: the median is 16,384 tokens for pairs where neither model was right, on both sets. Those cut-off samples add tokens and no correct answers, which raises the thinking model's tokens per correct. The both-correct medians (4,958 and 5,510) are well below the limit, so the 5.89× to 6.91× length ratios come from finished answers.</p>
+          <p>Many thinking samples that ended wrong stopped at the 16,384-token limit (their median token count where neither model was right is 16,384 on both sets). They add tokens but no correct answers, which raises the thinking model's tokens per correct. The both-correct medians (4,958 and 5,510) are well below the limit, so the 5.89× to 6.91× length ratios come from finished answers.</p>
         </div>
 
         <h2 id="passk">Pass@k</h2>
 
         <p>
-          Pass@k, the chance that at least one of k samples is correct, uses all samples. The panel is below the thinking model at every k I measured, and the gap narrows as k grows.
+          Pass@k, the chance that at least one of k samples is correct, uses all samples. The panel trails at every k I measured, and the gap narrows as k grows.
         </p>
 
             <figure class="chart">
-              <svg viewBox="0 0 960 460" role="img" aria-label="Matched pass@k, panel vs thinking on AIME 2024+2025 at n=16">
+              <svg viewBox="0 0 960 460" role="img" aria-label="Pass@k, panel vs thinking on the 20-problem AIME 2024+2025 subset, 16 samples each">
                 <rect x="0" y="0" width="960" height="460" fill="#ffffff" />
 
                 <text x="480" y="30" text-anchor="middle" fill="#3B3B39"
                       font-family="Inter, sans-serif" font-size="18" font-weight="400">
-                  Pass@k on AIME 2024 and 2025 (16 attempts on each of 20 problems)
+                  Pass@k on a 20-problem AIME 2024–2025 subset (16 attempts on each)
                 </text>
                 <text x="480" y="54" text-anchor="middle" fill="#969592"
                       font-family="Inter, Helvetica Neue, sans-serif" font-size="12" font-weight="400">
@@ -703,12 +719,12 @@
                 </text>
               </svg>
               <figcaption>
-                <strong>Figure 1.</strong> Pass@k on AIME 2024 and 2025: 16 samples per model on each of 20 problems, scored with the unbiased pass@k estimator from the Codex paper. The panel is below the thinking model at every k, and the gap narrows from 50.6 to 35.0 points.
+                <strong>Figure 1.</strong> Pass@k on the 20-problem AIME 2024–2025 subset, 16 samples per model per problem, scored with the Codex paper's unbiased estimator (<a href="https://arxiv.org/abs/2107.03374">Chen et al., 2021</a>).
               </figcaption>
             </figure>
 
         <div class="table-wrap">
-          <div class="table-label"><span class="id">Table 04</span>Pass@k gap (panel minus thinking) on three problem sets</div>
+          <div class="table-label"><span class="id">Table 04</span>Pass@k gap (panel minus thinking), all samples, on three problem sets</div>
           <table>
             <thead>
               <tr>
@@ -735,7 +751,7 @@
                 <td class="num">+14.7 points</td>
               </tr>
               <tr class="highlight">
-                <td>AIME 2024+2025</td>
+                <td>AIME 2024+2025 subset</td>
                 <td class="num">1 to 16</td>
                 <td class="num neg">−50.6 points</td>
                 <td class="num neg">−35.0 points</td>
@@ -746,45 +762,52 @@
         </div>
 
         <p>
-          A narrowing pass@k gap can arise under independent sampling without any difference in search strategy, so the narrowing here does not by itself identify a diversity mechanism. For example, on a problem the panel solves half the time and the thinking model 90% of the time, the gap is 0.40 at k = 1 and about 0.06 at k = 4 (0.9375 against 0.9999). On the 50-problem MATH500 set the thinking model also reaches the ceiling: its pass@3 is 1.0, so from k = 3 the gap can only shrink. On AIME, the panel solved 11 of the 20 problems at least once in 16 samples and the thinking model 18, and no problem was solved only by the panel.
+          A narrowing gap does not show that the panel explores more widely. Independent sampling alone narrows it as the stronger model nears its ceiling and the weaker one still has room to rise: if the panel solves a problem half the time and the thinking model 90% of the time, the gap is 0.40 at k = 1 and about 0.06 at k = 4 (0.9375 against 0.9999). On the 50-problem MATH500 slice the thinking model's pass@3 is already 1.0, so from k = 3 the gap can only shrink. On AIME the panel solved 11 of the 20 problems at least once in 16 samples, the thinking model 18, and none was solved only by the panel.
         </p>
 
         <h2 id="interpretation">Interpretation and limits</h2>
 
         <p>
-          On these problem sets, the panel adapter is less accurate per sample than Qwen's thinking model and uses fewer completion tokens per correct sampled answer. The comparison does not isolate the reasoning format. The panel is my base-model LoRA after 256 RL steps; the thinking model went through Qwen's full post-training. Either difference could produce the accuracy and length gaps. Separating them takes the matched-format control below.
+          The study describes how two models differ on these problems, not why. My adapter after 256 RL steps and Qwen's fully post-trained model differ in training history as well as format, and either could produce the accuracy and length gaps. This confound is the study's most consequential limitation; the matched-format control below would separate the two.
         </p>
 
         <p>Three things affect the estimates themselves:</p>
         <ul>
-          <li>Token limits and sample counts differ (Table 01). Truncated thinking samples raise its tokens per correct, and I did not count how many panel samples hit their lower limits.</li>
-          <li>The sets are small: 20 AIME problems, 134 MATH500 level-5 problems and a 50-problem MATH500 slice.</li>
+          <li>Token limits and sample counts differ (Table 01), and I did not count how many panel samples hit their lower limits.</li>
+          <li>The sets are small: a 20-problem AIME subset, 134 MATH500 level-5 problems and a 50-problem MATH500 slice.</li>
           <li>Each training stage is a single run with one seed.</li>
         </ul>
 
         <h2 id="next-experiment">Next experiment</h2>
         <ul>
-          <li>A matched-format control: a thinking-format arm trained from the same base with the same recipe (RL only, same reward, 128 GSM8K and 128 MATH steps, same LoRA rank), with both arms evaluated at the same token limit and sample count.</li>
+          <li>A matched-format control: a thinking-format arm trained from the same base with the same recipe, steps and LoRA rank, both arms evaluated at the same token limit and sample count. The repository has this arm's environments and launch scripts, but the arm was not completed.</li>
           <li>Count how many panel samples stop at their token limit, and extend pass@k beyond 16 samples.</li>
-          <li>Rerun the appendix's dispersion measure with persona names stripped, on fixed-length chunks of the full trace, and add a blinded annotation that counts distinct solution approaches per problem.</li>
+          <li>A cost comparison: pick one answer per problem by a fixed procedure, such as a majority vote over a set number of samples, and compare both models' accuracy and total tokens at matched limits.</li>
+          <li>Measure variety between samples on the full trace with persona names stripped, and count distinct solution approaches per problem by blinded annotation.</li>
         </ul>
+
+        <h2 id="follow-up">Follow-up: training on partially solved problems</h2>
+
+        <p>
+          The follow-up note, <a href="blog_multipersona_rl.html">Exploratory follow-up on training with partially solved math problems</a>, looked at where each model gets a learning signal under group-relative RL, whose correctness reward carries signal only on problems a model solves on some but not all attempts. Of 877 competition problems sampled 8 times per model, the panel partially solved 382 and the thinking model 209. One 100-step run trained the panel on its 354 partially solved problems outside a 100-problem held-out set, where its score rose from 14% to 29% by the last evaluation, at step 90. The held-out set was evaluated every 10 steps, the thinking-model run was not completed, and one run does not show that this selection beats another curriculum. Both the sampling and the run used the post-GSM8K adapter, not the released post-MATH one.
+        </p>
 
         <h2 id="reproducibility">Reproducibility</h2>
         <table class="repro">
           <tbody>
-            <tr><th scope="row">Model</th><td>Panel: <code>Qwen/Qwen3-30B-A3B-Base</code> + rank-32 LoRA after 128 GSM8K and 128 MATH RL steps (Tinker session <code>44722365…</code>), published as <a href="https://huggingface.co/scasella91/qwen3-30b-a3b-multipersona-debate-lora">scasella91/qwen3-30b-a3b-multipersona-debate-lora</a>. Thinking: <code>Qwen/Qwen3-30B-A3B</code> with <code>enable_thinking=True</code>.</td></tr>
+            <tr><th scope="row">Model</th><td>Panel: <code>Qwen/Qwen3-30B-A3B-Base</code> + rank-32 LoRA after 128 GSM8K and 128 MATH RL steps (Tinker session <code>44722365…</code>), published as <a href="https://huggingface.co/scasella91/qwen3-30b-a3b-multipersona-debate-lora">scasella91/qwen3-30b-a3b-multipersona-debate-lora</a>. This is the post-MATH checkpoint; the follow-up's post-GSM8K starting checkpoint is not published. Thinking: <code>Qwen/Qwen3-30B-A3B</code> with <code>enable_thinking=True</code>.</td></tr>
             <tr><th scope="row">Experiment</th><td>Training: <code>scripts/rl_multipersona_gsm8k.py</code>, <code>scripts/rl_multipersona_math.py</code> (seed 20260423). Evaluation: <code>scripts/eval_math500_vibecheck.py</code>, <code>scripts/eval_aime_vibecheck.py</code>, <code>scripts/eval_math500_thinking_ceiling.py</code>, <code>scripts/eval_aime_thinking_ceiling.py</code>. Analysis: <code>scripts/analyze_token_efficiency.py</code>, <code>scripts/analyze_diversity.py</code>, <code>scripts/pass_at_k_crossover.py</code>, <code>scripts/pass_at_k_aime.py</code>.</td></tr>
-            <tr><th scope="row">Data</th><td>MATH500: a 50-problem slice with 10 per level, and all 134 level-5 problems. AIME 2024 + 2025: 20 problems. Unit: one sampled completion. Tests are paired by problem, or by problem and sample index.</td></tr>
-            <tr><th scope="row">Results</th><td><a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/token_efficiency/summary.json">token_efficiency/summary.json</a> (Tables 02 and 03; matched accuracy from its correctness buckets), <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/pass_at_k_crossover/results.json">pass_at_k_crossover/results.json</a>, <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/pass_at_k_aime/results.json">pass_at_k_aime/results.json</a>, <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/diversity_analysis/summary.json">diversity_analysis/summary.json</a>, <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/diversity_analysis_aime/summary.json">diversity_analysis_aime/summary.json</a>, and per-run settings in <a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/eval_math500_vibecheck">eval_math500_vibecheck/</a> and <a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/eval_aime_vibecheck">eval_aime_vibecheck/</a>. Training logs are not published.</td></tr>
-            <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7">scasella/multi-model @ a1ebbfc</a></td></tr>
-            <tr><th scope="row">Status</th><td>Published 2026-04-24 · updated 2026-09-23 · Open issues: the repo README lists 80 GSM8K steps, while the training logs show 128.</td></tr>
+            <tr><th scope="row">Data</th><td>MATH500: <code>HuggingFaceH4/MATH-500</code>, test split. AIME subset: rows 0–9 of <code>HuggingFaceH4/aime_2024</code> and of <code>yentinglin/aime_2025</code>, listed in <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/eval_aime_vibecheck/aime_panel_postmath_n16/summary.json">aime_panel_postmath_n16/summary.json</a>. Unit: one sampled completion; repeated samples of a problem are not independent, and tests are paired by problem, or by problem and sample index.</td></tr>
+            <tr><th scope="row">Results</th><td><a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/token_efficiency/summary.json">token_efficiency/summary.json</a> (Tables 02 and 03; matched accuracy from its correctness buckets), <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/pass_at_k_crossover/results.json">pass_at_k_crossover/results.json</a>, <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/pass_at_k_aime/results.json">pass_at_k_aime/results.json</a>, <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/diversity_analysis/summary.json">diversity_analysis/summary.json</a>, <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/diversity_analysis_aime/summary.json">diversity_analysis_aime/summary.json</a>, and per-run settings in <a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/eval_math500_vibecheck">eval_math500_vibecheck/</a> and <a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/eval_aime_vibecheck">eval_aime_vibecheck/</a>, whose summary files include per-problem correct counts for recomputing pass@k. Without the per-sample completions, the matched token analysis needs new sampling to rerun. Illustrative transcripts from both models on 20 problems outside the evaluation: <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/reports/case_study/transcripts.json">case_study/transcripts.json</a>.</td></tr>
+            <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/multi-model/tree/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7">scasella/multi-model @ a1ebbfc</a>. The current <a href="https://github.com/scasella/multi-model/blob/8232c336e29ac4aac4ce5652dffd45fa459966d0/README.md">README</a> and <a href="https://github.com/scasella/multi-model/blob/8232c336e29ac4aac4ce5652dffd45fa459966d0/RECIPE.md">RECIPE.md</a> (8232c33) give the reproduction steps; only documentation changed after a1ebbfc. Training and evaluation sampling need the reader's own Tinker account. The <a href="https://github.com/scasella/multi-model/blob/a1ebbfce8a24aa6c3d16be45e0e26c33e5038ea7/data/multipersona_gsm8k/manifest.json">run manifest</a> records that the other training-stage checkpoints were deleted after publication; the released adapter loads with transformers and PEFT, without Tinker.</td></tr>
+            <tr><th scope="row">Status</th><td>Exploratory study. Published 2026-04-24 · updated 2026-10-23. Public: code, summary results and the adapter; per-sample completions and training logs are not. Historical note: the README at a1ebbfc gives the GSM8K stage as 80 steps, the launcher default; the run behind the adapter was resumed to 128, as the current README and model card state.</td></tr>
           </tbody>
         </table>
 
-        <h2 id="appendix-dispersion">Appendix: between-trace embedding dispersion</h2>
+        <h2 id="appendix-dispersion">Appendix: a lesson in measuring variety between samples</h2>
 
         <p>
-          This exploratory measure asks how different a model's samples on one problem are from each other. I embedded the reasoning text inside the debate or think tag with all-mpnet-base-v2, a standard sentence-embedding model, and averaged the cosine distance over all pairs of samples from the same model on each problem. A paired t-test over problems compares the two models.
+          I also tried to measure how different a model's samples on one problem are, and the attempt is more useful as a lesson about measurement than as a result. I averaged the cosine distance between all-mpnet-base-v2 sentence embeddings of the reasoning text (inside the debate or think tag) over all pairs of a model's samples on each problem, and compared models with a paired t-test over problems. The panel's samples came out farther apart, but the measure cannot say whether they differ in strategy.
         </p>
 
         <div class="table-wrap">
@@ -810,7 +833,7 @@
                 <td class="num">49</td>
               </tr>
               <tr>
-                <td>AIME 2024+2025 (20 problems, 16 samples each)</td>
+                <td>AIME 2024+2025 subset (20 problems, 16 samples each)</td>
                 <td class="num">0.119</td>
                 <td class="num">0.068</td>
                 <td class="num">+0.051 (+76%)</td>
@@ -821,21 +844,18 @@
           </table>
         </div>
 
-        <p>Three things limit what this number can mean:</p>
+        <p>Three confounds limit what this number can mean:</p>
         <ul>
-          <li><strong>It sees only the opening.</strong> The embedding model reads about 384 word pieces and drops the rest. Most thinking traces, and many panel traces, are longer.</li>
-          <li><strong>The persona names are included.</strong> Panel samples name their speakers differently ("Expert 1", "Persona 2", invented names). Part of the distance can come from names, phrasing and formatting rather than from different strategies.</li>
-          <li><strong>It compares samples within one model.</strong> It does not show whether the panel reaches ideas the thinking model does not.</li>
+          <li><strong>Truncation: it sees only the opening.</strong> The embedding model drops everything after about 384 word pieces, and most thinking traces and many panel traces are longer; runs on the first 2,000 and 8,000 characters give the same numbers, because the model cuts both off at the same point.</li>
+          <li><strong>Naming and formatting: the persona names are included.</strong> Panel samples name their speakers differently ("Expert 1", "Persona 2", invented names), so names, phrasing and formatting can add distance without any difference in strategy.</li>
+          <li><strong>Scope: it compares samples within one model.</strong> It does not show whether the panel reaches ideas the thinking model does not.</li>
         </ul>
 
-        <p>
-          The MATH training stage lowered the panel's dispersion on the same 50 problems from 0.174 to 0.095 (t = −7.95, df = 49). At the clustering threshold I used (DBSCAN, eps 0.25), almost every problem's samples formed a single cluster for both models.
-        </p>
 
 
             <!-- PANES:NEXT:START -->
     <nav class="post-next" aria-label="More research">
-      <a href="blog_qwen_lookup.html"><span>next →</span><span>Agents traced a three-stage lookup pathway in Qwen3, and six heads found in the small model held up in the larger one</span></a>
+      <a href="blog_qwen_lookup.html"><span>next →</span><span>Agents traced a lookup pathway in Qwen3</span></a>
       <a class="post-next__all" href="research.html">← all research</a>
     </nav>
   <!-- PANES:NEXT:END -->

@@ -79,27 +79,9 @@
             "hasPart": [
               {
                 "@type": "BlogPosting",
-                "headline": "Agents traced a three-stage lookup pathway in Qwen3, and six heads found in the small model held up in the larger one",
-                "url": "https://casella.dev/blog_qwen_lookup.html",
-                "datePublished": "2026-10-23",
-                "author": {
-                  "@id": "https://casella.dev/#person"
-                }
-              },
-              {
-                "@type": "BlogPosting",
-                "headline": "A probe on Llama’s hidden states beats its stated confidence, and the signal is spread across the network",
-                "url": "https://casella.dev/blog_fact_probe.html",
-                "datePublished": "2026-10-18",
-                "author": {
-                  "@id": "https://casella.dev/#person"
-                }
-              },
-              {
-                "@type": "BlogPosting",
-                "headline": "Verified once, reused three times: agents carried proofs of shipped OpenSSL code into new callers",
-                "url": "https://casella.dev/blog_reusable_binary_assurance.html",
-                "datePublished": "2026-10-05",
+                "headline": "25 bugs in free-threaded CPython, found by agents",
+                "url": "https://casella.dev/blog_cpython_ft.html",
+                "datePublished": "2026-09-25",
                 "author": {
                   "@id": "https://casella.dev/#person"
                 }
@@ -124,36 +106,36 @@
               },
               {
                 "@type": "BlogPosting",
-                "headline": "25 bugs in free-threaded CPython, found by agents",
-                "url": "https://casella.dev/blog_cpython_ft.html",
-                "datePublished": "2026-09-25",
+                "headline": "Agents traced a lookup pathway in Qwen3",
+                "url": "https://casella.dev/blog_qwen_lookup.html",
+                "datePublished": "2026-10-23",
                 "author": {
                   "@id": "https://casella.dev/#person"
                 }
               },
               {
                 "@type": "BlogPosting",
-                "headline": "I used formal verification and agents to make an algorithm 105× faster and prove it behaves the same",
-                "url": "https://casella.dev/blog_proof_optimizer.html",
-                "datePublished": "2026-09-24",
+                "headline": "What Llama’s internal signals reveal about factual accuracy",
+                "url": "https://casella.dev/blog_fact_probe.html",
+                "datePublished": "2026-10-18",
                 "author": {
                   "@id": "https://casella.dev/#person"
                 }
               },
               {
                 "@type": "BlogPosting",
-                "headline": "A 50-step RL update reduces categorical sampling bias",
-                "url": "https://casella.dev/blog_diversity.html",
-                "datePublished": "2026-05-26",
-                "author": {
-                  "@id": "https://casella.dev/#person"
-                }
-              },
-              {
-                "@type": "BlogPosting",
-                "headline": "Hidden-state probes outperform self-reported confidence",
+                "headline": "Testing internal signals for factual accuracy in legal answers and biographies",
                 "url": "https://casella.dev/blog_interp.html",
                 "datePublished": "2026-04-25",
+                "author": {
+                  "@id": "https://casella.dev/#person"
+                }
+              },
+              {
+                "@type": "BlogPosting",
+                "headline": "Agents reused proofs of OpenSSL routines across three callers",
+                "url": "https://casella.dev/blog_reusable_binary_assurance.html",
+                "datePublished": "2026-10-05",
                 "author": {
                   "@id": "https://casella.dev/#person"
                 }
@@ -167,7 +149,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap">
-    <link rel="stylesheet" href="panes.css?v=bbd7cc12">
+    <link rel="stylesheet" href="panes.css?v=87bdb6c4">
     <script src="ascii.js?v=6f1f421a" defer></script>
   </head>
   <body class="pn-body">
@@ -220,66 +202,40 @@
           <h2 class="label" id="research"><span>selected research</span><a class="label__aside" href="research.html">all 12 →</a></h2>
           <ul class="posts">
             <li>
-              <a href="blog_qwen_lookup.html">
-                <span class="posts__kicker">2026-10-23 — interp / patching</span>
-                <span class="posts__title">Agents traced a three-stage lookup pathway in Qwen3, and six heads found in the small model held up in the larger one</span>
-                <span class="posts__dek">Agents traced a twelve-head lookup pathway in Qwen3-0.6B. Six of its heads, fixed before testing, had the predicted effect in Qwen3-1.7B on 92.2–100% of held-out prompts, and that transfer passed every registered gate.</span>
-              </a>
-            </li>
-            <li>
-              <a href="blog_fact_probe.html">
-                <span class="posts__kicker">2026-10-18 — interp / probes</span>
-                <span class="posts__title">A probe on Llama’s hidden states beats its stated confidence, and the signal is spread across the network</span>
-                <span class="posts__dek">On 742 held-out FActScore claims, a layer-19 probe reaches AUROC 0.802 against 0.541 for Llama’s stated confidence. A preregistered decomposition puts 79% of its residualized signal in attention heads; the neuron part is spread over thousands of neurons.</span>
-              </a>
-            </li>
-            <li>
-              <a href="blog_reusable_binary_assurance.html">
-                <span class="posts__kicker">2026-10-05 — agents / formal verification</span>
-                <span class="posts__title">Verified once, reused three times: agents carried proofs of shipped OpenSSL code into new callers</span>
-                <span class="posts__dek">Machine-checked contracts for two unchanged Debian OpenSSL routines verified three experimental callers through their actual linkage. The held-out caller missed its three-hour cap, then completed in a recorded successor.</span>
+              <a href="blog_cpython_ft.html">
+                <span class="posts__kicker">2026-09-25 — agents / formal verification</span>
+                <span class="posts__title">25 bugs in free-threaded CPython, found by agents</span>
+                <span class="posts__dek">Agents confirmed 25 bugs in CPython’s free-threaded build, 18 with no earlier report found in the tracker search. Of five reports I filed upstream, two now have fixes merged into CPython main. TLAPS and Lean proofs checked a locking model; replays of real runs showed five places CPython departs from it.</span>
               </a>
             </li>
             <li>
               <a href="blog_certified_narrowing.html">
                 <span class="posts__kicker">2026-09-27 — agents / formal verification</span>
                 <span class="posts__title">Agents turned a one-kernel Lean proof into a checker that certified 25 PyTorch kernels</span>
-                <span class="posts__dek">One Lean theorem and a small checker certified 32-bit size arguments for 25 torch.compile kernels, including 10 of 24 held out, with each proof bound to the live compilation. Two of nine tuned kernels got faster.</span>
+                <span class="posts__dek">One Lean theorem and a small checker certified 32-bit size arguments for 25 torch.compile kernels: 15 of 35 development cases and 10 of 24 held out, each proof bound to the live compilation’s guards. Two of nine tuned kernels got faster.</span>
+              </a>
+              <p class="posts__rel">first experiment, one kernel: <a href="blog_pytorch_narrowing.html">A Lean proof let agents cut a compiled PyTorch workload’s runtime by 26%</a></p>
+            </li>
+            <li>
+              <a href="blog_qwen_lookup.html">
+                <span class="posts__kicker">2026-10-23 — interp / patching</span>
+                <span class="posts__title">Agents traced a lookup pathway in Qwen3</span>
+                <span class="posts__dek">Agents traced how Qwen3 looks up the value for a named item: three stages, each carried by a few attention heads. Six head locations found in Qwen3-0.6B were fixed in advance and tested in Qwen3-1.7B, where a separate search had found the other two stages. Interventions there moved the answer preference in the predicted direction on 92.2–100% of held-out prompts, and the transfer test passed every registered gate.</span>
               </a>
             </li>
             <li>
-              <a href="blog_pytorch_narrowing.html">
-                <span class="posts__kicker">2026-09-26 — agents / formal verification</span>
-                <span class="posts__title">A Lean proof let agents cut a compiled PyTorch workload’s runtime by 26%</span>
-                <span class="posts__dek">Agents declared a torch.compile kernel’s size arguments 32-bit, proved in Lean when that is exact, and cut a changing-shape workload’s time by 26% on one L4. The opt-in patch is an open PyTorch PR.</span>
+              <a href="blog_fact_probe.html">
+                <span class="posts__kicker">2026-10-18 — interp / probes</span>
+                <span class="posts__title">What Llama’s internal signals reveal about factual accuracy</span>
+                <span class="posts__dek">On 742 held-out FActScore claims, a layer-19 probe on Llama 3.1 8B reaches AUROC 0.802, against 0.735 for P(True) and 0.740 for subject popularity, though no clear advantage over popularity is detected once whole biographies are resampled. Within biographies it keeps a signal after position controls and, in an exploratory test, adds to P(True). A preregistered decomposition attributes most of its direct signal to attention heads.</span>
               </a>
+              <p class="posts__rel">initial study: <a href="blog_interp.html">Testing internal signals for factual accuracy in legal answers and biographies</a></p>
             </li>
             <li>
-              <a href="blog_cpython_ft.html">
-                <span class="posts__kicker">2026-09-25 — agents / formal verification</span>
-                <span class="posts__title">25 bugs in free-threaded CPython, found by agents</span>
-                <span class="posts__dek">Agents confirmed 25 bugs in the no-GIL build, with no earlier report found for 18. TLAPS and Lean proofs of the locking model held; replays of real runs showed five places CPython leaves it.</span>
-              </a>
-            </li>
-            <li>
-              <a href="blog_proof_optimizer.html">
-                <span class="posts__kicker">2026-09-24 — agents / formal verification</span>
-                <span class="posts__title">I used formal verification and agents to make an algorithm 105× faster and prove it behaves the same</span>
-                <span class="posts__dek">Claude Opus 5.5 rewrote four deliberately slow Dafny routines under a frozen spec it could not edit. Seven rewrites verified, and one ran 105× faster on a workload it never saw.</span>
-              </a>
-            </li>
-            <li>
-              <a href="blog_diversity.html">
-                <span class="posts__kicker">2026-05-26 — rl / sampling bias</span>
-                <span class="posts__title">A 50-step RL update reduces categorical sampling bias</span>
-                <span class="posts__dek">Fifty RL steps on one random-integer task moved nine untrained pick-one tasks toward uniform on Qwen3-30B-A3B-Instruct.</span>
-              </a>
-            </li>
-            <li>
-              <a href="blog_interp.html">
-                <span class="posts__kicker">2026-04-25 — interp / probes</span>
-                <span class="posts__title">Hidden-state probes outperform self-reported confidence</span>
-                <span class="posts__dek">A linear probe on Llama 3.1 8B’s hidden states ranks claim correctness better than the model’s stated confidence.</span>
+              <a href="blog_reusable_binary_assurance.html">
+                <span class="posts__kicker">2026-10-05 — agents / formal verification</span>
+                <span class="posts__title">Agents reused proofs of OpenSSL routines across three callers</span>
+                <span class="posts__dek">Agents verified three experimental x86-64 callers in HOL Light by applying machine-checked contracts for two unchanged Debian OpenSSL routines through their actual linkage, instead of re-deriving the routines in each caller’s proof. The held-out caller missed its three-hour cap, then completed in a separately recorded successor.</span>
               </a>
             </li>
           </ul>
@@ -363,7 +319,7 @@
           <li class="feat">
             <p class="feat__name">Panel-reasoning adapter</p>
             <div class="feat__body">
-              <p class="feat__desc">The Qwen adapter used in the accuracy and completion-length comparison.</p>
+              <p class="feat__desc">The post-MATH Qwen adapter from the exploratory accuracy and completion-length comparison.</p>
               <p class="feat__meta">LoRA adapter (rank 32) on <code>Qwen/Qwen3-30B-A3B-Base</code> · <span class="feat__id">scasella91/qwen3-30b-a3b-multipersona-debate-lora</span></p>
               <p class="feat__actions"><a href="blog_multipersona.html">read the experiment</a><span aria-hidden="true"> · </span><a href="https://huggingface.co/scasella91/qwen3-30b-a3b-multipersona-debate-lora">model card ↗</a></p>
             </div>

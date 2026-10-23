@@ -4,21 +4,21 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tracing an in-context lookup pathway in Qwen3-0.6B and Qwen3-1.7B | Stephen Casella</title>
-  <meta name="description" content="Agents running gpt-6-luna traced a three-stage, twelve-head lookup pathway in Qwen3-0.6B with activation patching. Six heads fixed from the small model had the predicted effect in Qwen3-1.7B, without a new search." />
+  <meta name="description" content="Agents running gpt-6-luna traced a three-stage, twelve-head lookup pathway in Qwen3 with activation patching. Six heads fixed from Qwen3-0.6B, joined to a relay a separate search had found in Qwen3-1.7B, moved its answer preference in the predicted direction on 92.2–100% of held-out prompts." />
   <meta name="author" content="Stephen Casella" />
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#080c0f" />
   <link rel="canonical" href="https://casella.dev/blog_qwen_lookup.html" />
   <meta property="og:site_name" content="Stephen Casella" />
-  <meta property="og:title" content="Agents traced a three-stage lookup pathway in Qwen3, and six heads found in the small model held up in the larger one" />
-  <meta property="og:description" content="A three-stage lookup pathway in Qwen3 gave the agents a concrete prediction to test in a larger model. Six heads found in Qwen3-0.6B, fixed before testing, had the predicted effect in Qwen3-1.7B." />
+  <meta property="og:title" content="Agents traced a lookup pathway in Qwen3" />
+  <meta property="og:description" content="Six attention heads found in Qwen3-0.6B were fixed before testing in Qwen3-1.7B, where a separate search had located the rest of the lookup pathway. Interventions there moved the answer preference in the predicted direction on 92.2–100% of held-out prompts." />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://casella.dev/blog_qwen_lookup.html" />
   <meta property="og:image" content="https://casella.dev/assets/og/blog_qwen_lookup.png" />
   <meta property="og:image:secure_url" content="https://casella.dev/assets/og/blog_qwen_lookup.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Share card for the write-up: Agents traced a three-stage lookup pathway in Qwen3, and six heads found in the small model held up in the larger one." />
+  <meta property="og:image:alt" content="Share card for the write-up: Agents traced a lookup pathway in Qwen3." />
   <meta property="article:author" content="Stephen Casella" />
   <meta property="article:published_time" content="2026-10-23" />
   <meta property="article:modified_time" content="2026-10-23" />
@@ -28,8 +28,8 @@
   <meta property="article:tag" content="attention heads" />
   <meta property="article:tag" content="Qwen3" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Agents traced a three-stage lookup pathway in Qwen3, and six heads found in the small model held up in the larger one" />
-  <meta name="twitter:description" content="A three-stage lookup pathway in Qwen3 gave the agents a concrete prediction to test in a larger model. Six heads found in Qwen3-0.6B, fixed before testing, had the predicted effect in Qwen3-1.7B." />
+  <meta name="twitter:title" content="Agents traced a lookup pathway in Qwen3" />
+  <meta name="twitter:description" content="Six attention heads found in Qwen3-0.6B were fixed before testing in Qwen3-1.7B, where a separate search had located the rest of the lookup pathway. Interventions there moved the answer preference in the predicted direction on 92.2–100% of held-out prompts." />
   <meta name="twitter:image" content="https://casella.dev/assets/og/blog_qwen_lookup.png" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
@@ -44,8 +44,8 @@
     {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
-      "headline": "Agents traced a three-stage lookup pathway in Qwen3, and six heads found in the small model held up in the larger one",
-      "description": "Agents running gpt-6-luna traced a three-stage, twelve-head lookup pathway in Qwen3-0.6B with activation patching. Six heads fixed from the small model had the predicted effect in Qwen3-1.7B, without a new search.",
+      "headline": "Agents traced a lookup pathway in Qwen3",
+      "description": "Agents running gpt-6-luna traced a three-stage, twelve-head lookup pathway in Qwen3 with activation patching. Six heads fixed from Qwen3-0.6B, joined to a relay a separate search had found in Qwen3-1.7B, moved its answer preference in the predicted direction on 92.2–100% of held-out prompts.",
       "url": "https://casella.dev/blog_qwen_lookup.html",
       "mainEntityOfPage": "https://casella.dev/blog_qwen_lookup.html",
       "image": "https://casella.dev/assets/og/blog_qwen_lookup.png",
@@ -381,7 +381,7 @@
   </style>
     <!-- PANES:HEAD:START -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
-  <link rel="stylesheet" href="panes.css?v=bbd7cc12" />
+  <link rel="stylesheet" href="panes.css?v=87bdb6c4" />
   <script src="ascii.js?v=6f1f421a" defer></script>
   <!-- PANES:HEAD:END -->
 </head>
@@ -433,65 +433,64 @@
   <!-- PANES:BAR:END -->
   <main class="post-main">
   <article class="post">
-<h1>Agents traced a three-stage lookup pathway in Qwen3, and six heads found in the small model held up in the larger one</h1>
+<h1>Agents traced a lookup pathway in Qwen3</h1>
 <!-- PANES:META:START -->
-    <p class="post-byline">[ <time datetime="2026-10-23">2026-10-23</time> ] // gpt-6-luna · Qwen3-0.6B · Qwen3-1.7B // 13 MIN READ</p>
+    <p class="post-byline">[ <time datetime="2026-10-23">2026-10-23</time> ] // gpt-6-luna · Qwen3-0.6B · Qwen3-1.7B // 15 MIN READ</p>
   <!-- PANES:META:END -->
-        <p class="subtitle">I wanted to know what happens inside a language model when it reads a few facts and answers a question about them. If Rowan is red and Lumen is blue, how does the model get from “What color is Rowan?” to “red”?</p>
+        <p class="subtitle">Tell a language model that Rowan is red and Lumen is blue, then ask what color Rowan is. To answer, it has to look up the value that belongs to the named item. I wanted to see how a model does that, and whether an explanation found in one model could predict what happens inside a larger one.</p>
         <div class="paper-links">
           <a href="https://github.com/scasella/qwen3-auto-interp" class="btn-pill">GitHub repo</a>
+          <a href="explorer/straitjacket/" class="btn-pill">Open the interactive explorer</a>
         </div>
         <div class="tldr">
           <span class="tldr-label">TL;DR</span>
-          <p>I used AI agents and a controlled experiment harness to trace that process in two sizes of Qwen3. The agents, Codex CLI calls running gpt-6-luna, proposed and reviewed explanations; frozen, executable tests decided which ones survived. The experiments identified a three-stage pathway: information about which record answers the question travels through the model, reaches components that choose where to read, and directs them to copy the corresponding value.</p>
-          <p>Then the investigation made a prediction. Six component locations found in the smaller model were carried into the larger one, without a new search for those locations. Interventions there produced the predicted effects, and that study passed every registered gate. That is the result I find most encouraging. An explanation of one model became useful enough to guide an experiment in another.</p>
-          <p>Not everything passed. The smaller model’s own three-stage study met all 63 of its mechanism criteria but failed its overall verdict, because the unmodified model answered 101 of 128 test prompts correctly against a required 103. A repair built on the findings also failed its preregistered test. Both are reported below. The scope is short, controlled lookup prompts in two related models.</p>
+          <p>Agents traced the lookup in two sizes of Qwen3 as a sequence of three stages, each carried by a small group of attention heads, the components that move information between positions in the text. Six heads help identify which record the question asks about, three relay that information to the position where the answer is produced, and three select the matching record as the source and copy its value into the answer.</p>
+          <p>The strongest result is a prediction that held. The six identifying heads were found in Qwen3-0.6B, and their locations were fixed before they were tested in Qwen3-1.7B, where a separate search had already located the other two stages. Interventions starting at those six locations moved the larger model’s preference between the two candidate answers in the predicted direction on 92.2% to 100% of held-out prompts, and the study passed every criterion registered before it ran. An explanation of one model was specific enough to guide an experiment in another.</p>
+          <p>Not everything passed. In the smaller model, the same three-stage route met all 63 of its mechanism criteria, but that study failed its overall verdict because the unmodified model answered 101 of 128 test prompts correctly against a required 103. On held-out four-record prompts, a repair built on the findings fixed six errors and introduced one, and it still failed its registered test. Agents proposed and reviewed explanations under my direction, and executable tests fixed before each run decided what survived. The scope is short, synthetic lookup prompts in two related models.</p>
         </div>
         <div class="stat-row">
           <div class="stat">
             <span class="k">Heads in the pathway</span>
             <div class="v">12</div>
-            <div class="s">Three groups of attention heads in Qwen3-0.6B</div>
+            <div class="s">Three groups of attention heads; the 1.7B route, with 18:7 in place of 15:4, passed every gate</div>
           </div>
           <div class="stat">
             <span class="k">Carried to 1.7B</span>
             <div class="v">6 heads</div>
-            <div class="s">Fixed before any Qwen3-1.7B test, with no new search</div>
+            <div class="s">Locations fixed from Qwen3-0.6B before their Qwen3-1.7B test</div>
           </div>
           <div class="stat">
             <span class="k">Predicted direction</span>
             <div class="v">92.2–100%</div>
-            <div class="s">Of held-out Qwen3-1.7B prompts, across comparisons and datasets</div>
+            <div class="s">Share of held-out 1.7B prompts moved toward the predicted answer; not accuracy</div>
           </div>
           <div class="stat">
             <span class="k">Readout right, model wrong</span>
             <div class="v">13 / 13</div>
-            <div class="s">Model errors where one retrieval head still favored the correct value</div>
+            <div class="s">Model errors where one copying head still favored the correct value (descriptive)</div>
           </div>
         </div>
         <div class="callout">
           <span class="callout-label">Status</span>
-          <p>The transfer to Qwen3-1.7B passed all of its registered gates, as did the six-head route in the smaller model and the independent route search in the larger one. The smaller model’s three-stage study and the repair failed their overall verdicts. The source code is public under Apache-2.0 in <a href="https://github.com/scasella/qwen3-auto-interp">scasella/qwen3-auto-interp</a>, with a <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/RESULTS_INDEX.md">results ledger</a> for every study. The frozen reports, prompt sets and saved arrays are private, so a public clone cannot rerun the audits. No one outside the project has checked the results.</p>
+          <p>The transfer to Qwen3-1.7B passed all of its registered gates, as did the confirmation of the last two stages in the smaller model and the separate search for them in the larger one. The smaller model’s three-stage study and the repair failed their overall verdicts. The source code is public under Apache-2.0 in <a href="https://github.com/scasella/qwen3-auto-interp">scasella/qwen3-auto-interp</a>, with a <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/RESULTS_INDEX.md">results ledger</a> for every study. The frozen reports, prompt sets and saved arrays are private, so a public clone cannot rerun the audits.</p>
         </div>
 
         <h2 id="task">A small task with a revealing change</h2>
-        <p>The task is deliberately simple. Here is an illustrative example:</p>
+        <p>The task is deliberately simple:</p>
         <blockquote><p>Rowan is red.<br />Lumen is blue.<br />What color is Rowan?</p></blockquote>
         <p>Now swap the names in the facts:</p>
         <blockquote><p>Lumen is red.<br />Rowan is blue.<br />What color is Rowan?</p></blockquote>
-        <p>The question is identical. The colors appear in the same order. Only the relationship between names and colors has changed, and the answer must change with it.</p>
-        <p>This gives us a useful way to investigate the model. A signal that only carries the name “Rowan” would be the same in both cases. A signal that incorporates which record belongs to Rowan must reflect the changed context.</p>
-        <p>To test that distinction, the harness runs the model on both versions, then copies selected internal signals from one run into the other. Researchers call this <em>activation patching</em>. The practical question is straightforward: when we transplant this particular piece of the computation, does the model start favoring the answer associated with the other version?</p>
-        <p>One especially informative experiment changed the signal used by later retrieval components to choose where to read, while keeping their other lookup inputs fixed. Their attention shifted toward the record selected by the transplanted signal: in the six-head study, the three heads’ average attention to that record moved by a median of 14 to 21 percentage points, depending on the comparison. Their contribution to the answer shifted with it.</p>
-        <p>Even though the question’s wording had stayed the same, that internal signal had changed in a way that affected which record was selected. It was carrying information about the relationship between the question and the facts.</p>
+        <p>The question is identical. The colors appear in the same order. Only the relationship between names and colors has changed, and the answer must change with it. (Rowan and Lumen are illustrative. From study 4 on, the keys were other single-token words, drawn fresh for each study without reference to the model’s answers.)</p>
+        <p>A signal that only carries the name “Rowan” would be the same in both cases. A signal that incorporates which record belongs to Rowan must reflect the changed context. To tell them apart, the experiment runs the model on both versions, then transplants selected internal signals from one run into the other and measures what changes. This intervention is called <em>activation patching</em>.</p>
+        <p>The outcome measured throughout is the model’s <em>answer preference</em>: how strongly it favors one of the two candidate answers, such as red over blue, as the next word. It is measured in logits, the raw scores the model assigns to possible next words. Free-form generation was not tested. A second kind of swap asks about the other name with the facts unchanged; only the name swap above rules out simply copying the name from the question.</p>
+        <p>One especially informative experiment changed the signal the copying heads use to choose where to read, while keeping their other lookup inputs fixed. In the confirmation of the last two stages, the three copying heads’ average attention shifted toward the record selected by the transplanted signal by a median of 14 to 21 percentage points, depending on the comparison, and their contribution to the answer moved with it. In the name swap, where the question stays the same, that signal still changed in a way that affected which record was selected, so it was carrying information about the relationship between the question and the facts.</p>
 
-        <h2 id="three-stages">Following the answer through three stages</h2>
-        <p>Inside a transformer, <em>attention heads</em> are small components that read information from other positions in the text and contribute to the model’s next computation. The investigation found twelve heads, arranged in three groups, that participated in a linked lookup pathway.</p>
-        <p>The three groups had different roles:</p>
+        <h2 id="three-stages">Three stages: identify, relay, select</h2>
+        <p>Each of these models has 448 attention heads, 16 in each of 28 layers. The investigation found twelve that carry a linked lookup pathway, in three groups with different roles:</p>
         <ol>
-          <li><strong>Connect the question to the facts.</strong> Six earlier heads, operating around the question and the text following it, influenced a signal that depended on which record answered the question.</li>
-          <li><strong>Carry that information to the answer position.</strong> Three intermediate heads read from the question region and brought the relevant information to the position where the model was about to produce its answer.</li>
-          <li><strong>Select the source and copy its value.</strong> Three later heads used the resulting signal to direct attention toward a value in the facts and contribute that value to the answer.</li>
+          <li><strong>Identify the requested record.</strong> Six heads in layers 11 to 14, working over the question and the text that follows it, influence a signal that depends on which record answers the question.</li>
+          <li><strong>Relay it to the answer position.</strong> Three heads in layers 15 to 18 read that information from the question region and carry it to the position where the model is about to produce its answer.</li>
+          <li><strong>Select the source and copy its value.</strong> Three later heads, in layers 19 to 22, use the relayed signal to direct their attention to one record’s value and copy that value into the answer.</li>
         </ol>
         <div class="table-wrap">
           <div class="table-label"><span class="id">Table 01</span>The twelve heads, as layer:head (zero-based)</div>
@@ -500,92 +499,102 @@
               <tr><th>Stage</th><th>Qwen3-0.6B</th><th>Qwen3-1.7B</th></tr>
             </thead>
             <tbody>
-              <tr><td>1. Connect the question to the facts</td><td>13:6, 12:6, 13:14, 14:12, 11:9, 13:15</td><td>The same six, fixed from 0.6B</td></tr>
-              <tr><td>2. Carry it to the answer position</td><td>15:4, 16:4, 17:1</td><td>16:4, 17:1, 18:7 (found by search)</td></tr>
+              <tr><td>1. Identify the requested record</td><td>13:6, 12:6, 13:14, 14:12, 11:9, 13:15</td><td>The same six, fixed from 0.6B</td></tr>
+              <tr><td>2. Relay it to the answer position</td><td>15:4, 16:4, 17:1</td><td>16:4, 17:1, 18:7 (found by search)</td></tr>
               <tr><td>3. Select the source and copy its value</td><td>19:5, 21:13, 22:9</td><td>19:5, 21:13, 22:9 (found by search)</td></tr>
             </tbody>
           </table>
         </div>
-        <p>The experiments followed these connections by allowing changes to travel through the proposed route while holding other inputs fixed. That helped distinguish a direct effect from an effect that passed through the particular intermediate components being tested.</p>
-        <p>In the smaller model, the full three-stage intervention moved the model’s answer preference in the predicted direction on all <strong>192 held-out prompts</strong>, and on the 64 prompts used to select the heads. Here, “predicted direction” means moving its preference toward the answer associated with the transplanted signal. That study passed all 63 of its mechanism criteria but failed its overall verdict. Its registered prerequisite was that the unmodified model answer at least 103 of the 128 main held-out prompts correctly, and it answered 101. The mechanism results stand as measured, but the smaller model’s three-stage pathway did not receive a full confirmation.</p>
-        <p>Separate tests also isolated the copying step. Changing the internal value information at the color positions had a strong effect; making the corresponding change at other positions had very little effect. In the six-head study, the model’s preference between the two answers moved by a median of 4.14 logits at the color positions, against a median absolute 0.02 elsewhere. Several of the findings carried over to fresh color words without refitting the selected components.</p>
-        <p>An address is a useful analogy for the routing signal: it helps determine where to read before the value is copied. Its exact internal representation remains an open question. The causal experiments establish its role in selecting a source; they do not decode a literal address stored somewhere in the network.</p>
+        <p>The experiments let a change travel only through the proposed route while holding other inputs fixed, which separates an effect through the tested components from a direct effect or one that bypasses them.</p>
+        <p>In the smaller model, the full three-stage intervention moved the answer preference in the predicted direction on all <strong>192 held-out prompts</strong> (128 in the main set and 64 with new answer colors), and on the 64 calibration prompts used to select the heads. “Predicted direction” means the preference moved toward the answer associated with the transplanted signal. That study passed all 63 of its mechanism criteria but failed its overall verdict: its registered prerequisite was that the unmodified model answer at least 103 of the 128 main held-out prompts correctly, and it answered 101. The mechanism results stand as measured, but the pathway was not fully confirmed in the smaller model.</p>
+        <p>Separate tests isolated the copying step. In the confirmation of the last two stages, changing the value information at the color positions moved the answer preference by a median of 4.14 logits, against a median absolute 0.02 when the same change was made elsewhere. That confirmation also passed on fresh color words, green and yellow, without reselecting any heads.</p>
+        <p>An address is a useful analogy for the routing signal: it helps determine where to read before the value is copied. That is a functional interpretation. The causal experiments establish the signal’s role in selecting a source; they do not decode a literal address stored in the network.</p>
 
         <h2 id="transfer">The smaller model supplied a prediction for the larger one</h2>
-        <p>The two models were Qwen3-0.6B and Qwen3-1.7B: roughly 600 million and 1.7 billion parameters, respectively. These are the numerical settings learned during training. They are related models with matching layer and attention-head layouts (28 layers of 16 query heads each), which makes component locations directly comparable.</p>
-        <p>An independent search in the larger model recovered the same three final retrieval-head locations found in the smaller one. Two of the three intermediate locations also matched.</p>
-        <p>The stronger test concerned the six earlier heads around the question. After finding them in the smaller model, the investigation froze those six locations and tested them in the larger model without searching for replacements.</p>
-        <p>The rest of the pathway had already been located in the larger model. The prediction was specific: would these six transferred locations connect into it in the expected way?</p>
-        <p>They did. Across the tested comparisons and datasets, interventions through the proposed route had the predicted direction on <strong>92.2% to 100% of held-out prompts</strong>. The size of the effects varied, but the earlier discovery successfully identified a group of components that played the expected causal role in the larger model. The study passed every registered gate, and the unmodified larger model answered 127 of the 128 main held-out prompts correctly.</p>
-        <p>One caution about what transferred. The relay the six heads fed into had been found by searching the larger model, and one of its three heads differs from the smaller model’s. So this is six locations carried into a partly rediscovered pathway, not all twelve carried over unchanged.</p>
-        <p>This is a practical form of reusable understanding. A search in one model supplied concrete targets for an experiment in another, removing the need to repeat that particular search.</p>
-        <p>That connects to a question from my <a href="blog_reusable_binary_assurance.html">recent work on reusing proofs of OpenSSL code</a>: can a result become something the next investigation starts with? Here, the reusable object was a tested account of part of a model’s computation.</p>
+        <p>The two models were Qwen3-0.6B and Qwen3-1.7B: roughly 600 million and 1.7 billion parameters, the numerical settings learned during training. Their head layouts match, so a head’s location in one model names the same location in the other.</p>
+        <p>In Qwen3-1.7B, a separate search on calibration prompts first located the last two stages. It recovered the same three copying heads as the smaller model, and two of its three relay heads matched; the third was 18:7 in place of 15:4. That study passed all 108 of its registered criteria, 36 of them on the calibration prompts used for the search.</p>
+        <p>Then came the prediction. The six identifying heads had been found in the smaller model, and their locations were fixed before the transfer test in the larger model, with no new search for them. The study reused the smaller model’s 63 mechanism criteria unchanged and asked whether these six locations would feed the larger model’s relay in the expected way.</p>
+        <p>They did. Interventions starting at the six heads moved the larger model’s answer preference in the predicted direction on <strong>92.2% to 100% of held-out prompts</strong>, across both kinds of swap and both held-out prompt sets. The study passed every registered gate, and the unmodified larger model answered 127 of the 128 main held-out prompts correctly.</p>
+        <p>The 92.2–100% figure counts direction only: it is not answer accuracy, the effect sizes varied from the smaller model’s, and it does not show that the pathway is a complete account of lookup. A separate, ungated check that carried all twelve original locations unchanged into the larger model fell short of the main threshold on one measure.</p>
+        <p>That connects to a question from my <a href="blog_reusable_binary_assurance.html">recent work on reusing proofs of OpenSSL code</a>: can a result become something the next investigation starts with? Here, a search in one model supplied concrete targets for an experiment in another, removing the need to repeat that particular search.</p>
 
         <h2 id="retrieval-vs-answer">A model can retrieve the right value and still answer incorrectly</h2>
-        <p>The investigation also exposed a useful distinction between finding the answer internally and producing it at the output.</p>
-        <p>On the original evaluation of 128 two-record prompts, the full model made thirteen errors. A readout of one retrieval head favored the correct value on all thirteen. In a separate test using “gold” and “silver,” the same head favored the correct value on all nine errors. Neither study passed its own overall test: the first missed its accuracy prerequisite by one prompt, and the gold/silver follow-up failed a calibration prerequisite. The readouts are descriptive findings from those runs.</p>
-        <p>Interventions showed that this head also pushed the output toward the correct answer. The useful signal was participating in the computation, and later processing could outweigh it.</p>
-        <p>That suggested a possible repair: strengthen the useful retrieval contribution.</p>
-        <p>The four-record experiments made the problem more interesting. Different retrieval heads had different preferences for where to look. One leaned toward recent records; others helped with earlier records. Simply amplifying a useful head could also amplify the value it retrieved from the wrong position.</p>
-        <p>The resulting repair accounted for those position preferences and adjusted the balance between heads. Its settings were chosen on calibration prompts and then frozen. On the held-out four-record prompts, it fixed six errors and introduced one new error, a net gain of five prompts out of 192. It still failed its preregistered test. On the main held-out set it did not improve the margins of the recency errors it targeted, and on fresh colors its net gain only tied naive amplification. A separate repair on the gold/silver task fixed two errors and broke two.</p>
-        <p>This was a small repair pilot, and it did not pass. Its value was the connection between explanation and intervention: understanding how the heads divided up the task suggested a more targeted intervention than amplifying every head, and it caused fewer new errors than that naive approach on both four-record sets.</p>
-        <p>My <a href="blog_fact_probe.html">recent post on factual-confidence probes</a> investigated what model activations reveal about answer correctness. This project adds a different view: tracing how a particular answer is selected, transported, and sometimes outweighed before it reaches the output.</p>
+        <p>On the first study’s 128 held-out two-record prompts, the full model made thirteen errors. A readout of one copying head, 19:5, favored the correct value on all thirteen. In a separate test using “gold” and “silver,” the same head favored the correct value on all nine of the model’s calibration errors in that test. Neither study passed its own overall test: the first missed its accuracy prerequisite by one prompt, and the gold/silver follow-up failed a calibration prerequisite. The readouts are descriptive findings from those runs.</p>
+        <p>Interventions showed that this head also pushed the output toward the correct answer: its signal was participating in the computation, and later processing could outweigh it. That suggested a possible repair: strengthen the copying heads’ contribution.</p>
+        <p>On four-record prompts, the copying heads had different preferences for where to look: 19:5 leaned toward the last record, while the other two leaned away from it. Simply amplifying the heads also amplified values retrieved from the wrong position. The first amplification attempt raised the median margin on the prompts used to choose it, yet made 15 of their 17 existing errors worse.</p>
+        <p>The later repair accounted for those position preferences. It subtracted part of each head’s habitual lean toward particular records before the head mixed in values, and amplified head 22:9. Its settings were chosen on calibration prompts and then frozen. On the 192 held-out four-record prompts, it fixed six errors and introduced one new error, a net gain of five; naive amplification of all three heads fixed ten and broke seven on the same prompts. The repair still failed its registered test. On the main held-out set it did not improve the margins of the recency errors it targeted, and on fresh colors its net gain only tied naive amplification. A separate repair on the gold/silver task fixed two errors and broke two.</p>
+        <p>The value of this small pilot was the link between explanation and intervention: knowing how the heads divided the task suggested a more targeted repair than amplifying every head, with fewer new errors on both four-record sets.</p>
+        <p>My recent post on <a href="blog_fact_probe.html">what Llama’s internal signals reveal about factual accuracy</a> asked what activations reveal about whether an answer is correct. This project traces how an answer is selected, relayed, and sometimes outweighed before it reaches the output.</p>
 
         <h2 id="harness">What the agent harness enabled</h2>
-        <p>By <em>harness</em>, I mean the software surrounding the agents’ research work: tools for generating controlled examples, changing selected internal computations, measuring the effects, and recording exactly what was tested. The agents proposed explanations and reviewed results. They could not turn a failed test into a pass.</p>
-        <p>Its most useful capability was supporting a connected sequence of experiments.</p>
-        <p>Finding the components that copied the value raised a new question: what told them which value to copy? Tracing that signal backward raised another: where did it pick up information about the relationship between the question and the facts? Once the earlier group was identified, the next question became whether those same locations would work in the larger model.</p>
-        <p>Each answer narrowed the next search. The agents could keep working through that sequence, carrying forward a specific account of the computation.</p>
-        <p>Several features made the sequence scientifically useful.</p>
-        <h3>An explanation had to make a prediction</h3>
-        <p>Before confirmation runs, the harness froze the selected components, interventions, and evaluation criteria. Fresh examples then tested whether the proposed mechanism behaved as expected.</p>
-        <p>This matters because it is easy to find an interesting pattern and invent an explanation that fits it. A prediction on examples kept out of discovery asks more of the explanation.</p>
-        <p>The six-head transfer was an especially clear version of this: name the locations first, then measure what happens there in the other model.</p>
-        <h3>The tools could be checked against known mechanisms</h3>
-        <p>The harness included synthetic controls with deliberately simple behavior. For example, a control that only passed along the literal name in the question should behave differently from a system that incorporated the changed name-to-color relationship.</p>
-        <p>These controls tested whether the experiments could distinguish the competing explanations they were supposed to distinguish. They gave the agents a way to check the measuring instrument as well as the model.</p>
-        <h3>Failed ideas remained part of the investigation</h3>
-        <p>The first amplification idea was useful even when it made answers worse. That result pointed toward a missing part of the explanation: a head could move values effectively while favoring the wrong record position.</p>
-        <p>Preserving unsuccessful experiments made it possible to follow that clue. The later repair could use what the earlier attempt had revealed.</p>
-        <h3>The measurements could be recomputed</h3>
-        <p>The harness saved the experimental plans, inputs, and raw results. File fingerprints made changes detectable. Separate numerical checks recomputed reported measurements from the saved data, and fresh-process runs checked that results could be repeated.</p>
-        <p>These checks make the evidence easier to inspect and build on. They also help an agent distinguish a model behavior worth investigating from a problem in the experiment itself.</p>
-        <p>The model experiments ran on consumer Apple Silicon, one 24 GB M4 Pro MacBook Pro, making this a concrete example of agent-assisted interpretability research on accessible hardware.</p>
+        <p>By <em>agent harness</em>, I mean the software workflow that gives the agents tools to build controlled prompts and change internal computations, runs the experiments, checks the outputs against criteria fixed in advance, and keeps a record of everything tested.</p>
+        <p>The agents, Codex CLI calls running gpt-6-luna, proposed explanations and reviewed results. I directed the campaign: I specified or approved changes to the designs, word lists, record formats and pass criteria before the runs that used them, and authorized the compute budget for the transfer study. The agents could not turn a failed test into a pass: frozen, executable tests decided which explanations survived, and no finished study was regraded.</p>
+        <p><strong>Test competing explanations.</strong> One plausible account held that the names were stamped onto the colors in the facts, so the copying heads could match on them directly. A registered test found that route too weak to meet its bar; the effect of swapping names ran mainly through the signal that tells the copying heads where to look. Planted control models with deliberately simple behavior were run before the Qwen3 tests to check that the tests could tell the explanations apart; from study 5 on, they included one that only copies the literal name from the question.</p>
+        <p><strong>Follow a chain of interventions.</strong> Finding the heads that copied the value raised the question of what told them where to read. Tracing that signal backward led to the relay heads, and tracing the relay’s input led to the six heads at the question.</p>
+        <p><strong>Make predictions before measuring.</strong> Before each confirmation run, the harness froze the selected heads, prompts, interventions and pass criteria, and recorded file fingerprints. Heads were chosen on calibration prompts and tested on held-out prompts. The transfer study is the clearest case: name six locations first, then measure what happens there in the other model.</p>
+        <p><strong>Keep failures in the record.</strong> The first amplification attempt made answers worse, and that pointed to the position preferences the later repair used. A version with structured, JSON-like records failed both its tracks, and its measurements pointed the search back toward the question. The appendix lists every study and its verdict.</p>
+        <p>Several checks stood behind each result. Each confirmation ran twice in fresh processes and had to reproduce its saved numbers exactly, and a separate NumPy script recomputed every gate from the saved arrays. In the later studies, the AI review cited numbers by reference and code filled in the audited values, so it could not misquote them. These are internal checks, not outside review.</p>
+        <p>All of this ran on one 24 GB M4 Pro MacBook Pro. Broader uses, such as starting new investigations from a tested map of a model, monitoring deployed models, or repairing errors automatically, are future possibilities; this campaign shows one prospective reuse and one small repair that did not pass.</p>
 
         <h2 id="related">Where this fits</h2>
-        <p>There is an existing research foundation here. Earlier work on <a href="https://finetuning.baulab.info/">entity-tracking circuits</a> traced multi-stage pathways that connect a question to the correct value. More recent work on <a href="https://arxiv.org/html/2510.06182v2">mixing retrieval mechanisms</a> shows that models can combine different strategies for looking things up.</p>
-        <p>The contribution of this project is a detailed causal account in two Qwen3 models, a successful test using locations transferred from one size to another, and an agent research process that connected those findings across a series of experiments.</p>
+        <p>Prakash and colleagues traced <a href="https://finetuning.baulab.info/">entity-tracking circuits</a> in Llama-7B, multi-stage groups of heads that connect a question to the correct value. Gur-Arieh, Geva and Geiger’s work on <a href="https://arxiv.org/html/2510.06182v2">mixing retrieval mechanisms</a> shows that models combine different strategies for retrieving bound entities from context.</p>
+        <p>What this project adds is a causal account in two Qwen3 sizes tested against registered criteria, a prospective test of locations carried from one size to the other, and a record that keeps failed studies beside passing ones.</p>
 
         <h2 id="limits">Limits</h2>
-        <p>The scope is short, controlled lookup tasks. These two related models give a useful setting for testing transfer. Longer contexts, different model families, and more complicated questions will test how much of the account survives.</p>
+        <p>The most consequential limit is scope. These are short, synthetic lookup prompts with two or four records, in two related models. “Answer preference” and accuracy here mean the model’s preference between two specified answer words, such as red and blue, at the next token. Free-form generation was not tested. Longer contexts, other model families and more complicated questions were not tested either, and the one attempt at structured, JSON-like formats failed.</p>
         <ul>
-          <li>“Answer preference” and accuracy here mean the model’s preference between two specified answer words, such as red and blue, at the next token. Free-form generation was not tested.</li>
-          <li>Verdicts by study: the six-head route in the smaller model, the route search in the larger model and the six-head transfer passed their registered gates. The first study was inconclusive (115 of 128 correct against a required 116), the gold/silver follow-up failed a calibration prerequisite, the smaller model’s three-stage study failed its accuracy prerequisite, the repair failed three of its four gates, and a version with structured, JSON-like records failed both of its tracks.</li>
-          <li>The six-head route passed after three of its thresholds were revised before the run, using earlier outcomes: accuracy from 85% to 80%, and two attention-shift bars. Earlier failed studies were not regraded.</li>
+          <li>The confirmation of the last two stages passed after three of its thresholds were revised before the run, using earlier outcomes: accuracy from 85% to 80%, and two attention-shift bars. Earlier failed studies were not regraded. The later three-stage studies kept the 80% accuracy bar.</li>
           <li>Heads were selected on calibration prompts, so calibration results are selection evidence, not confirmation. The selected heads are not shown to be unique or exclusive, and this is not a complete account of how the model does lookup.</li>
           <li>Matching locations across the two sizes do not prove the heads are the same component. The pathway that passed in the larger model uses 18:7 in place of 15:4.</li>
-          <li>The two fresh runs per confirmation show the numbers repeat exactly; they are not extra samples. The independent audits reuse some of the same NumPy arithmetic as the production code. No one outside the project has reviewed the work.</li>
+          <li>The two fresh runs per confirmation show the numbers repeat exactly; they are not extra samples. The separate audits reuse some of the same NumPy arithmetic as the production code. No one outside the project has reviewed the work.</li>
         </ul>
 
         <h2 id="next-experiment">Next experiment</h2>
-        <p>The experiments also leave a precise question for the next investigation: what does the routing signal represent? It may encode position, aspects of the requested record, or a combination. Moving records around independently of their names and values can help distinguish those possibilities.</p>
-        <p>For the harness, the next question is whether giving agents an existing causal map lets them solve a new research task with less search. This campaign demonstrated one concrete reuse of that kind. Measuring the broader benefit will require comparing investigations that start with the map against investigations that start without it.</p>
-        <p>The larger-model experiment began with six places to look and a specific prediction about what changing them would do. That prediction held. The next step is to give agents more of those tested starting points, then measure how much they help with the next discovery.</p>
+        <p>The scope limit has a direct test: carry the fixed heads, unchanged, to longer prompts and structured formats, and require the same direction and size criteria to pass with no new search. Another model family would need its own search first, because its layout differs.</p>
+        <p>One question remains open: what does the routing signal represent? It may encode position, aspects of the requested record, or a combination. Moving records around independently of their names and values can help distinguish those possibilities.</p>
+        <p>For the harness, the next question is whether giving agents an existing causal map lets them solve a new research task with less search. Answering it requires comparing investigations that start with such a map against ones without it.</p>
+
+        <h2 id="study-record">Appendix: every study and its verdict</h2>
+        <p>An earlier broad sweep over real text tested 36 hypotheses and produced no survivor, which is why the campaign moved to this controlled task. The table lists the controlled studies in order, with the verdict set by each study’s own criteria. Post-hoc diagnostics of finished studies are described in the <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/RESULTS_INDEX.md">results ledger</a> and are not counted as confirmations.</p>
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 02</span>The study record, from the results ledger and run reports</div>
+          <table>
+            <thead>
+              <tr><th>Study</th><th>Model</th><th>What it tested</th><th>Verdict</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>0.6B</td><td>Search for a head that retrieves the value; selected 19:5</td><td>Inconclusive: 19:5 passed its head-level tests, but the model answered 115 of 128 against a required 116</td></tr>
+              <tr><td>Gold/silver</td><td>0.6B</td><td>19:5 with new answer words and record formats</td><td>Inconclusive: calibration accuracy 55 of 64, below 90%; held-out swaps moved in the predicted direction on 128 of 128</td></tr>
+              <tr><td>2</td><td>0.6B</td><td>Value copying by 19:5, 21:13 and 22:9</td><td>Failed: discovery accuracy 56 of 64, below 90%, and no held-out errors to fix; the copying and new-color tests passed</td></tr>
+              <tr><td>3</td><td>0.6B</td><td>Amplification repair on four-record prompts</td><td>Rejected: every candidate broke correct answers, so none was selected</td></tr>
+              <tr><td>Upstream</td><td>0.6B</td><td>Relay heads 15:4, 16:4 and 17:1</td><td>Failed single-head, attention-shift and accuracy requirements; the three-head group passed its double-dissociation test</td></tr>
+              <tr><td>4</td><td>0.6B</td><td>The last two stages; the name-stamping account</td><td>Failed four of five gates; the name-stamping prediction failed</td></tr>
+              <tr><td>5</td><td>0.6B</td><td>The routing-signal interpretation, on new prompts</td><td>Failed four of five gates, though every routing intervention moved in the predicted direction</td></tr>
+              <tr><td>6</td><td>0.6B</td><td>New inline templates</td><td>Failed three of five gates; 77 of 80 scientific criteria passed</td></tr>
+              <tr><td>7</td><td>0.6B</td><td>The last two stages, with revised thresholds</td><td>Passed every gate; 80 of 80 criteria</td></tr>
+              <tr><td>8</td><td>0.6B</td><td>Calibrated repairs</td><td>Failed three of four gates; 6 fixed and 1 broken on held-out four-record prompts</td></tr>
+              <tr><td>9</td><td>0.6B</td><td>Structured records: YAML, JSON and Markdown</td><td>Failed both tracks</td></tr>
+              <tr><td>10</td><td>1.7B</td><td>Separate search for the last two stages</td><td>Passed every gate; 108 of 108 criteria (36 on calibration prompts), on a third attempt after an interrupted run and a numerical-tolerance failure</td></tr>
+              <tr><td>11</td><td>0.6B</td><td>Search for the identifying stage; the full three-stage route</td><td>Failed: 63 of 63 mechanism criteria, but 101 of 128 correct against a required 103</td></tr>
+              <tr><td>12</td><td>1.7B</td><td>The six identifying locations, fixed from 0.6B</td><td>Passed every gate; 63 of 63 criteria</td></tr>
+            </tbody>
+          </table>
+        </div>
 
         <h2 id="reproducibility">Reproducibility</h2>
         <table class="repro">
           <tbody>
-            <tr><th scope="row">Model</th><td>Agents: Codex CLI calls running gpt-6-luna, which proposed and reviewed explanations. Targets: <code>Qwen/Qwen3-0.6B</code> at revision <code>c1899de</code> and <code>Qwen/Qwen3-1.7B</code> at <code>70d244c</code>, BF16 weights.</td></tr>
-            <tr><th scope="row">Experiment</th><td>Activation patching with preregistered protocols, planted controls, two fresh processes per confirmation and a separate NumPy audit of the saved arrays, on one 24 GB Apple M4 Pro MacBook Pro (MPS). Twelve numbered studies plus follow-ups.</td></tr>
-            <tr><th scope="row">Data</th><td>Synthetic key–value prompts with two or four records (red/blue, green/yellow and gold/silver answers), built from response-blind key lists. The frozen prompt sets are private.</td></tr>
-            <tr><th scope="row">Results</th><td><a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/RESULTS_INDEX.md">Results ledger</a>, <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/PAPER.md">manuscript</a>, <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/ARCHITECTURE.md">harness and mathematics</a> and the repository’s <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/BLOG_POST.md">longer write-up</a>, including the failed studies. The per-study reports, saved arrays and audit evidence are private (<a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/OMISSIONS.md">what is left out</a>).</td></tr>
-            <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/qwen3-auto-interp">scasella/qwen3-auto-interp</a>, Apache-2.0, source only: harness, experiment runners, auditors and tests. The historical runners have fixed paths and are not turnkey replays, and the master audit stops without the private evidence.</td></tr>
-            <tr><th scope="row">Status</th><td>Published 2026-10-23 · Source public, evidence private. The six-head route, the larger-model route search and the transfer passed; the other studies were inconclusive or failed. No external validation.</td></tr>
+            <tr><th scope="row">Model</th><td>Agents: Codex CLI calls running gpt-6-luna. Targets: <code>Qwen/Qwen3-0.6B</code> at revision <code>c1899de</code> and <code>Qwen/Qwen3-1.7B</code> at <code>70d244c</code>, BF16 weights.</td></tr>
+            <tr><th scope="row">Experiment</th><td>Activation patching with protocols fixed before each confirmation, planted controls, two fresh processes per confirmation and a separate NumPy audit of the saved arrays, on one 24 GB Apple M4 Pro MacBook Pro (MPS). Twelve numbered studies plus follow-ups.</td></tr>
+            <tr><th scope="row">Data</th><td>Synthetic key–value prompts with two or four records (red/blue, green/yellow and gold/silver answers), built from response-blind key lists. The frozen prompt sets are private; the source includes the templates and word lists used to build them.</td></tr>
+            <tr><th scope="row">Results</th><td><a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/RESULTS_INDEX.md">Results ledger</a>, <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/PAPER.md">manuscript</a>, <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/ARCHITECTURE.md">harness and mathematics</a> and the repository’s <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/BLOG_POST.md">longer write-up</a>, including the failed studies. These summarize the results; the per-study reports, saved arrays and audit evidence are private (<a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/OMISSIONS.md">what is left out</a>). The <a href="explorer/straitjacket/">interactive explorer</a> presents the same study.</td></tr>
+            <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/qwen3-auto-interp">scasella/qwen3-auto-interp</a>, Apache-2.0, source only: harness, experiment runners, auditors and tests. The README documents how to install it and run the unit tests and planted controls from a clone. Tests that need the private evidence are skipped, the master audit stops without that evidence, and the historical runners have fixed paths and are not turnkey replays.</td></tr>
+            <tr><th scope="row">Status</th><td>Published 2026-10-23 · Source public, evidence private, not independently reproduced. The confirmation of the last two stages, the larger-model search and the transfer passed every registered gate; the other studies were inconclusive or failed. No external review.</td></tr>
           </tbody>
         </table>
     <!-- PANES:NEXT:START -->
     <nav class="post-next" aria-label="More research">
-      <a href="blog_gemma_blind_search.html"><span>next →</span><span>Agents built a label-free search for what Gemma 3 1B tracks as it reads, and confirmed one direction by steering</span></a>
+      <a href="blog_gemma_blind_search.html"><span>next →</span><span>A search for internal signals in Gemma, built and tested by agents</span></a>
       <a class="post-next__all" href="research.html">← all research</a>
     </nav>
   <!-- PANES:NEXT:END -->

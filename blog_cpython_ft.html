@@ -4,14 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Agents find 25 bugs in free-threaded CPython | Stephen Casella</title>
-  <meta name="description" content="Claude Opus 5.5 agents confirmed 25 bugs in CPython's no-GIL build, with no earlier report found for 18, plus 92 more in a call-site sweep. A proof of the locking model held; real runs showed where CPython differs." />
+  <meta name="description" content="Claude Opus 5.5 agents confirmed 25 bugs in free-threaded CPython; two of my five upstream reports now have merged fixes. Proofs of a locking model held, and real runs showed where CPython departs from it." />
   <meta name="author" content="Stephen Casella" />
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#080c0f" />
   <link rel="canonical" href="https://casella.dev/blog_cpython_ft.html" />
   <meta property="og:site_name" content="Stephen Casella" />
   <meta property="og:title" content="25 bugs in free-threaded CPython, found by agents" />
-  <meta property="og:description" content="25 confirmed bugs, 92 sweep findings, and TLAPS and Lean proofs of the locking model that held up under audit, and replays of real runs that showed five places where CPython leaves the model." />
+  <meta property="og:description" content="25 confirmed bugs, five public reports and two fixes merged by CPython developers. A separate call-site sweep confirmed 92 findings. TLAPS and Lean proofs checked a locking model; replays of real runs showed five places where CPython departs from it." />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://casella.dev/blog_cpython_ft.html" />
   <meta property="og:image" content="https://casella.dev/assets/og/blog_cpython_ft.png" />
@@ -21,7 +21,7 @@
   <meta property="og:image:alt" content="Share card for the write-up: 25 bugs in free-threaded CPython, found by agents." />
   <meta property="article:author" content="Stephen Casella" />
   <meta property="article:published_time" content="2026-09-25" />
-  <meta property="article:modified_time" content="2026-09-25" />
+  <meta property="article:modified_time" content="2026-10-23" />
   <meta property="article:tag" content="formal verification" />
   <meta property="article:tag" content="CPython" />
   <meta property="article:tag" content="free-threading" />
@@ -30,7 +30,7 @@
   <meta property="article:tag" content="AI agents" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="25 bugs in free-threaded CPython, found by agents" />
-  <meta name="twitter:description" content="25 confirmed bugs, 92 sweep findings, and TLAPS and Lean proofs of the locking model that held up under audit, and replays of real runs that showed five places where CPython leaves the model." />
+  <meta name="twitter:description" content="25 confirmed bugs, five public reports and two fixes merged by CPython developers. A separate call-site sweep confirmed 92 findings. TLAPS and Lean proofs checked a locking model; replays of real runs showed five places where CPython departs from it." />
   <meta name="twitter:image" content="https://casella.dev/assets/og/blog_cpython_ft.png" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RSWDWW67D"></script>
@@ -46,12 +46,12 @@
       "@context": "https://schema.org",
       "@type": "BlogPosting",
       "headline": "25 bugs in free-threaded CPython, found by agents",
-      "description": "Claude Opus 5.5 agents confirmed 25 bugs in CPython's no-GIL build, with no earlier report found for 18, plus 92 more in a call-site sweep. A proof of the locking model held; real runs showed where CPython differs.",
+      "description": "Claude Opus 5.5 agents confirmed 25 bugs in free-threaded CPython; two of my five upstream reports now have merged fixes. Proofs of a locking model held, and real runs showed where CPython departs from it.",
       "url": "https://casella.dev/blog_cpython_ft.html",
       "mainEntityOfPage": "https://casella.dev/blog_cpython_ft.html",
       "image": "https://casella.dev/assets/og/blog_cpython_ft.png",
       "datePublished": "2026-09-25",
-      "dateModified": "2026-09-25",
+      "dateModified": "2026-10-23",
       "author": {
         "@type": "Person",
         "name": "Stephen Casella",
@@ -383,7 +383,7 @@
   </style>
     <!-- PANES:HEAD:START -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
-  <link rel="stylesheet" href="panes.css?v=bbd7cc12" />
+  <link rel="stylesheet" href="panes.css?v=87bdb6c4" />
   <script src="ascii.js?v=6f1f421a" defer></script>
   <!-- PANES:HEAD:END -->
 </head>
@@ -438,30 +438,30 @@
 
 <h1>25 bugs in free-threaded CPython, found by agents</h1>
 <!-- PANES:META:START -->
-    <p class="post-byline">[ <time datetime="2026-09-25">2026-09-25</time> ] // Claude Opus 5.5 · TLA+ · Lean 4 // 10 MIN READ</p>
+    <p class="post-byline">[ <time datetime="2026-09-25">2026-09-25</time> · updated <time datetime="2026-10-23">2026-10-23</time> ] // Claude Opus 5.5 · TLA+ · Lean 4 // 14 MIN READ</p>
   <!-- PANES:META:END -->
-        <p class="subtitle">Claude Opus 5.5 agents confirmed 25 bugs in CPython's build without the Global Interpreter Lock, each on an unmodified interpreter. A tracker search found no earlier report for 18 of them. A later sweep of 1,805 call sites confirmed 92 more findings. Two independent provers also proved the locking model's safety invariant. Checking that proof against real runs showed five places where CPython doesn't behave like the model.</p>
+        <p class="subtitle">Claude Opus 5.5 agents confirmed 25 bugs in the free-threaded build of CPython, the build without the Global Interpreter Lock. Each has a trigger that misbehaves on an unmodified interpreter, and 18 have no earlier report found in the tracker search. I filed five reports upstream, and CPython developers have since merged fixes for two of them. Proofs in TLAPS and Lean checked a model of the locking protocol; replays of real runs showed five places where CPython departs from that model.</p>
 
         <div class="tldr">
           <span class="tldr-label">TL;DR</span>
-          <p>I pointed Claude Opus 5.5 agents at the free-threaded (no-GIL) build of CPython <code>main</code>, 3.15 and 3.14 on macOS. A finding counted only if a trigger misbehaved on a stock build. Independent agents then had to reproduce it and fail to refute it. The hunt confirmed 25 bugs, 16 of which I'd file now. A sweep of call sites confirmed 92 more; about half also affect the regular GIL build. A TLA+ spec of the locking protocol predicted one deadlock path, and a real build then hit it. Its safety invariant was proved in TLAPS and in Lean. An audit showed those proofs are genuine. Replays of real runs showed CPython departs from the model in five places. The bugs came from agents reading C and running triggers. The formal work checked the locking model and mapped where it and the code disagree.</p>
+          <p>I pointed Claude Opus 5.5 agents at the free-threaded (no-GIL) build of CPython <code>main</code>, 3.15 and 3.14 on macOS. A finding counted only if a trigger misbehaved on a stock build and separate agents then reproduced it and failed to refute it. The hunt confirmed 25 bugs, 16 of which I'd file now. Of the five reports I filed upstream, four from the hunt and one from a locking-spec pilot, two now have merged fixes. A later sweep of call sites confirmed 92 findings, counted separately from the 25; about half also affect the regular GIL build. A TLA+ spec of the locking protocol predicted one deadlock path, and a real build then hit it. Its safety invariant was proved in TLAPS and in Lean, and an audit by separate agents found those proofs genuine. The bugs came from agents reading C and running triggers; the formal work checked the locking model and mapped where CPython departs from it.</p>
         </div>
 
         <div class="stat-row">
           <div class="stat">
             <span class="k">Bugs confirmed</span>
             <div class="v">25</div>
-            <div class="s">No earlier report found for 18</div>
+            <div class="s">18 with no earlier report found in the tracker search</div>
+          </div>
+          <div class="stat">
+            <span class="k">Fixes merged upstream</span>
+            <div class="v">2</div>
+            <div class="s">Of 5 public reports, into CPython main</div>
           </div>
           <div class="stat">
             <span class="k">Sweep findings</span>
             <div class="v">92</div>
-            <div class="s">From 1,805 call sites; 47 also hit the GIL build</div>
-          </div>
-          <div class="stat">
-            <span class="k">Broken specs caught</span>
-            <div class="v">63 / 63</div>
-            <div class="s">Each made a proof fail; 8 of 8 planted cheats rejected</div>
+            <div class="s">Counted separately; 47 also hit the GIL build</div>
           </div>
           <div class="stat">
             <span class="k">Model gaps found</span>
@@ -471,36 +471,40 @@
         </div>
 
         <div class="callout">
-          <span class="callout-label">Filing status</span>
-          <p>Five of these bugs are now filed with CPython, with repros and proposed fixes: <a href="https://github.com/python/cpython/issues/158194">gh-158194</a>, <a href="https://github.com/python/cpython/issues/158195">gh-158195</a>, <a href="https://github.com/python/cpython/issues/158196">gh-158196</a>, <a href="https://github.com/python/cpython/issues/158197">gh-158197</a> and <a href="https://github.com/python/cpython/issues/158198">gh-158198</a>. The rest are described here by class and count only. No function names, triggers or repros until they're filed. I'll add each link here.</p>
+          <span class="callout-label">Update, 23 October 2026</span>
+          <p>Two of my five reports now have fixes merged into CPython <code>main</code>. For <a href="https://github.com/python/cpython/issues/158197">gh-158197</a>, nascheme's <a href="https://github.com/python/cpython/pull/158686">PR #158686</a>, merged on 20 October, builds on the patch attached to the report, with refinements. For <a href="https://github.com/python/cpython/issues/158198">gh-158198</a>, DinoV wrote his own fix, <a href="https://github.com/python/cpython/pull/160114">PR #160114</a>, merged on 22 October. The other three reports have proposed fixes in open pull requests. <a href="#upstream">Status of all five</a>.</p>
         </div>
 
         <h2 id="setup">Setup</h2>
         <p>
-          PEP 703 made CPython's Global Interpreter Lock optional. 3.14 is the first release where the free-threaded build is officially supported. Removing the lock took new machinery. Per-object locks called <em>critical sections</em> are quietly released when their thread blocks. <em>Stop-the-world</em> pauses park every other thread. Dicts and lists get lock-free reads. Bugs tend to live where two of these meet, or in older code that assumed nothing else could run while it did.
+          PEP 703 made CPython's Global Interpreter Lock optional. 3.14 is the first release where the free-threaded build is officially supported. Removing the lock took new machinery. Per-object locks called <em>critical sections</em> are quietly released when their thread blocks. <em>Stop-the-world</em> pauses park every other thread. Dicts and lists get lock-free reads. Bugs tend to live where two of these meet, or in older code that assumed nothing else could run while it did. When this machinery is wrong, ordinary threaded Python code can crash, corrupt memory or hang the whole interpreter. I started with one question: could agents working with formal tools, the Lean proof assistant and the TLA+ specification language, find real bugs in mature code? This machinery seemed a likely place to look.
         </p>
-        <p>I tested free-threaded debug builds of main (6757482), 3.15.0rc2+ (2dafe2a) and 3.14 (1d8c9f8). I also used release and ThreadSanitizer builds of main, and a python.org 3.14 GIL build for comparison. Claude Code directed every agent, all of them Claude Opus 5.5. The ground rules:</p>
+        <p>I tested free-threaded debug builds of main (6757482), 3.15.0rc2+ (2dafe2a) and 3.14 (1d8c9f8). I also used release builds and ThreadSanitizer (race detector) builds of main, and a python.org 3.14 GIL build for comparison. Every agent was Claude Opus 5.5, directed from Claude Code. They worked inside a harness: the workflow that gave them builds and tools, ran their triggers, sent each finding to separate checking agents and kept the evidence. The ground rules:</p>
         <ul>
           <li>A bug counts only if a trigger misbehaves on an unmodified build. A model or a code reading alone is never enough.</li>
           <li>Findings are checked by separate agents: one writes its own repro from the description, one tries to refute the finding, and one searches the tracker for earlier reports.</li>
-          <li>GitHub is read-only. No agent filed, commented or posted anything.</li>
+          <li>GitHub is read-only during the hunt: no hunt agent filed, commented or posted anything.</li>
           <li>Every run has a hard timeout, and patches go into isolated copies of the source.</li>
         </ul>
+        <p>I chose the target and these ground rules, steered a lead agent, decided which findings to report and filed the reports from my GitHub account. The lead agent scripted each round, re-ran key repros and chose what went into the next round; the other agents read the C code, wrote the triggers, repros, patches, specs and proofs, and drafted the reports. Separate agents, not people, did the three checks above, and checks by CPython developers began after filing.</p>
 
         <h2 id="bugs">The bugs</h2>
         <p>
-          The hunt ran in three rounds: 221 agents, about 22 million tokens, about 13 hours. One agent owned each subsystem. Later stages reproduced, attacked, fixed and reviewed what it found. A critic ended each round and listed the gaps for the next one.
+          The hunt ran in three rounds. One agent owned each subsystem; later agent stages reproduced, attacked, fixed and reviewed what it found, and a critic agent ended each round by listing the gaps for the next.
         </p>
         <p>
           It ended with 25 bugs: 16 I'd file now and 9 at low priority. They include whole-interpreter deadlocks, heap corruption, NULL dereferences in lock-free iteration and use-after-frees. Most affect the 3.14 branch as well as 3.15 and main. Eight also hit the regular GIL build. Most need only public Python APIs to trigger. A few need a private module, API misuse or a C-API callback.
         </p>
         <p>
-          After an outside reviewer pushed on novelty, a second systematic search of the tracker found no earlier report for 18 of the 25. Three of those have no related report at all. The other 15 have related work on the same components only. Six others partly overlap an earlier report. One was already described upstream but is still unfixed. 19 of the 25 have a filing packet: a minimal repro, fix diffs for each branch, a regression test that fails before the fix and passes after, and a model check of the fix. The packets need another round of fixes before filing. Eight have blocking errors, including a fix that must be restructured to link on 3.14 and Windows, and several wrong repros or claims. Four of the 25 are filed so far, all from packets without blocking errors: two deadlocks in type locking (<a href="https://github.com/python/cpython/issues/158194">gh-158194</a>, <a href="https://github.com/python/cpython/issues/158195">gh-158195</a>), a heap double free in <code>FileIO</code> (<a href="https://github.com/python/cpython/issues/158196">gh-158196</a>) and a NULL dereference in instance-dict iteration (<a href="https://github.com/python/cpython/issues/158197">gh-158197</a>).
+          After a review questioned the novelty claims, agents searched the tracker again, systematically. For 18 of the 25 there was no earlier report found in the tracker search: three have no related report at all, and 15 have related work on the same components only. Six others partly overlap an earlier report. One was already described upstream but is still unfixed.
+        </p>
+        <p>
+          19 of the 25 have a filing packet: a minimal repro, fix diffs for each branch, a regression test that fails before the fix and passes after, and a model check of the fix. Eight of those packets have blocking errors, including a fix that must be restructured to link on 3.14 and Windows, and several wrong repros or claims, so they are not filed yet. Four of the 25 are filed, all from packets without blocking errors: two deadlocks in type locking (<a href="https://github.com/python/cpython/issues/158194">gh-158194</a>, <a href="https://github.com/python/cpython/issues/158195">gh-158195</a>), a heap double free in <code>FileIO</code> (<a href="https://github.com/python/cpython/issues/158196">gh-158196</a>) and a NULL dereference in instance-dict iteration (<a href="https://github.com/python/cpython/issues/158197">gh-158197</a>). A fifth report, <a href="https://github.com/python/cpython/issues/158198">gh-158198</a>, comes from the spec pilot <a href="#spec">below</a>. The other 21 bugs are described here by class and count only, with no function names, triggers or repros until they are reported.
         </p>
 
         <h3 id="sweep">A second pass: the call-site sweep</h3>
         <p>
-          Writing the spec (below) surfaced five rules for code that calls these primitives. Two of them: "don't use a borrowed pointer after anything that can run Python" and "don't act on an unlocked read". The rules came from gaps auditors found, not from the model itself. Agents then checked 1,805 call sites in 114 files against them. 252 candidates merged into 101 findings, and every finding got the three independent checks. 92 are confirmed, 8 are duplicates and 1 was refuted.
+          Writing the spec (below) surfaced five rules for code that calls these primitives. Two of them: "don't use a borrowed pointer after anything that can run Python" and "don't act on an unlocked read". The rules came from gaps that auditing agents found, not from the locking model itself. Agents then checked 1,805 call sites in 114 files against them. 252 candidates merged into 101 findings, and every finding got the same three separate-agent checks. 92 are confirmed, 8 are duplicates and 1 was refuted.
         </p>
 
         <div class="table-wrap">
@@ -520,15 +524,40 @@
             </tbody>
           </table>
         </div>
-        <p>So these are not 92 free-threading bugs. About half are general CPython bugs that the rules happened to lead to. The 11 same-object races are a class upstream has closed as "not planned" before. The build-scope split is a heuristic from the checkers' notes. A shortlist of 10 is ranked for filing. It has not had a maintainer-style review yet.</p>
+        <p>So these are not 92 free-threading bugs, and they are not part of the 25. About half are general CPython bugs that the rules happened to lead to. The 11 same-object races are a class upstream has closed as "not planned" before. The build-scope split is a heuristic from the checking agents' notes. One agent ranked a shortlist of 10 for filing; those still need packets and the agent review the hunt's bugs got.</p>
+
+        <h2 id="upstream">What happened upstream</h2>
+        <p>I filed the five reports on 25 and 26 September 2026, each with a repro and a proposed patch.</p>
+
+        <div class="table-wrap">
+          <div class="table-label"><span class="id">Table 02</span>The five public reports, as of 23 October 2026</div>
+          <table>
+            <thead>
+              <tr><th>Report</th><th>Discussion</th><th>Fix</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><a href="https://github.com/python/cpython/issues/158194">gh-158194</a>: <code>PyType_Freeze()</code> deadlocks with concurrent class updates</td><td>Triaged and labelled</td><td>nascheme, <a href="https://github.com/python/cpython/pull/158674">#158674</a></td><td>Fix proposed (open PR)</td></tr>
+              <tr><td><a href="https://github.com/python/cpython/issues/158195">gh-158195</a>: stop-the-world under the type lock deadlocks</td><td>picnixz questioned how realistic the repros are and asked for performance numbers; ZeroIntensity found the proposed fix too invasive</td><td>nascheme, <a href="https://github.com/python/cpython/pull/158678">#158678</a> (closed unmerged), then <a href="https://github.com/python/cpython/pull/159972">#159972</a></td><td>Discussed; fix proposed (open PR)</td></tr>
+              <tr><td><a href="https://github.com/python/cpython/issues/158196">gh-158196</a>: <code>FileIO</code> close or truncate frees memory twice</td><td>cmaloney: <code>FileIO</code> is not thread-safe, and broader I/O fixes are under way; mpage: users still shouldn't be able to segfault the runtime</td><td>BHUVANSH855, <a href="https://github.com/python/cpython/pull/159153">#159153</a></td><td>Discussed; fix proposed (open PR)</td></tr>
+              <tr class="highlight"><td><a href="https://github.com/python/cpython/issues/158197">gh-158197</a>: iterating an instance dict crashes during concurrent deletion</td><td>Fix approved by methane and DinoV</td><td>nascheme, <a href="https://github.com/python/cpython/pull/158686">#158686</a>, based on the attached patch with refinements; 3.15 backport <a href="https://github.com/python/cpython/pull/159953">#159953</a></td><td>Merged into main (20 Oct) and 3.15 (21 Oct); in 3.15.1; issue closed</td></tr>
+              <tr class="highlight"><td><a href="https://github.com/python/cpython/issues/158198">gh-158198</a>: a dict resize writes into a freed instance's inline values</td><td>Fix reviewed by mpage and methane</td><td>DinoV, <a href="https://github.com/python/cpython/pull/160114">#160114</a>, his own approach</td><td>Merged into main (22 Oct); issue still open</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          The two merges are the strongest outside check on this work so far. In both, a CPython developer wrote or refined the final fix and other developers reviewed it, so neither is an agent patch merged unchanged. For gh-158198, my patch made freeing the object take the dict's lock; DinoV's change instead clears the dict's pointer to the object's inline values only after they have been moved out, and reads it with acquire ordering when the object is cleared.
+        </p>
+        <p>
+          Merged does not mean released on every branch. The gh-158197 fix is listed in the <a href="https://github.com/python/cpython/blob/v3.15.1/Misc/NEWS.d/3.15.1.rst">Python 3.15.1 changelog</a>; its PR is labelled for a 3.14 backport, but none has been opened. The gh-158198 fix is in main only.
+        </p>
 
         <h2 id="spec">What the spec did</h2>
-        <p>Midway through, I tried letting the formal side lead. Agents wrote the locking protocol down before looking for bugs. The spec says how critical sections, pinning and stop-the-world pauses are supposed to interact, in 698 lines of TLA+ with 13 contracts and 12 rules for callers. Then they checked code against it.</p>
+        <p>Midway through, I tried letting the formal side lead. Agents wrote the locking protocol down before looking for bugs, in TLA+, a language for describing concurrent systems precisely enough for tools to check them. The spec says how critical sections, pinning (keeping a lock held even while its thread waits) and stop-the-world pauses are supposed to interact, in 698 lines with 13 contracts and 12 rules for callers. Then agents checked code against it.</p>
         <ul>
-          <li><strong>Blind recall.</strong> Checked against six known bugs it had never been told about, the pilot rediscovered five.</li>
+          <li><strong>Blind recall.</strong> Checked against six bugs from the hunt that it had never been told about, the pilot rediscovered five.</li>
           <li><strong>One confirmed prediction.</strong> The model predicted a path into a stop-the-world deadlock. An instrumented build then hung 5 times out of 5. It is a new entry point into an already-known deadlock, not a new bug.</li>
           <li><strong>A named root cause.</strong> The spec had to state an assumption the code never documents, and deadlock freedom depends on it. Audits of the code and replays of real runs showed that shipping CPython breaks it. It is the root of that deadlock family.</li>
-          <li><strong>New bugs.</strong> Checking call sites against the rules found three. The best is a use-after-free that aborts debug builds on main, 3.15 and 3.14. ThreadSanitizer flags it as a data race on freed and reused memory. It has a one-hunk fix and a stress test that fails 5 of 5 runs before it, and it is filed as <a href="https://github.com/python/cpython/issues/158198">gh-158198</a>. The second is a free-threaded hang. The third turned out to be a GIL-build bug.</li>
+          <li><strong>Three more bugs,</strong> separate from the 25 and the sweep, found by checking call sites against the rules. The best is a use-after-free that aborts debug builds on main, 3.15 and 3.14, which ThreadSanitizer flags as a data race on freed and reused memory. I reported it as <a href="https://github.com/python/cpython/issues/158198">gh-158198</a> with a one-hunk patch and a stress test that fails 5 of 5 runs before the patch; the merged fix is DinoV's own. The second is a free-threaded hang. The third turned out to be a GIL-build bug.</li>
         </ul>
 
         <h2 id="proofs">The proof held; the model didn't match CPython</h2>
@@ -537,13 +566,14 @@
         </p>
         <ul>
           <li><strong>TLAPS</strong>, the TLA+ proof system, by a lead agent and five helpers: 4,430 of 4,430 proof obligations, and 4,455 of 4,455 for a version with any number of locks.</li>
-          <li><strong>Lean 4</strong>, by one agent that wrote a fresh encoding of about 5,000 lines without reading the TLAPS proof. It uses only Lean's three standard axioms, with no <code>sorry</code> and no <code>native_decide</code>.</li>
+          <li><strong>Lean 4</strong>, a proof assistant whose small kernel checks every step, by one agent that wrote a fresh encoding of about 5,000 lines without reading the TLAPS proof. It uses only Lean's three standard axioms, with no <code>sorry</code> (a placeholder for a missing proof) and no <code>native_decide</code> (which trusts compiled code).</li>
         </ul>
+        <p>Both are proofs about the modelled protocol, as written in the TLA+ spec and re-encoded in Lean, not about CPython's C code.</p>
 
         <h3 id="audit">Are the proofs real?</h3>
-        <p>Agents are good at making a proof look finished, so an audit tried to catch the proofs cheating or proving nothing:</p>
+        <p>Agents are good at making a proof look finished, so separate agents audited the proofs, trying to catch them cheating or proving nothing:</p>
         <div class="table-wrap">
-          <div class="table-label"><span class="id">Table 02</span>Proof audit</div>
+          <div class="table-label"><span class="id">Table 03</span>Proof audit</div>
           <table>
             <thead>
               <tr><th>Check</th><th>Question</th><th>Result</th></tr>
@@ -557,10 +587,10 @@
           </table>
         </div>
         <p>
-          A broken spec here has one deliberate defect, such as a deleted guard or a lock left held. The model checker first confirmed that each defect actually matters. A proof that still passed on one would be proving nothing, and none did. Some of those failures are shallow: the proof just restates a setting that was changed. The any-number-of-locks version was not mutation-tested. So the answer is yes: within the model, these are real proofs.
+          A broken spec here has one deliberate defect, such as a deleted guard or a lock left held, which the model checker first confirmed actually matters. A proof that still passed on one would be proving nothing, and none did. Some of those failures are shallow: the proof just restates a setting that was changed. The any-number-of-locks version was not mutation-tested. So the answer is yes: within the model, these are real proofs.
         </p>
         <p>
-          They are safety proofs only. Deadlock freedom is not just unproved. Under CPython's documented settings it fails in the model, with a 13-state trace. That trace is the deadlock path the spec predicted and a real build then hit.
+          They are safety proofs only. Deadlock freedom is not just unproved: under CPython's documented settings it fails in the model, with a 13-state trace that is the deadlock path the spec predicted and a real build then hit.
         </p>
 
         <h3 id="grounding">Is the model CPython?</h3>
@@ -577,45 +607,44 @@
           <li>the world restarted before the pause's own lock is released.</li>
         </ul>
         <p>
-          On the states the checker classed as ordinary, all 10 safety properties it could evaluate held. That class excludes global pauses, forked children, finalization and the raw type-lock holds. The one property that failed anywhere was the no-leaked-lock rule, on those raw holds. Each gap has a proposed spec fix that passes bounded checks. None has been re-proved yet.
+          On the states the checker classed as ordinary, all 10 safety properties it could evaluate held. That class excludes global pauses, forked children, finalization and the raw type-lock holds. The one property that failed anywhere was the no-leaked-lock rule, on those raw holds. Each gap has a proposed spec fix that passes bounded checks but has not been re-proved.
         </p>
         <p>
-          So the proof holds, but it is about a cleaner protocol than the one CPython runs. The audit found five of the places where the two differ. Without the check against real runs, the proof would have been a correct theorem about the wrong system.
+          So the proof holds, but it is about a cleaner protocol than the one CPython runs. The audit and the replays found five places where the two differ. Without the check against real runs, the proof would have been a correct theorem about the wrong system.
         </p>
 
         <h2 id="control">Did the rules help find bugs? A control run</h2>
         <p>I re-audited 8 of the sweep's areas with a plain "find free-threading bugs" prompt. The model, tools and builds were the same, and the agents were told not to read the earlier work.</p>
         <div class="table-wrap">
-          <div class="table-label"><span class="id">Table 03</span>Same 8 areas, two prompts</div>
+          <div class="table-label"><span class="id">Table 04</span>Same 8 areas, two prompts</div>
           <table>
             <thead>
               <tr><th></th><th>With the five rules</th><th>Plain prompt</th></tr>
             </thead>
             <tbody>
-              <tr><td>New bugs</td><td>16 confirmed (three checks each)</td><td>11 of those 16, plus about 9 other candidates (repro check only, novelty unchecked)</td></tr>
+              <tr><td>Bugs found</td><td>16 confirmed (three checks each)</td><td>11 of those 16, plus about 9 other candidates (repro check only, novelty unchecked)</td></tr>
               <tr><td>Found only by this prompt</td><td class="num">5</td><td>about 9</td></tr>
             </tbody>
           </table>
         </div>
         <p>
-          The rules reached a subtle class the plain prompt missed: five re-entrancy chains. Their output was also cleaner, but it had been through more checking. They did not find more bugs overall. What I'd recommend is a plain audit for breadth, then the rules as a checklist, with independent checks on every candidate.
+          The rules reached a subtle class the plain prompt missed: five re-entrancy chains. Their output was also cleaner, but it had been through more checking. They did not find more bugs overall. What I'd recommend is a plain audit for breadth, then the rules as a checklist, with the three separate-agent checks on every candidate.
         </p>
 
         <h2 id="interpretation">Interpretation and limits</h2>
-        <p>Agents with a strict repro harness found real, mostly new bugs in mature, heavily reviewed code. The TLA+ spec made one prediction that came true, named a root cause and produced a checklist. The unbounded proofs found no bugs. They showed the modelled protocol, at its default settings, meets its 11 safety properties. Checking them against real runs showed where CPython's actual protocol differs.</p>
+        <p>Agents with a strict repro harness found real bugs in mature, heavily reviewed code, most with no earlier report found in the tracker search, and CPython developers have merged fixes for two of the five I reported. The TLA+ spec made one prediction that came true, named a root cause and produced a checklist. The unbounded proofs found no bugs. They showed that the modelled protocol, at its default settings, meets its 11 safety properties, and checking them against real runs showed where CPython's actual protocol differs.</p>
         <ul>
-          <li>"No earlier report found" means a systematic search came up empty, not that no one has ever seen the bug.</li>
-          <li>Six of the 25 have no packet yet, and 8 packets have blocking errors to fix before filing.</li>
-          <li>The proofs cover safety only. One of the 16 theorems is established by neither prover: that a reduced core of the invariant, without its three extra conjuncts, is inductive by itself.</li>
+          <li>I have not reported the other 21 hunt bugs, the other two pilot bugs or the 92 sweep findings, so apart from the one hunt bug already described upstream, they have had no upstream review.</li>
+          <li>One of the 16 theorems is established by neither prover: that a reduced core of the invariant, without its three auxiliary parts, is inductive on its own, meaning every step preserves it without relying on those parts.</li>
           <li>The replays cover 44 of 72 logs and 16 of 38 workloads, with no data writes, so one property went unchecked. Some known kinds of divergence never occurred in them, so there may be more gaps than the five found.</li>
-          <li>The models assume sequential consistency.</li>
+          <li>The models assume sequential consistency, a single global order for all memory operations, which arm64 hardware does not guarantee, so they cannot show memory-ordering bugs.</li>
           <li>The control used 8 areas, and the same model helped write the rules, so rule-style thinking may have leaked into the plain run.</li>
           <li>Everything ran on one macOS arm64 machine. Linux, Windows and 3.13 are untested.</li>
         </ul>
 
         <h2 id="next-experiment">Next experiment</h2>
         <ul>
-          <li>File the remaining packets upstream and link them here.</li>
+          <li>Fix the eight blocked packets and file the remaining reports, so more of the 25 get upstream review.</li>
           <li>Check the roughly 9 candidates only the plain prompt found.</li>
           <li>Fold the five spec fixes into one model and re-prove it in both provers.</li>
           <li>Replay the remaining 28 logs, with data writes recorded.</li>
@@ -627,15 +656,17 @@
           <tbody>
             <tr><th scope="row">Model</th><td>Claude Opus 5.5 for every agent, directed from Claude Code.</td></tr>
             <tr><th scope="row">Experiment</th><td>Free-threaded CPython main @6757482, 3.15 @2dafe2a, 3.14 @1d8c9f8 on macOS arm64. TLA+ tools 1.7.4, TLAPS 1.6.0-pre (strict), Lean 4.34 without Mathlib. Hunt: 221 agents, ~22M tokens, ~13 h. Sweep: 343 agents, plus 175 to re-check findings. Control: 80 agents, 5.5M tokens.</td></tr>
-            <tr><th scope="row">Data</th><td>Unit for bugs: a trigger that misbehaves on an unmodified build, confirmed by independent repro, refutation and novelty checks. Replays: 44 of 72 logs, 36,064,311 events.</td></tr>
-            <tr><th scope="row">Status</th><td>Published 2026-09-25 · Five bugs filed upstream (<a href="https://github.com/python/cpython/issues/158194">gh-158194</a> to <a href="https://github.com/python/cpython/issues/158198">gh-158198</a>), with repros and patches attached; details of the rest withheld until they're filed. Other results and code are not published.</td></tr>
+            <tr><th scope="row">Data</th><td>Unit for bugs: a trigger that misbehaves on an unmodified build, confirmed by separate-agent repro, refutation and novelty checks. Replays: 44 of 72 logs, 36,064,311 events.</td></tr>
+            <tr><th scope="row">Results</th><td>The five public reports (<a href="https://github.com/python/cpython/issues/158194">gh-158194</a> to <a href="https://github.com/python/cpython/issues/158198">gh-158198</a>) include their repros, proposed patches and run counts. The other findings, the specs, the proofs and the replay logs are not published.</td></tr>
+            <tr><th scope="row">Code</th><td>The agent harness and workflow scripts are not published.</td></tr>
+            <tr><th scope="row">Status</th><td>Published 2026-09-25 · updated 2026-10-23. Five reports filed upstream: fixes for two are merged into CPython main and three have open fix PRs (Table 02). Unreported findings are described by class and count only until they are filed.</td></tr>
           </tbody>
         </table>
 
 
             <!-- PANES:NEXT:START -->
     <nav class="post-next" aria-label="More research">
-      <a href="blog_proof_optimizer.html"><span>next →</span><span>I used formal verification and agents to make an algorithm 105× faster and prove it behaves the same</span></a>
+      <a href="blog_proof_optimizer.html"><span>next →</span><span>Agents optimized four naive routines without changing their specifications</span></a>
       <a class="post-next__all" href="research.html">← all research</a>
     </nav>
   <!-- PANES:NEXT:END -->

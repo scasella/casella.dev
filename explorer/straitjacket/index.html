@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AI Scientist in a Straitjacket</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Twelve attention heads in Qwen3 pass an answer along in three stages, and a map made in the small model predicted where to look in a larger one. An AI scientist found it on one laptop, under rules sealed before the model ran. An illustrated, interactive tour of the findings and what they are good for.">
+<meta name="description" content="Twelve attention heads in Qwen3 pass an answer along in three stages, and six head locations from the small model predicted where to look in a larger one. An AI scientist found it on one laptop, under rules sealed before the model ran. An illustrated, interactive tour of the findings and what they are good for.">
 <meta name="robots" content="index, follow">
 <meta name="theme-color" content="#0F1317">
 <link rel="canonical" href="https://casella.dev/explorer/straitjacket/">
@@ -13,7 +13,7 @@
 <meta name="author" content="Stephen Casella">
 <meta property="og:site_name" content="Stephen Casella">
 <meta property="og:title" content="Putting an AI Scientist in a Cryptographic Straitjacket">
-<meta property="og:description" content="Twelve attention heads in Qwen3 pass an answer along in three stages, and a map made in Qwen3-0.6B predicted where to look in Qwen3-1.7B. Found by AI agents under sealed, audited rules on one laptop.">
+<meta property="og:description" content="Twelve attention heads in Qwen3 pass an answer along in three stages, and six head locations from Qwen3-0.6B predicted where to look in Qwen3-1.7B. Found by AI agents under sealed, audited rules on one laptop.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://casella.dev/explorer/straitjacket/">
 <meta property="og:image" content="https://casella.dev/assets/og/blog_qwen_lookup.png">
@@ -30,7 +30,7 @@
   "@context": "https://schema.org",
   "@type": "WebPage",
   "name": "AI Scientist in a Straitjacket",
-  "description": "An interactive tour of a pre-registered mechanistic interpretability study of Qwen3-0.6B and Qwen3-1.7B: a twelve-head, three-stage lookup pathway found by AI agents under sealed, audited rules on one laptop, a map from the small model that predicted where to look in the larger one, and what the findings are good for.",
+  "description": "An interactive tour of a pre-registered mechanistic interpretability study of Qwen3-0.6B and Qwen3-1.7B: a twelve-head, three-stage lookup pathway found by AI agents under sealed, audited rules on one laptop, six head locations from the small model that predicted where to look in the larger one, and what the findings are good for.",
   "url": "https://casella.dev/explorer/straitjacket/",
   "isPartOf": { "@type": "WebSite", "name": "Stephen Casella", "url": "https://casella.dev/" },
   "author": { "@type": "Person", "name": "Stephen Casella", "url": "https://casella.dev/" },
@@ -1323,11 +1323,11 @@ details.nums > summary { font-family: var(--f-mono); }
       <div class="top-tldr" role="region" aria-labelledby="top-tldr-k">
         <p class="top-tldr-k" id="top-tldr-k">TL;DR</p>
         <ul>
-          <li>Ask Qwen3 “Rowan is red. Lumen is blue. What color is Rowan?” Twelve of its 448 <button type="button" class="gl" data-term="attention-head">attention heads</button> answer in three <button type="button" class="gl" data-term="stage">stages</button>: six question heads match the question to the facts, three router heads carry that to the answer position, and three copier heads copy the color.</li>
-          <li>A sealed guess, that names get stamped onto their colors, failed. Bookkeeping then predicted about 3.79 <button type="button" class="gl" data-term="logit">points</button> had to flow through the last word's query, and the measurement came back 3.797.</li>
-          <li>A <button type="button" class="gl" data-term="blind-search">blind search</button> in the larger Qwen3-1.7B found the same three copier heads and two of the three router heads. Pooled over both models, <button type="button" class="gl" data-term="patching">transplanting</button> the router heads' signal moved the answer preference the predicted way on 960 of 960 prompts, a direction-only count pooled across runs with mixed verdicts.</li>
+          <li>Ask Qwen3 “Rowan is red. Lumen is blue. What color is Rowan?” Twelve of its 448 <button type="button" class="gl" data-term="attention-head">attention heads</button> answer in three <button type="button" class="gl" data-term="stage">stages</button>: six question heads help identify which record the question asks about, three router heads carry that to the answer position, and three copier heads copy the color.</li>
+          <li>A sealed guess, that names get stamped onto their colors, failed. Bookkeeping then predicted that about 3.79 <button type="button" class="gl" data-term="logit">points</button> would flow through the last word's query (an exploratory estimate, not a conservation law), and a post-hoc measurement came back 3.797.</li>
+          <li>A <button type="button" class="gl" data-term="blind-search">blind search</button> in the larger Qwen3-1.7B found the same three copier heads and two of the three router heads. Pooled over both models, <button type="button" class="gl" data-term="patching">transplanting</button> the router heads' signal moved the answer preference the predicted way on 960 of 960 prompts, a direction-only count pooled across five runs with mixed verdicts; it leaves out the failed structured-format run.</li>
           <li>Six question-head locations from the small model were tested in the larger one with <button type="button" class="gl" data-term="transfer">no new search</button>. The predicted direction held on 92.2% to 100% of held-out prompts, and that study passed every registered gate.</li>
-          <li>When the model answered wrong, one copier head still favored the right color, on all 13 errors in the first study. A repair built on the findings fixed 6 errors for each one it broke, but failed its preregistered test.</li>
+          <li>When the model answered wrong, one copier head still favored the right color, on all 13 errors in the first study. On held-out four-record prompts, a repair built on the findings fixed 6 errors and broke 1, but failed its preregistered test.</li>
           <li>Not everything passed. The small model's own three-stage study moved the preference the predicted way on all 192 held-out prompts, yet failed its overall verdict: the unmodified model answered 101 of 128 test prompts against a required 103.</li>
         </ul>
         <p class="rec-note">Rowan and Lumen are illustrative. The experiments used fresh single-token words, drawn new for every run. “Answer preference” is the model's preference between two given answer words, such as red and blue.</p>
@@ -1561,7 +1561,7 @@ details.nums > summary { font-family: var(--f-mono); }
     brk(19, 22, 'move', ['copier heads', 'copy the value'], ['Stage 2', 'L19–22']);
     if (R.model === '06') brk(15, 17, 'route', ['router heads', 'carry it forward'], ['Stage 1', 'L15–17']);
     else brk(16, 18, 'route', ['router heads', 'carry it forward'], ['Stage 1', 'L16–18']);
-    brk(11, 14, 'hop', ['question heads', 'match the question'], ['Stage 0', 'L11–14']);
+    brk(11, 14, 'hop', ['question heads', 'identify the record'], ['Stage 0', 'L11–14']);
   }
 
   function build(L) {
@@ -1676,7 +1676,7 @@ details.nums > summary { font-family: var(--f-mono); }
 })();
 </script>
         <ul class="top-legend">
-          <li><i data-s="hop" aria-hidden="true"></i><span class="l-plain">Question heads, layers 11–14: match the question to the facts</span><span class="l-tech">Stage 0 · L11–14 · at [p_query..T−1]</span></li>
+          <li><i data-s="hop" aria-hidden="true"></i><span class="l-plain">Question heads, layers 11–14: help identify the requested record</span><span class="l-tech">Stage 0 · L11–14 · at [p_query..T−1]</span></li>
           <li><i data-s="route" aria-hidden="true"></i><span class="l-plain">Router heads: carry it to the answer position</span><span class="l-tech">Stage 1 · read V over the question, write Q_T</span></li>
           <li><i data-s="move" aria-hidden="true"></i><span class="l-plain">Copier heads, layers 19–22: copy the value</span><span class="l-tech">Stage 2 · L19–22 · copy V_value via OV</span></li>
         </ul>
@@ -1715,7 +1715,7 @@ details.nums > summary { font-family: var(--f-mono); }
         <div class="tbl-wrap" tabindex="0" role="region" aria-label="Numbers for Fig 1.1, the twelve heads"><table class="tbl">
           <thead><tr><th>Stage</th><th>Job</th><th>Qwen3-0.6B</th><th>Qwen3-1.7B</th></tr></thead>
           <tbody>
-            <tr><td>0 · question heads</td><td>match the question to the facts</td><td>13:6, 12:6, 13:14, 14:12, 11:9, 13:15</td><td>the same six, fixed from 0.6B</td></tr>
+            <tr><td>0 · question heads</td><td>help identify the requested record</td><td>13:6, 12:6, 13:14, 14:12, 11:9, 13:15</td><td>the same six, fixed from 0.6B</td></tr>
             <tr><td>1 · router heads</td><td>carry it to the answer position</td><td>15:4, 16:4, 17:1</td><td>16:4, 17:1, 18:7 (found by search)</td></tr>
             <tr><td>2 · copier heads</td><td>select the source, copy its value</td><td>19:5, 21:13, 22:9</td><td>19:5, 21:13, 22:9 (found by search)</td></tr>
           </tbody>
@@ -1736,9 +1736,9 @@ details.nums > summary { font-family: var(--f-mono); }
           <li>960/960 is the pooled direction count (sign of Δm only) for B_upstream_Q and C_upstream_Q across v4–v7 (0.6B) and v10 (1.7B): five disjoint key pools, 192 held-out prompts each (128 Primary red/blue plus 64 Vocabulary green/yellow). B_q_final and C_q_final were 959/960. Verdicts were mixed: v4, v5 and v6 failed other sealed checks, and only v7 and v10 passed every gate.</li>
           <li>v7 passed 5/5 gates and 80/80 checks after three of its thresholds were revised before the run, using earlier outcomes: accuracy from 85% to 80%, and two attention-shift bars. Earlier failed studies were not regraded.</li>
           <li>≈3.79 is 4.5601 − 0.7706: the query-swap total minus the key-stamp share, treating the 0.047-logit value term as zero. The 3.797235 measurement came from a read-only diagnostic on the frozen v4 data; v7 then tested the final-query path prospectively. Counting the value term, the prediction would be 3.7423, 0.055 from the measurement <span class="ev" data-ev="arithmetic">Arithmetic</span>. <a href="#pointer">Finding 2</a> walks through it.</li>
-          <li>13/13 and 9/9: head 19:5's readout favored the correct value on all 13 model errors in v1 and on all 9 in the gold/silver follow-up. v1 was inconclusive (115 of 128 against a required 116) and the gold/silver follow-up failed a calibration prerequisite, so these are descriptive findings from those runs.</li>
+          <li>13/13 and 9/9: head 19:5's readout favored the correct value on all 13 model errors in v1 and on all 9 calibration errors in the gold/silver follow-up. v1 was inconclusive (115 of 128 against a required 116) and the gold/silver follow-up failed a calibration prerequisite, so these are descriptive findings from those runs.</li>
           <li>The repair (v8) had its settings chosen on calibration prompts, then frozen. On held-out four-record prompts it fixed 6 errors and introduced 1 (+5 net of 192), against 10 fixed and 7 broken for naive amplification. It failed three of its four gates: on the main held-out set it did not improve the margins of the recency errors it targeted, and on fresh colors its net gain only tied naive amplification. A separate gold/silver repair fixed 2 and broke 2.</li>
-          <li>The two fresh runs per confirmation show the numbers repeat exactly; they are not extra samples. The independent audits reuse some of the same NumPy arithmetic as the production code. No one outside the project has reviewed the work.</li>
+          <li>The two fresh runs per confirmation show the numbers repeat exactly; they are not extra samples. The separate audits reuse some of the same NumPy arithmetic as the production code. No one outside the project has reviewed the work.</li>
           <li>Agents: Codex CLI calls running gpt-6-luna proposed and reviewed explanations; frozen, executable tests decided which ones survived. Hardware: one 24 GB Apple M4 Pro MacBook Pro (MPS).</li>
           <li>Code: <a href="https://github.com/scasella/qwen3-auto-interp">github.com/scasella/qwen3-auto-interp</a> (Apache-2.0, source only), with a <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/RESULTS_INDEX.md">results ledger for every study</a>. The frozen reports, prompt sets and saved arrays are private, so a public clone cannot rerun the audits.</li>
           <li>Scope: short, controlled lookup prompts with two or four records, in two related Qwen3 models. Answer preference is the preference between two specified answer words at the next token; free-form generation was not tested.</li>
@@ -1773,7 +1773,7 @@ SJ.ready(() => {
     '17': 'Twelve of 448 in Qwen3-1.7B · six found by a blind search (v10) · six carried over with no new search (v12) · both passed every gate'
   };
   const W = {
-    '06': ['Question heads match the question to the facts…', '…router heads carry it to the answer position…', '…copier heads copy the value.'],
+    '06': ['Question heads help identify the requested record…', '…router heads carry it to the answer position…', '…copier heads copy the value.'],
     '17': ['The six question heads, fixed from 0.6B, feed the rail…', '…router heads carry it to the answer position…', '…copier heads copy the value.']
   };
   const EV = {
@@ -1787,7 +1787,7 @@ SJ.ready(() => {
   root.querySelectorAll('[data-lens-to]').forEach((b) => b.addEventListener('click', () => SJ.setLens(b.getAttribute('data-lens-to'))));
 
   /* tooltips on the lit heads (detail only; the tables carry every value) */
-  const ROLE = { hop: 'question head · stage 0 · works at the question, marks which fact matches', route: 'router head · stage 1 · carries it to the answer position, writes the pointer', move: 'copier head · stage 2 · selects the source, copies its value' };
+  const ROLE = { hop: 'question head · stage 0 · works at the question, helps identify the requested record', route: 'router head · stage 1 · carries it to the answer position, writes the pointer', move: 'copier head · stage 2 · selects the source, copies its value' };
   function attachTips() { T.R.nodes.forEach((n, id) => { const [L, h] = id.split(':'); SJ.tip.attach(n, `${id} · layer ${L}, head ${h} · ${ROLE[SJ.HEADS[id]]}`); }); }
 
   /* the sweep buttons belong to the current model */
@@ -4557,7 +4557,7 @@ SJ.ready(() => {
 
   <div class="prose">
     <aside class="mn">v4 read-only diagnostic · predicted <span class="l-plain">≈3.79</span><span class="l-tech">3.7895</span> · measured <span class="l-plain">3.797</span><span class="l-tech">3.797235</span> (128/128)</aside>
-    <p>The team had sealed a guess in advance: each name gets stamped onto its answer word, and the copiers search those stamps. The guess failed. The stamps carried 0.77 <button type="button" class="gl" data-term="logit">points</button>. Take the full where-to-look effect measured with switch B, 4.56 points, as the total to account for. A copier's output at the last word depends on only three inputs: its query, the keys and the values. The values carried almost nothing, 0.05 points. So the rest, about 3.79 points, had to be in the query, even though the question had not changed. A read-only check on the frozen data measured 3.797. This is a <button type="button" class="gl" data-term="conservation">conservation-based prediction</button>.</p>
+    <p>The team had sealed a guess in advance: each name gets stamped onto its answer word, and the copiers search those stamps. The guess failed. The stamps carried 0.77 <button type="button" class="gl" data-term="logit">points</button>. Take the full where-to-look effect measured with switch B, 4.56 points, as the total to account for. A copier's output at the last word depends on only three inputs: its query, the keys and the values. The values carried almost nothing, 0.05 points. So the rest, about 3.79 points, should be in the query, even though the question had not changed. A read-only check on the frozen data measured 3.797. This is a <button type="button" class="gl" data-term="conservation">conservation-based prediction</button>.</p>
   </div>
 
   <figure class="fig wide" id="pointer-receipt" aria-labelledby="pointer-receipt-t">
@@ -4796,7 +4796,7 @@ SJ.ready(() => {
       'The total to account for: 4.56 points, measured with switch B.',
       'The sealed guess: name stamps should carry about 4.5 of it.',
       'Measured: the stamps carried 0.77, and the values 0.05. The guess failed.',
-      'Bookkeeping: the remaining ≈3.79 points must be in the last word\'s query.',
+      'Bookkeeping: the remaining ≈3.79 points should be in the last word\'s query.',
       'Measured with the query alone: 3.797. The three router heads alone carry 3.36 of it.'
     ];
     let cur = 5, auto = 0, gen = 0, marks = [], lbls = [], groups = {}, geo = null;
@@ -5678,7 +5678,7 @@ SJ.ready(() => {
           <li class="h7-row"><span class="h7-lamp" aria-hidden="true"></span><span class="h7-g">Gate 2</span><span class="h7-d"><b>Routers drive the pointer, with the question swapped and with it fixed</b><span class="h7-c">19/19 red/blue · 19/19 green/yellow</span></span><span class="stamp" data-v="pass">Pass</span></li>
           <li class="h7-row"><span class="h7-lamp" aria-hidden="true"></span><span class="h7-g">Gate 3</span><span class="h7-d"><b>Both word pairs at once</b><span class="h7-c">40/40 red/blue · 40/40 green/yellow = 80/80</span></span><span class="stamp" data-v="pass">Pass</span></li>
           <li class="h7-row"><span class="h7-lamp" aria-hidden="true"></span><span class="h7-g">Gate 4</span><span class="h7-d"><b>Decoys, exact replay, sealed files</b><span class="h7-c">decoys handled · identity error 0.00000000 · 655/655 arrays identical · 1,053 protected files</span></span><span class="stamp" data-v="pass">Pass</span></li>
-          <li class="h7-row h7-rev"><span class="h7-lamp" aria-hidden="true"></span><span class="h7-g">Review</span><span class="h7-d"><b>Independent AI review: support</b><span class="h7-c">83/83 numbers bound by code</span></span><span class="stamp" data-v="pass">Support</span></li>
+          <li class="h7-row h7-rev"><span class="h7-lamp" aria-hidden="true"></span><span class="h7-g">Review</span><span class="h7-d"><b>Reference-bound AI review: support</b><span class="h7-c">83/83 numbers bound by code</span></span><span class="stamp" data-v="pass">Support</span></li>
         </ol>
         <div class="h7-80">
           <div class="h7-80b">
@@ -5769,7 +5769,7 @@ SJ.ready(() => {
   </figure>
 
   <aside class="callout" data-kind="sowhat"><p class="callout-k">So what</p><p>One lucky test can fool you. Five batches of fresh prompts with new words, in two model sizes, checked against bars sealed in advance, are much harder to fool.</p></aside>
-  <aside class="callout" data-kind="breaks"><p class="callout-k">Where this picture breaks</p><p>The 960 counts only the sign of each change, not its size, and not whether the answer flipped. It pools five runs with mixed verdicts: v4, v5 and v6 failed other sealed checks. The two model sizes use different router trios (15:4 in the small model, 18:7 in the larger one).</p></aside>
+  <aside class="callout" data-kind="breaks"><p class="callout-k">Where this picture breaks</p><p>The 960 counts only the sign of each change, not its size, and not whether the answer flipped. It pools five runs with mixed verdicts: v4, v5 and v6 failed other sealed checks. It leaves out the structured-format run (v9), which failed, and in v4 the names-swapped rows come from a read-only diagnostic run after that study. The two model sizes use different router trios (15:4 in the small model, 18:7 in the larger one).</p></aside>
 
   <details class="hood"><summary><span class="hood-k">Under the hood</span><span class="hood-src">v2 · v4–v7 · v10 · T1 P4, P7 · T2 §3.1, §5, Tables 2 and 4 · manuscript §5.4</span></summary><div class="hood-body">
     <p><b>Safe summary.</b> Confirmed in pre-registered runs that passed every gate (the capstone, v7, in Qwen3-0.6B: 5/5 gates, 80/80 checks; v10 in Qwen3-1.7B: 108/108 criteria), and directionally consistent on 960/960 prompts pooled across five datasets in two model sizes. Three of those five runs (v4, v5, v6) failed other gates, so the 960 is pooled direction and is separate from the run verdicts.</p>
@@ -6743,7 +6743,7 @@ SJ.ready(() => {
   <details class="hood"><summary><span class="hood-k">Under the hood</span><span class="hood-src">v1 · gold/silver · v8 Track A · T1 P2–P3 · T2 §6.1 · T5 §6.3.3</span></summary><div class="hood-body">
     <p><span class="stamp" data-v="inconclusive">v1 · Inconclusive</span><span class="stamp" data-v="fail">gold/silver · Failed a prerequisite</span><span class="stamp" data-v="rejected">v8 · Rejected</span></p>
     <p><b>v1 (red/blue).</b> The model scored 115/128 (89.84375%) on held-out prompts, against a required 116, so the run was inconclusive; head 19:5's read-out scored 126/128 (98.4375%) and was right on 13/13 of the model's errors. Its donor-patch direction was 128/128 over all held-out prompts, errors included. Because the read-out was right on all 13 errors, its 2 misses fell on prompts the model got right <span class="ev" data-ev="arithmetic">Arithmetic</span>. No attention numbers are reported for the v1 errors.</p>
-    <p><b>Gold/silver follow-up.</b> The run failed a calibration prerequisite, so its read-outs are descriptive. Calibration accuracy 55/64 (85.94%): gold 32/32, silver 23/32. All 9 errors are on the 64-prompt calibration split. On 9/9, 19:5's leave-group-out read-out predicted silver, its attention favored silver over gold, and four ways of removing or swapping it each made the error worse (median changes: −0.5626 zeroing, −0.6498 mean replacement, −1.3487 opposite-donor patching, −1.3048 source-V swap, in logits). The logit lens after layer 19 already favored silver on 5/9 errors.</p>
+    <p><b>Gold/silver follow-up.</b> The run failed a calibration prerequisite, so its read-outs are descriptive. Calibration accuracy 55/64 (85.94%): gold 32/32, silver 23/32. All 9 calibration errors are among those 64 prompts. On 9/9, 19:5's leave-group-out read-out predicted silver, its attention favored silver over gold, and four ways of removing or swapping it each made the error worse (median changes: −0.5626 zeroing, −0.6498 mean replacement, −1.3487 opposite-donor patching, −1.3048 source-V swap, in logits). The logit lens after layer 19 already favored silver on 5/9 errors.</p>
     <p><b>What overruled it.</b> Later layers added about −1.2 logits against silver on the errors (−1.2074; layer 24 attention −0.9835), led by head 24:7, which leaned toward “gold” on all 192 prompts it was measured on (+0.498 to +1.964 logits) and averaged −1.2421 against silver on the 9 errors. That was with one set of key words; with a fresh set, the lean largely vanished. The −1.2 figure is not 24:7's own number.</p>
     <p><b>Why both fixes backfire (T2 §6.1).</b> If h(x) = s_task(x) + b_prior with E[s_task(x)] = 0, then μ_h = E[h(x)] = b_prior. Replacing h(x) with μ_h leaves the constant lean in place (1 fixed / 3 broken on both splits). Setting h(x) to 0 subtracts b_prior from every prompt, which moves the decision line: 4 fixed / 0 broken on calibration (59/64), 3 fixed / 4 broken on the 128 confirmation prompts. Both rows imply a 120/128 confirmation baseline (118 − 1 + 3; 119 − 3 + 4) <span class="ev" data-ev="arithmetic">Arithmetic</span>.</p>
     <p><b>Fresh key words (v8-repair, Track A).</b> Keys from an expanded 471-word whitelist: calibration rose from 55/64 (85.94%) to 62/64 (96.88%) with silver 32/32, and the mean calibration margin reversed to favor silver by 0.4196 logits. Held-out: 122/128 (95.31%), silver 62/64, so gold 60/64 <span class="ev" data-ev="arithmetic">Arithmetic</span>. 24:7 was not re-measured. The run also tried a “frozen repair (α=2.5, γ=1.0)” that gave 2 fixed / 2 broken; it is not the proposed error flag, so it counts neither for nor against that idea.</p>
@@ -8963,13 +8963,13 @@ SJ.ready(() => {
             <li data-n="1"><span class="ed-n" aria-hidden="true">1</span><div>
               <p class="ed-sk" data-stage="hop">Stage 0 · <span class="l-plain">question heads</span><span class="l-tech">H₀</span> · layers 11–14</p>
               <p class="ed-lt"><span class="hid" data-stage="hop">13:6</span> <span class="hid" data-stage="hop">12:6</span> <span class="hid" data-stage="hop">13:14</span> <span class="hid" data-stage="hop">14:12</span> <span class="hid" data-stage="hop">11:9</span> <span class="hid" data-stage="hop">13:15</span></p>
-              <p class="ed-ld">Match the question to the facts, and leave the result at the <button type="button" class="gl" data-term="question-span">question</button>.</p>
+              <p class="ed-ld">Help identify the requested record, and leave the result at the <button type="button" class="gl" data-term="question-span">question</button>.</p>
               <p class="ed-tech tech-only">They write into positions p_query..T−1; Stage 1 reads it through its values.</p>
               <span class="ed-chips"><span class="ev" data-ev="measured">Measured · v11 (failed its accuracy prerequisite)</span><span class="ev" data-ev="confirmed">Confirmed in 1.7B · v12</span></span></div></li>
             <li data-n="2"><span class="ed-n" aria-hidden="true">2</span><div>
               <p class="ed-sk" data-stage="route">Stage 1 · <span class="l-plain">router heads</span><span class="l-tech">U</span> · layers 15–17</p>
               <p class="ed-lt"><span class="hid" data-stage="route">15:4</span> <span class="nw">(<button type="button" class="gl" data-term="head-id">layer 15, head 4</button>),</span> <span class="hid" data-stage="route">16:4</span>, <span class="hid" data-stage="route">17:1</span></p>
-              <p class="ed-ld">Carry the match to the answer position and write the <button type="button" class="gl" data-term="pointer">pointer</button> into the copiers’ query. In Qwen3-1.7B they are <span class="hid" data-stage="route">16:4</span>, <span class="hid" data-stage="route">17:1</span> and <span class="hid" data-stage="route">18:7</span>.</p>
+              <p class="ed-ld">Carry that information to the answer position and write the <button type="button" class="gl" data-term="pointer">pointer</button> into the copiers’ query. In Qwen3-1.7B they are <span class="hid" data-stage="route">16:4</span>, <span class="hid" data-stage="route">17:1</span> and <span class="hid" data-stage="route">18:7</span>.</p>
               <p class="ed-tech tech-only">They read V over the question span and write Q_final, the copiers’ final-position query.</p>
               <span class="ed-chips"><span class="ev" data-ev="confirmed">Confirmed · v7 (0.6B) · v10 (1.7B)</span></span></div></li>
             <li data-n="3"><span class="ed-n" aria-hidden="true">3</span><div>
@@ -9012,12 +9012,12 @@ SJ.ready(() => {
       </div>
     </div>
     <div class="fig-ctrl"><button type="button" class="btn ghost replay" data-replay hidden>↻ Replay the three stages</button></div>
-    <figcaption><span class="read">Read it:</span> the lit heads are the pathway this study mapped and checked, drawn on Qwen3-0.6B’s grid: teal triangles match the question to the facts, orange diamonds carry the match to the answer, blue circles copy the value. Numbers 4 and 5 mark where the model leans; the dashed tiles mark what has not been mapped. <span class="fig-note">Schematic: head positions are exact; the wires, the lean mark and the ghost tiles are drawings.</span></figcaption>
+    <figcaption><span class="read">Read it:</span> the lit heads are the pathway this study mapped and checked, drawn on Qwen3-0.6B’s grid: teal triangles help identify the requested record, orange diamonds carry that to the answer, blue circles copy the value. Numbers 4 and 5 mark where the model leans; the dashed tiles mark what has not been mapped. <span class="fig-note">Schematic: head positions are exact; the wires, the lean mark and the ghost tiles are drawings.</span></figcaption>
     <details class="nums"><summary>Show the numbers</summary><div class="tbl-wrap" tabindex="0" role="region" aria-label="Numbers for Fig 14.1"><table class="tbl">
       <thead><tr><th class="r">#</th><th>Mark</th><th>What it shows</th><th>Numbers</th><th>Status</th></tr></thead>
       <tbody>
-        <tr><td class="r">1</td><td>13:6, 12:6, 13:14, 14:12, 11:9, 13:15 (layers 11–14)</td><td>match the question to the facts</td><td>v11 (0.6B): predicted direction on all 192 held-out prompts and the 64 selection prompts, 63/63 mechanism criteria, but 101/128 correct against a required 103; v12 (1.7B, no new search): 92.2%–100% of held-out prompts, 63/63 criteria</td><td>Measured · v11; confirmed in 1.7B · v12</td></tr>
-        <tr><td class="r">2</td><td>15:4, 16:4, 17:1 (layers 15–17); 16:4, 17:1, 18:7 in 1.7B</td><td>carry the match, write the pointer</td><td>960/960 pooled direction, v4–v7 and v10 (direction only; runs with mixed verdicts); capstone 5/5 gates, 80/80 checks; v10 108/108 criteria</td><td>Confirmed · v7, v10</td></tr>
+        <tr><td class="r">1</td><td>13:6, 12:6, 13:14, 14:12, 11:9, 13:15 (layers 11–14)</td><td>help identify the requested record</td><td>v11 (0.6B): predicted direction on all 192 held-out prompts and the 64 selection prompts, 63/63 mechanism criteria, but 101/128 correct against a required 103; v12 (1.7B, no new search): 92.2%–100% of held-out prompts, 63/63 criteria</td><td>Measured · v11; confirmed in 1.7B · v12</td></tr>
+        <tr><td class="r">2</td><td>15:4, 16:4, 17:1 (layers 15–17); 16:4, 17:1, 18:7 in 1.7B</td><td>carry that to the answer, write the pointer</td><td>960/960 pooled direction, v4–v7 and v10 (direction only; runs with mixed verdicts); capstone 5/5 gates, 80/80 checks; v10 108/108 criteria</td><td>Confirmed · v7, v10</td></tr>
         <tr><td class="r">3</td><td>19:5, 21:13, 22:9 (layers 19–22)</td><td>fetch the word</td><td>capstone 5/5 gates, 80/80 checks; v10’s blind search over 176 heads found the same three</td><td>Confirmed · v7, v10</td></tr>
         <tr><td class="r">4</td><td>24:7</td><td>leaned toward gold</td><td>192/192 prompts in the gold/silver test; fresh key words in v8 took accuracy from 85.94% to 96.88% (24:7 not re-measured)</td><td>Measured · gold/silver follow-up</td></tr>
         <tr><td class="r">5</td><td>19:5</td><td>pull toward the last row</td><td>8.07× last row over first row (v8); 32/32 right when the asked-for color matched the last row, 15/32 when it didn’t (v3)</td><td>Measured · v8 (failed its test); seen after the fact · v3</td></tr>
@@ -9030,7 +9030,7 @@ SJ.ready(() => {
     <p class="scope-k" id="edge-scope-k">Scope: what this does not show</p>
     <ol>
       <li><b>Pointer-like routing.</b> The routing signal helps decide where to read before the value is copied, and an address is a useful analogy. What it represents is open: position, aspects of the requested record, or both. Moving records around independently of their names and values could tell these apart.</li>
-      <li><b>A verified twelve-head subgraph, not an exhaustive circuit.</b> The selected heads are not shown to be unique or exclusive, and this is not a complete account of how the model does lookup. Intervention ratios are sizes of controlled contrasts, not shares of the model’s whole decision.</li>
+      <li><b>A tested twelve-head subgraph, not an exhaustive circuit.</b> The selected heads are not shown to be unique or exclusive, and this is not a complete account of how the model does lookup. Intervention ratios are sizes of controlled contrasts, not shares of the model’s whole decision.</li>
       <li><b>Selection evidence.</b> Heads were selected on calibration prompts, so calibration results are selection evidence, not confirmation.</li>
       <li><b>Two sizes of one family,</b> Qwen3-0.6B and Qwen3-1.7B. Other families are untested. Matching locations across the two sizes do not prove the heads are the same component, and the pathway that passed in the larger model uses 18:7 in place of 15:4. Effect sizes differ between the models, so only directions and shares are compared.</li>
       <li><b>Short, synthetic lookup prompts</b> with 2 to 4 records. “Answer preference” means the model’s preference between two specified answer words, such as red and blue, at the next token. Free-form generation was not tested. JSON and tables were partly tested once (v9), and that run failed both of its tracks.</li>
@@ -9040,7 +9040,7 @@ SJ.ready(() => {
   </div>
 
   <div class="ed-pay">
-    <p>Ask Qwen3 “Rowan is red. Lumen is blue. What color is Rowan?” and you can now point to where the answer comes from: six heads in layers 11 to 14 match the question to the facts, three heads carry that match to the answer position, and three heads in layers 19 to 22 copy the color. A map drawn in the small model told the agents where to look in the larger one, and that prediction held. You can also point to where it goes wrong: a later head that leaned toward one word in one test, and a copier that drifts toward the last row. AI agents proposed the explanations, and frozen tests decided which ones survived.</p>
+    <p>Ask Qwen3 “Rowan is red. Lumen is blue. What color is Rowan?” and you can now point to where the answer comes from: six heads in layers 11 to 14 help identify which record the question asks about, three heads carry that to the answer position, and three heads in layers 19 to 22 copy the color. Six head locations from the small model told the agents where to look in the larger one, and that prediction held. You can also point to where it goes wrong: a later head that leaned toward one word in one test, and a copier that drifts toward the last row. AI agents proposed the explanations, and frozen tests decided which ones survived.</p>
     <p class="rec-note">Rowan and Lumen are illustrative names; the experiments used fresh single-token words.</p>
   </div>
 
@@ -9048,9 +9048,9 @@ SJ.ready(() => {
     <div class="ed-tk">
       <h3>If you are new to AI</h3>
       <ol>
-        <li>Inside this model, looking something up happens in three stages: one group matches the question to the facts, one carries the match to the answer, and one copies the value.</li>
+        <li>Inside this model, looking something up happens in three stages: one group helps identify the requested record, one carries that to the answer, and one copies the value.</li>
         <li>The right answer can be inside a model even when it is not what comes out.</li>
-        <li>An explanation of one model can guide an experiment in another: a map from the small model told the agents where to look in the larger one.</li>
+        <li>An explanation of one model can guide an experiment in another: six head locations from the small model told the agents where to look in the larger one.</li>
         <li>An AI can help do real science when code holds it to rules sealed in advance.</li>
       </ol>
     </div>
@@ -9074,9 +9074,9 @@ SJ.ready(() => {
         <li>“Heads were selected on calibration prompts, so calibration results are selection evidence, not confirmation. The selected heads are not shown to be unique or exclusive, and this is not a complete account of how the model does lookup.” (W, Limits)</li>
         <li>“Matching locations across the two sizes do not prove the heads are the same component. The pathway that passed in the larger model uses 18:7 in place of 15:4.” (W, Limits)</li>
         <li>“‘Answer preference’ and accuracy here mean the model’s preference between two specified answer words, such as red and blue, at the next token. Free-form generation was not tested.” (W, Limits)</li>
-        <li>“The two fresh runs per confirmation show the numbers repeat exactly; they are not extra samples. The independent audits reuse some of the same NumPy arithmetic as the production code. No one outside the project has reviewed the work.” (W, Limits)</li>
-        <li>“The six-head route passed after three of its thresholds were revised before the run, using earlier outcomes: accuracy from 85% to 80%, and two attention-shift bars. Earlier failed studies were not regraded.” (W, Limits)</li>
-        <li>The six heads of the first manuscript are “a verified, high-leverage causal subgraph, not an exhaustive or exclusive circuit. Separate Q and K patch effects need not sum linearly through softmax and RMSNorm, and intervention ratios represent controlled contrast magnitudes rather than percentages of total causal mediation.” (T2 §7) The same holds for the twelve.</li>
+        <li>“The two fresh runs per confirmation show the numbers repeat exactly; they are not extra samples. The separate audits reuse some of the same NumPy arithmetic as the production code. No one outside the project has reviewed the work.” (W, Limits)</li>
+        <li>“The confirmation of the last two stages passed after three of its thresholds were revised before the run, using earlier outcomes: accuracy from 85% to 80%, and two attention-shift bars. Earlier failed studies were not regraded.” (W, Limits)</li>
+        <li>The six heads of the first manuscript are “a verified, high-leverage causal subgraph, not an exhaustive or exclusive circuit. Separate Q and K patch effects need not sum linearly through softmax and RMSNorm, and intervention ratios represent controlled contrast magnitudes rather than percentages of total causal mediation.” (T2 §7) The same limits apply to the twelve, which passed every gate only in Qwen3-1.7B, with 18:7 in place of 15:4.</li>
         <li>The first manuscript said the heads before 17:1, 16:4 and 15:4 were not identified (T2 §7). v11 then screened all 240 heads in layers 0–14 across the question span and selected six in layers 11–14 (T10, T11). The map no longer marks that gap.</li>
         <li>The report’s estimate that a small-model map cuts discovery compute has no measurement behind it, so this page leaves it out. The write-up says measuring that benefit needs investigations that start with the map compared against ones that start without it.</li>
         <li>24:7’s lean comes from the gold/silver follow-up only, which failed a calibration prerequisite. It is not shown to cause the v1 red/blue errors.</li>
@@ -9432,7 +9432,7 @@ SJ.ready(() => {
       <div><dt id="gt-attention-head">Attention head</dt><dd id="g-attention-head">A small unit inside a layer that looks back at earlier words and copies information from them. Each layer has 16, so each model has 448. Qwen3-0.6B and Qwen3-1.7B share this 28 × 16 grid, so a head’s name points to the same place in both. <span class="gl-tech">16 query heads per layer share 8 key/value heads (GQA: query head h uses KV head ⌊h/2⌋); head size 128, in both models.</span></dd></div>
       <div><dt id="gt-head-id">Head name (19:5)</dt><dd id="g-head-id">“19:5” means layer 19, head 5, counting from 0. The same name means the same place in both models. <span class="gl-tech">layer:head, 0-indexed.</span></dd></div>
       <div><dt id="gt-qkv">Query, key, value</dt><dd id="g-qkv">A head at the last word sends out a query, compares it with a key on every earlier word, and copies the values of the best matches. The query and keys decide where to look; the values decide what gets copied. <span class="gl-tech">Attn(Q_T, K_1..T, V_1..T). QK sets the attention pattern; OV writes the output (Elhage et al., 2021).</span></dd></div>
-      <div><dt id="gt-stage">Stage (0, 1, 2)</dt><dd id="g-stage">One of the three groups of heads in the lookup pathway, in the order they act. Stage 0, six question heads in layers 11–14, matches the question to the facts. Stage 1, three router heads, carries the match to the answer position. Stage 2, three copier heads in layers 19–22, copies the value. <span class="gl-tech">Stage 0 = H₀ {13:6, 12:6, 13:14, 14:12, 11:9, 13:15}; Stage 1 = U {15:4, 16:4, 17:1} in 0.6B, {16:4, 17:1, 18:7} in 1.7B; Stage 2 = D {19:5, 21:13, 22:9} in both.</span></dd></div>
+      <div><dt id="gt-stage">Stage (0, 1, 2)</dt><dd id="g-stage">One of the three groups of heads in the lookup pathway, in the order they act. Stage 0, six question heads in layers 11–14, helps identify the requested record. Stage 1, three router heads, carries that to the answer position. Stage 2, three copier heads in layers 19–22, copies the value. <span class="gl-tech">Stage 0 = H₀ {13:6, 12:6, 13:14, 14:12, 11:9, 13:15}; Stage 1 = U {15:4, 16:4, 17:1} in 0.6B, {16:4, 17:1, 18:7} in 1.7B; Stage 2 = D {19:5, 21:13, 22:9} in both.</span></dd></div>
       <div><dt id="gt-question-span">Question span</dt><dd id="g-question-span">The question and the words after it, up to the answer position. Stage 0 heads work there, and Stage 1 heads read from there. <span class="gl-tech">Positions p_query..T−1 for the Stage 0 patches; Stage 1 reads its values over p_query..T.</span></dd></div>
       <div><dt id="gt-pointer">Pointer</dt><dd id="g-pointer">This page’s word for the where-to-look signal the router heads write into the last word’s query. Stage 1 writes it from what Stage 0 left at the question. <span class="gl-tech">A context-resolved routing signal in Q_final, written by Stage 1 from values read over the question span. Pointer-like; what it represents (position, aspects of the requested record, or both) is open.</span></dd></div>
       <div><dt id="gt-logit">Points (logits)</dt><dd id="g-logit">The model’s raw score for a possible next word. On this page, “points” means logits. <span class="gl-tech">One logit of lead multiplies the two-way odds by about 2.7 (e¹). Logit sizes differ between the two models, so only directions and shares are compared across them.</span></dd></div>
@@ -9486,7 +9486,7 @@ SJ.ready(() => {
         <tr><th scope="row">Studies</th><td>Twelve numbered studies plus follow-ups (v1 → v12, with upstream and the gold/silver follow-up). Three passed every registered gate: v7 (Qwen3-0.6B, the six-head route), v10 (Qwen3-1.7B, the route search) and v12 (Qwen3-1.7B, the six-head transfer). v7 passed after three of its thresholds were revised before the run, using earlier outcomes. The others were inconclusive or failed.</td></tr>
         <tr><th scope="row">Capstone manifest</th><td><code>data/bounded-poc-v7-capstone/manifest.json</code> · SHA-256 <code>a59566919a93607e7eff114aa4342807978294ce2b75577cd097fbb55ab9a899</code> · pre-inference commit <code>ff46c4b</code></td></tr>
         <tr><th scope="row">Protected files</th><td>21,073 protected file references by v12 (1,053 protected files by the capstone; 1,416 after v8)</td></tr>
-        <tr><th scope="row">Replication</th><td>Bit-identical across two fresh processes: 655 arrays (71 file pairs) in v5–v7, 612 (66 pairs) in v10 and 1,212 (84 pairs) in v12. The repeats are not extra samples.</td></tr>
+        <tr><th scope="row">Repeat runs</th><td>Bit-identical across two fresh processes: 655 arrays (71 file pairs) in v5–v7, 612 (66 pairs) in v10 and 1,212 (84 pairs) in v12. The repeats are not extra samples.</td></tr>
         <tr><th scope="row">Review numbers</th><td>Every number in the AI review is bound by code: 83/83 in v7, 109/109 in v10, 31/31 in v12</td></tr>
         <tr><th scope="row">Tests</th><td>202+ unit and planted-control tests (report); the earlier manuscript appendix lists 103 unit tests and 66 Metal hardware regressions</td></tr>
         <tr><th scope="row">Code</th><td><a href="https://github.com/scasella/qwen3-auto-interp">scasella/qwen3-auto-interp</a>, Apache-2.0, source only: harness, experiment runners, auditors and tests. At commit <code>b193b4a</code>: <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/RESULTS_INDEX.md">results ledger</a>, <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/PAPER.md">manuscript</a>, <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/ARCHITECTURE.md">harness and mathematics</a>, <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/BLOG_POST.md">longer write-up</a> and <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/OMISSIONS.md">what is left out</a>.</td></tr>
@@ -9495,7 +9495,7 @@ SJ.ready(() => {
         <tr><th scope="row">Source keys</th><td>W the published write-up (it wins where it differs from the doc) · R report · T1 narrative (parts P1–P8) · T2 manuscript · T3 the five findings in plain English · T4 practical uses and next steps · T5 the v8-repair addendum · T6 ranked next steps · T7 v9 and v10 narrative · T8 ledger rows for v9 and v10 · T9 manuscript §5.4–5.5 · T10 v11 and v12 narrative · T11 manuscript §5.6</td></tr>
       </tbody>
     </table></div>
-    <p class="colo-line">Every number on this page comes from Stephen Casella’s write-up: the published post, <a href="../../blog_qwen_lookup.html">“Agents traced a three-stage lookup pathway in Qwen3, and six heads found in the small model held up in the larger one”</a>, and the longer project doc behind it, “Putting an AI Scientist in a Cryptographic Straitjacket”. Where they differ, this page follows the published post. Arithmetic on reported numbers is tagged <span class="ev" data-ev="arithmetic">Derived</span> (Σ); drawings that show an idea are tagged <span class="ev" data-ev="schematic">Schematic</span> (✎).</p>
+    <p class="colo-line">Every number on this page comes from Stephen Casella’s write-up: the published post, <a href="../../blog_qwen_lookup.html">“Agents traced a lookup pathway in Qwen3”</a>, and the longer project doc behind it, “Putting an AI Scientist in a Cryptographic Straitjacket”. Where they differ, this page follows the published post. Arithmetic on reported numbers is tagged <span class="ev" data-ev="arithmetic">Derived</span> (Σ); drawings that show an idea are tagged <span class="ev" data-ev="schematic">Schematic</span> (✎).</p>
     <ul class="colo-refs" aria-label="References">
       <li><span class="k">Where this fits</span>Earlier work on <a href="https://finetuning.baulab.info/">entity-tracking circuits</a> traced multi-stage pathways that connect a question to the correct value, and more recent work on <a href="https://arxiv.org/html/2510.06182v2">mixing retrieval mechanisms</a> shows that models can combine different strategies for looking things up.</li>
       <li><span class="k">Reference</span>Elhage, N., et al. (2021). <a href="https://transformer-circuits.pub/2021/framework/index.html">A Mathematical Framework for Transformer Circuits</a>. Transformer Circuits Thread.</li>
