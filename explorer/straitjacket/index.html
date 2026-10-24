@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>AI Scientist in a Straitjacket</title>
+<title>Inside Qwen3’s lookup pathway</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Twelve attention heads in Qwen3 pass an answer along in three stages, and six head locations from the small model predicted where to look in a larger one. An AI scientist found it on one laptop, under rules sealed before the model ran. An illustrated, interactive tour of the findings and what they are good for.">
+<meta name="description" content="Twelve attention heads in Qwen3 pass an answer along in three stages, and six head locations from the small model predicted where to look in a larger one. AI agents traced it on one laptop, under rules sealed before the model ran. An illustrated, interactive tour of the findings and what they are good for.">
 <meta name="robots" content="index, follow">
 <meta name="theme-color" content="#0F1317">
 <link rel="canonical" href="https://casella.dev/explorer/straitjacket/">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta name="author" content="Stephen Casella">
 <meta property="og:site_name" content="Stephen Casella">
-<meta property="og:title" content="Putting an AI Scientist in a Cryptographic Straitjacket">
+<meta property="og:title" content="Inside Qwen3’s lookup pathway">
 <meta property="og:description" content="Twelve attention heads in Qwen3 pass an answer along in three stages, and six head locations from Qwen3-0.6B predicted where to look in Qwen3-1.7B. Found by AI agents under sealed, audited rules on one laptop.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://casella.dev/explorer/straitjacket/">
@@ -29,7 +29,7 @@
 {
   "@context": "https://schema.org",
   "@type": "WebPage",
-  "name": "AI Scientist in a Straitjacket",
+  "name": "Inside Qwen3’s lookup pathway",
   "description": "An interactive tour of a pre-registered mechanistic interpretability study of Qwen3-0.6B and Qwen3-1.7B: a twelve-head, three-stage lookup pathway found by AI agents under sealed, audited rules on one laptop, six head locations from the small model that predicted where to look in the larger one, and what the findings are good for.",
   "url": "https://casella.dev/explorer/straitjacket/",
   "isPartOf": { "@type": "WebSite", "name": "Stephen Casella", "url": "https://casella.dev/" },
@@ -1105,7 +1105,7 @@ details.nums > summary { font-family: var(--f-mono); }
 <a class="skip" href="#main">Skip to the content</a>
 <header class="topbar">
   <a class="tb-home" href="https://casella.dev/" aria-label="Back to casella.dev"><span aria-hidden="true">←</span><span>casella.dev</span></a>
-  <span class="tb-name">AI Scientist in a Straitjacket</span>
+  <span class="tb-name">Inside Qwen3’s lookup pathway</span>
   <span class="tb-sp"></span>
   <details class="toc">
     <summary class="tb-btn" aria-label="Contents"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h9" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="square"/></svg><span class="tb-long">Contents</span></summary>
@@ -1114,7 +1114,7 @@ details.nums > summary { font-family: var(--f-mono); }
         <li><a href="#top"><span class="n">01</span><span>Summary and key results</span></a></li>
         <li><a href="#primer"><span class="n">02</span><span>A sixty-second primer</span></a></li>
         <li><a href="#test"><span class="n">03</span><span>The test: three switches</span></a></li>
-        <li><a href="#straitjacket"><span class="n">04</span><span>Five locks on an AI scientist</span></a></li>
+        <li><a href="#straitjacket"><span class="n">04</span><span>Five locks on the agents</span></a></li>
         <li><a href="#relay"><span class="n">05</span><span>Finding 1 · Three stages, twelve heads</span></a></li>
         <li><a href="#pointer"><span class="n">06</span><span>Finding 2 · The pointer is in the query</span></a></li>
         <li><a href="#source"><span class="n">07</span><span>Finding 3 · It starts at the question</span></a></li>
@@ -1313,7 +1313,7 @@ details.nums > summary { font-family: var(--f-mono); }
     <div class="top-colL">
     <header class="top-title">
       <p class="top-kicker">Research · October 2026 · Stephen Casella</p>
-      <h1 id="top-h">Putting an AI Scientist in a Cryptographic Straitjacket</h1>
+      <h1 id="top-h">Inside Qwen3’s lookup pathway</h1>
       <p class="top-dek">A three-stage lookup pathway in Qwen3 gave the agents a concrete prediction to test in a larger model. An explanation of one model became useful enough to guide an experiment in another.</p>
       <p class="top-links"><a class="top-read" href="../../blog_qwen_lookup.html">Read the write-up <span aria-hidden="true">→</span></a><span class="top-linknote">This page is an illustrated, interactive companion to the published post.</span></p>
     </header>
@@ -1324,13 +1324,13 @@ details.nums > summary { font-family: var(--f-mono); }
         <p class="top-tldr-k" id="top-tldr-k">TL;DR</p>
         <ul>
           <li>Ask Qwen3 “Rowan is red. Lumen is blue. What color is Rowan?” Twelve of its 448 <button type="button" class="gl" data-term="attention-head">attention heads</button> answer in three <button type="button" class="gl" data-term="stage">stages</button>: six question heads help identify which record the question asks about, three router heads carry that to the answer position, and three copier heads copy the color.</li>
-          <li>A sealed guess, that names get stamped onto their colors, failed. Bookkeeping then predicted that about 3.79 <button type="button" class="gl" data-term="logit">points</button> would flow through the last word's query (an exploratory estimate, not a conservation law), and a post-hoc measurement came back 3.797.</li>
+          <li>A sealed guess, that names get stamped onto their colors, failed. Treating the effects as roughly additive then suggested that about 3.79 <button type="button" class="gl" data-term="logit">points</button> would flow through the last word's query, a heuristic estimate, and a post-hoc measurement came back 3.797.</li>
           <li>A <button type="button" class="gl" data-term="blind-search">blind search</button> in the larger Qwen3-1.7B found the same three copier heads and two of the three router heads. Pooled over both models, <button type="button" class="gl" data-term="patching">transplanting</button> the router heads' signal moved the answer preference the predicted way on 960 of 960 prompts, a direction-only count pooled across five runs with mixed verdicts; it leaves out the failed structured-format run.</li>
           <li>Six question-head locations from the small model were tested in the larger one with <button type="button" class="gl" data-term="transfer">no new search</button>. The predicted direction held on 92.2% to 100% of held-out prompts, and that study passed every registered gate.</li>
           <li>When the model answered wrong, one copier head still favored the right color, on all 13 errors in the first study. On held-out four-record prompts, a repair built on the findings fixed 6 errors and broke 1, but failed its preregistered test.</li>
           <li>Not everything passed. The small model's own three-stage study moved the preference the predicted way on all 192 held-out prompts, yet failed its overall verdict: the unmodified model answered 101 of 128 test prompts against a required 103.</li>
         </ul>
-        <p class="rec-note">Rowan and Lumen are illustrative. The experiments used fresh single-token words, drawn new for every run. “Answer preference” is the model's preference between two given answer words, such as red and blue.</p>
+        <p class="rec-note">Rowan and Lumen are illustrative. From v4 on, the experiments used fresh single-token words drawn for each run; earlier runs used generated identifiers. “Answer preference” is the model's preference between two given answer words, such as red and blue.</p>
         <p class="top-tech tech-only">Stage 0: <span class="hid" data-stage="hop">13:6</span> <span class="hid" data-stage="hop">12:6</span> <span class="hid" data-stage="hop">13:14</span> <span class="hid" data-stage="hop">14:12</span> <span class="hid" data-stage="hop">11:9</span> <span class="hid" data-stage="hop">13:15</span> work across the question span [p_query..T−1] and write which record matched. Stage 1: <span class="hid" data-stage="route">15:4</span> <span class="hid" data-stage="route">16:4</span> <span class="hid" data-stage="route">17:1</span> in 0.6B, with <span class="hid" data-stage="route">18:7</span> in place of 15:4 in 1.7B, read it at the final token through their values over the question span, and write a pointer into Stage 2's final-position query (Q_T). Stage 2: <span class="hid" data-stage="move">19:5</span> <span class="hid" data-stage="move">21:13</span> <span class="hid" data-stage="move">22:9</span> attend to the bound value and copy it through OV into the two-token logit preference.</p>
         <div class="top-status">
           <p class="top-status-k">Status</p>
@@ -2117,7 +2117,7 @@ SJ.ready(() => {
     <svg class="mini-grid" aria-hidden="true"></svg>
     <p class="sec-ev"><span class="ev" data-ev="schematic">Schematic</span></p>
   </header>
-  <div class="prose"><p class="lede">Four ideas are enough to follow everything on this page. Each one takes about fifteen seconds.</p><p class="rec-note">The drawings use the example “Rowan is red. Lumen is blue. What color is Rowan?” Rowan and Lumen are illustrative; the experiments used fresh single-token words.</p></div>
+  <div class="prose"><p class="lede">Four ideas are enough to follow everything on this page. Each one takes about fifteen seconds.</p><p class="rec-note">The drawings use the example “Rowan is red. Lumen is blue. What color is Rowan?” Rowan and Lumen are illustrative; from v4 on, the experiments used fresh single-token words.</p></div>
 
   <figure class="fig wide" id="primer-f" aria-labelledby="primer-f-t">
     <div class="fig-head"><p class="fig-t" id="primer-f-t"><span class="fig-no">Fig 2.1</span> Four ideas, one drawing each</p><span class="ev" data-ev="schematic">Schematic</span></div>
@@ -2618,7 +2618,7 @@ SJ.ready(() => {
             <p class="rec-line" data-row="2"><span class="ts-slot" data-slot="k2"><span class="tok key" data-key="2">Lumen</span></span> is <span class="ts-slot" data-slot="c2"><span class="tok val" data-c="blue" data-w="1">blue</span></span>.</p>
             <p class="rec-line rec-q">What color is <span class="tok key ts-qk">Rowan</span>? <span class="tok ans">Answer:</span> <span class="rec-out">→ <span class="tok val ts-ans" data-c="red">red</span></span></p>
           </div>
-          <p class="rec-note">Rowan and Lumen are illustrative. The experiments used fresh single-token words, drawn new for every run and never reused.</p>
+          <p class="rec-note">Rowan and Lumen are illustrative. From v4 on, the experiments used fresh single-token words drawn for each run; earlier runs used generated identifiers.</p>
           <output class="readout ts-say" id="test-say" aria-live="polite">The original prompt.</output>
         </div>
         <div class="ts-right">
@@ -3054,7 +3054,7 @@ SJ.ready(() => {
 <section id="straitjacket" class="sec" data-heads="19:5,27:15,27:13" aria-labelledby="straitjacket-h">
   <header class="sec-head">
     <p class="eyebrow"><span class="sec-no">04</span><span class="sec-kind">The harness</span><span class="sec-meta">Tightened run by run, v1 → v12</span></p>
-    <h2 id="straitjacket-h">Five locks on an AI scientist</h2>
+    <h2 id="straitjacket-h">Five locks on the agents</h2>
     <svg class="mini-grid" aria-hidden="true"></svg>
     <p class="sec-ev"><span class="ev" data-ev="inplace">In place · self-reported</span></p>
   </header>
@@ -3139,7 +3139,7 @@ SJ.ready(() => {
 
       <li class="lk plate" id="straitjacket-l4">
         <div class="lk-h"><svg class="lk-ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#sj-lock"/></svg><span class="lk-n">4</span><h3>Run it twice, audit it separately.</h3></div>
-        <p class="lk-stops"><span class="k">stops</span>flukes and hidden bugs.</p>
+        <p class="lk-stops"><span class="k">checks</span>repeatability and catches some implementation errors.</p>
         <div class="lk-body">
           <div class="lk-inst lz">
             <fieldset class="seg lz-seg"><legend class="vh">Which confirmation runs to show</legend><label><input type="radio" name="straitjacket-zip" value="v57"><span>v5–v7</span></label><label><input type="radio" name="straitjacket-zip" value="v10"><span>v10</span></label><label><input type="radio" name="straitjacket-zip" value="v12" checked><span>v12</span></label></fieldset>
@@ -3668,7 +3668,7 @@ SJ.ready(() => {
   </header>
   <div class="prose">
     <p class="lede">Ask the model “Rowan is red. Lumen is blue. What color is Rowan?” and it answers red. Inside, twelve <button type="button" class="gl" data-term="attention-head">attention heads</button> pass that answer along in <button type="button" class="gl" data-term="stage">three stages</button>, from the question to the copied word.</p>
-    <p class="note-ill">Rowan and Lumen are illustrative. The experiments used fresh single-token words, drawn new for every run.</p>
+    <p class="note-ill">Rowan and Lumen are illustrative. From v4 on, the experiments used fresh single-token words drawn for each run; earlier runs used generated identifiers.</p>
     <ol class="stg-list">
       <li data-st="hop"><span class="stg-n">0</span><b>Connect the question to the facts.</b> Six earlier heads, in layers 11 to 14, work around the question and the words after it. They shape a signal that depends on which fact answers the question.</li>
       <li data-st="route"><span class="stg-n">1</span><b>Carry it to the answer position.</b> Three heads in layers 15 to 17 read from the question and bring that information to the last word, where the model is about to answer.</li>
@@ -3747,7 +3747,7 @@ SJ.ready(() => {
               <p class="thr-out" data-t="outline"><span class="rec-out">→ <span class="tok val" data-c="red" data-t="out">red</span></span></p>
             </div>
           </div>
-          <p class="rec-note">Simplified example. Rowan and Lumen stand in for real single-token words, drawn fresh for every run and never reused.</p>
+          <p class="rec-note">Simplified example. Rowan and Lumen stand in for the keys; these two runs (v2 and upstream) used generated identifiers, not single-token words.</p>
         </div>
         <div class="thr-side">
           <div class="fig-ctrl">
@@ -4518,7 +4518,7 @@ SJ.ready(() => {
             </div>
           </div>
           <p class="pt-meters" id="pointer-meters" hidden><span class="pm"><i aria-hidden="true">▼</i><b>−17.72</b> on row 1's color</span><span class="pm"><i aria-hidden="true">▲</i><b>+17.10</b> on row 2's color</span><span class="pm-u"><span class="l-plain">points of attention</span><span class="l-tech">pp of attention, coalition, v7</span></span></p>
-          <p class="rec-note">Simplified example. Rowan and Lumen stand in for real single-token words, drawn fresh for every run and never reused.</p>
+          <p class="rec-note">Simplified example. Rowan and Lumen stand in for the single-token words v7 drew fresh for its run.</p>
         </div>
         <div class="thr-side">
           <div class="pt-held">
@@ -4557,7 +4557,7 @@ SJ.ready(() => {
 
   <div class="prose">
     <aside class="mn">v4 read-only diagnostic · predicted <span class="l-plain">≈3.79</span><span class="l-tech">3.7895</span> · measured <span class="l-plain">3.797</span><span class="l-tech">3.797235</span> (128/128)</aside>
-    <p>The team had sealed a guess in advance: each name gets stamped onto its answer word, and the copiers search those stamps. The guess failed. The stamps carried 0.77 <button type="button" class="gl" data-term="logit">points</button>. Take the full where-to-look effect measured with switch B, 4.56 points, as the total to account for. A copier's output at the last word depends on only three inputs: its query, the keys and the values. The values carried almost nothing, 0.05 points. So the rest, about 3.79 points, should be in the query, even though the question had not changed. A read-only check on the frozen data measured 3.797. This is a <button type="button" class="gl" data-term="conservation">conservation-based prediction</button>.</p>
+    <p>The team had sealed a guess in advance: each name gets stamped onto its answer word, and the copiers search those stamps. The guess failed. The stamps carried 0.77 <button type="button" class="gl" data-term="logit">points</button>. Take the full where-to-look effect measured with switch B, 4.56 points, as the total to account for. A copier's output at the last word depends on only three inputs: its query, the keys and the values. The values carried almost nothing, 0.05 points. Treating the three effects as approximately additive, which they need not be, suggested a query effect of about 3.79 points, even though the question had not changed. A read-only diagnostic on the frozen data then measured 3.797. This is a <button type="button" class="gl" data-term="conservation">heuristic estimate, checked experimentally</button>.</p>
   </div>
 
   <figure class="fig wide" id="pointer-receipt" aria-labelledby="pointer-receipt-t">
@@ -4565,7 +4565,7 @@ SJ.ready(() => {
     <div class="plate rc-plate">
       <div class="rc-body">
         <div class="rc-chart">
-          <svg class="rc-svg" id="pointer-rc-svg" role="img" aria-labelledby="pointer-rc-title pointer-rc-desc"><title id="pointer-rc-title">The receipt: where the switch-B effect went</title><desc id="pointer-rc-desc">Total to account for 4.56 points. The values carried 0.05. Name stamps, the sealed guess, carried 0.77 where the guess expected about 4.5, so the guess failed. Bookkeeping left about 3.79 for the query; measured with the query alone, 3.797. The three router heads alone carry 3.36 of it.</desc></svg>
+          <svg class="rc-svg" id="pointer-rc-svg" role="img" aria-labelledby="pointer-rc-title pointer-rc-desc"><title id="pointer-rc-title">The receipt: where the switch-B effect went</title><desc id="pointer-rc-desc">Total to account for 4.56 points. The values carried 0.05. Name stamps, the sealed guess, carried 0.77 where the guess expected about 4.5, so the guess failed. Treating the effects as additive left about 3.79 for the query; measured with the query alone, 3.797. The three router heads alone carry 3.36 of it.</desc></svg>
           <span class="stamp rc-stamp" data-v="fail" id="pointer-rc-stamp" aria-hidden="true">Guess failed · Gate 1C</span>
         </div>
         <div class="rc-tape">
@@ -4575,7 +4575,7 @@ SJ.ready(() => {
             <li data-s="2" class="rc-guess"><span class="rc-k">Sealed guess: stamps</span><span class="rc-d"></span><span class="rc-v">≈4.5</span></li>
             <li data-s="3" class="rc-dim"><span class="rc-k">Values, ≈0, left out</span><span class="rc-d"></span><span class="rc-v"><span class="l-plain">0.05</span><span class="l-tech">0.0472</span></span></li>
             <li data-s="3"><span class="rc-k">Name stamps, measured</span><span class="rc-d"></span><span class="rc-v">− <span class="l-plain">0.77</span><span class="l-tech">0.7706</span></span></li>
-            <li data-s="4" class="rc-sum"><span class="rc-k">Query, predicted</span><span class="rc-d"></span><span class="rc-v"><span class="l-plain">≈3.79</span><span class="l-tech">3.7895</span></span></li>
+            <li data-s="4" class="rc-sum"><span class="rc-k">Query, estimated</span><span class="rc-d"></span><span class="rc-v"><span class="l-plain">≈3.79</span><span class="l-tech">3.7895</span></span></li>
             <li data-s="5" class="rc-meas"><span class="rc-k">Query alone, measured</span><span class="rc-d"></span><span class="rc-v"><span class="l-plain">3.797</span><span class="l-tech">3.797235</span></span></li>
             <li data-s="5" class="rc-sub"><span class="rc-k">of which routers alone</span><span class="rc-d"></span><span class="rc-v"><span class="l-plain">3.36</span><span class="l-tech">3.3601</span></span></li>
           </ol>
@@ -4583,9 +4583,9 @@ SJ.ready(() => {
         </div>
       </div>
       <div class="stepper"><button type="button" class="btn" data-step="prev">◀ Prev</button><ol class="step-dots" aria-hidden="true"><li></li><li></li><li></li><li></li><li></li></ol><button type="button" class="btn" data-step="next">Next ▶</button><p class="step-cap" aria-live="polite"></p></div>
-      <p class="tech-only rc-tech">B_q_final 4.560079 · C_k_color 0.770555 (71.88% direction) · C_ov_color 0.0472 (58.59%) · predicted C_q_final 3.7895 · measured 3.797235 (128/128) · C_q + C_k = 4.567790 vs 4.560079. Counting the 0.0472 value term too, the prediction would be 3.7423, 0.055 from the measurement. Medians need not add through softmax and RMSNorm, so this is a conservation-based prediction.</p>
+      <p class="tech-only rc-tech">B_q_final 4.560079 · C_k_color 0.770555 (71.88% direction) · C_ov_color 0.0472 (58.59%) · predicted C_q_final 3.7895 · measured 3.797235 (128/128) · C_q + C_k = 4.567790 vs 4.560079. Counting the 0.0472 value term too, the prediction would be 3.7423, 0.055 from the measurement. Medians need not add through softmax and RMSNorm, so this is a heuristic estimate, checked experimentally.</p>
     </div>
-    <figcaption><span class="read">Read it:</span> the sealed guess carried a small share. The leftover, predicted by bookkeeping, showed up in the query. <span class="fig-note">One 0 to 5 point scale for every row. Bars are drawn to scale, so the measured bar lands inside the predicted outline.</span></figcaption>
+    <figcaption><span class="read">Read it:</span> the sealed guess carried a small share. The leftover, estimated by treating the effects as additive, showed up in the query when measured. <span class="fig-note">One 0 to 5 point scale for every row. Bars are drawn to scale, so the measured bar lands inside the predicted outline.</span></figcaption>
     <details class="nums"><summary>Show the numbers</summary>
       <div class="tbl-wrap" tabindex="0" role="region" aria-label="Numbers for Fig 6.2">
         <table class="tbl"><caption>Copiers 19:5 + 21:13 + 22:9, v4-confirm and its read-only diagnostic. Median change in points, with the share of prompts that moved the predicted way.</caption>
@@ -4594,7 +4594,7 @@ SJ.ready(() => {
             <tr><td>Total to account for: the switch-B effect<span class="l-tech"> (B_q_final)</span></td><td class="r">4.560079</td><td>100.00%</td><td>measured with switch B</td></tr>
             <tr><td>The values<span class="l-tech"> (C_ov_color)</span></td><td class="r">0.0472</td><td>58.59%</td><td>control, expected ≈0</td></tr>
             <tr><td>Name stamps, the sealed guess<span class="l-tech"> (C_k_color)</span></td><td class="r">0.770555</td><td>71.88%</td><td>guess expected ≈4.5 · Gate 1C failed</td></tr>
-            <tr><td>Left over for the query, predicted</td><td class="r">3.7895</td><td></td><td>4.5601 − 0.7706</td></tr>
+            <tr><td>Left over for the query, estimated</td><td class="r">3.7895</td><td></td><td>4.5601 − 0.7706</td></tr>
             <tr><td>Query alone, measured<span class="l-tech"> (C_q_final)</span></td><td class="r">3.797235</td><td>100.00% (128/128)</td><td>read-only diagnostic</td></tr>
             <tr><td>Router heads alone<span class="l-tech"> (C_upstream_Q)</span></td><td class="r">3.3601</td><td>128/128 and 64/64</td><td>88.5% of the query's share <span class="ev" data-ev="arithmetic">Arithmetic</span></td></tr>
             <tr><td>Sum check: query + stamps</td><td class="r">4.567790</td><td></td><td>against the 4.560079 total</td></tr>
@@ -4698,8 +4698,8 @@ SJ.ready(() => {
   <aside class="callout" data-kind="breaks"><p class="callout-k">Where this picture breaks</p><p>“Pointer” is this page's word for the signal. The study shows pointer-like routing on two-row prompts, which falls short of showing that the model stores a literal row number. Name stamps still carried a minority share, about 17% in the first test.</p></aside>
   <details class="hood"><summary><span class="hood-k">Under the hood</span><span class="hood-src">v4-confirm · axis-c-q diagnostic · v5–v7 · T1 P6–P7 · T2 §2.3, §4.2, Tables 2–3, §7</span></summary><div class="hood-body">
     <p><strong>The guess that failed (v4-confirm, F07).</strong> Gate 1C pre-registered the intuitive hypothesis that keys get stamped onto the answer words: under switch C (Axis C), patching K at the two color positions (<code>C_k_color</code>) should carry the ~4.5-logit routing effect. It reduced the margin by 0.7706 logits (71.88% direction; 0.3746 on green/yellow). The copiers' attention gained 1.5 points on the swapped target and lost 4.4 on the original (+1.47 / −4.39 pp). Name stamps are a minor route: about 17% in this test.</p>
-    <p><strong>The bookkeeping (F08).</strong> A head's final-token output depends only on (Q<sub>T</sub>, K<sub>1..T</sub>, V<sub>1..T</sub>). <code>C_ov_color</code> = 0.0472 logits (58.59% direction) and <code>C_k_color</code> = 0.770555, so the rest of the 4.560079-logit <code>B_q_final</code> effect should sit in Q<sub>T</sub>: 4.560079 − 0.770555 = 3.789524, quoted as 3.7895. Pure-Q<sub>T</sub> replay from the switch-C donor onto clean K and V measured <code>C_q_final</code> = 3.797235 logits (100.00% direction, 128/128). Sum check: 3.797235 + 0.770555 = 4.567790 against 4.560079.</p>
-    <p>B_q_final 4.560079 · C_k_color 0.770555 (71.88% direction) · C_ov_color 0.0472 (58.59%) · predicted C_q_final 3.7895 · measured 3.797235 (128/128) · C_q + C_k = 4.567790 vs 4.560079. Counting the 0.0472 value term too, the prediction would be 3.7423, 0.055 from the measurement. Medians need not add through softmax and RMSNorm, so this is a conservation-based prediction.</p>
+    <p><strong>The bookkeeping (F08).</strong> A head's final-token output depends only on (Q<sub>T</sub>, K<sub>1..T</sub>, V<sub>1..T</sub>). <code>C_ov_color</code> = 0.0472 logits (58.59% direction) and <code>C_k_color</code> = 0.770555, so, treating the effects as additive, the rest of the 4.560079-logit <code>B_q_final</code> effect is estimated to sit in Q<sub>T</sub>: 4.560079 − 0.770555 = 3.789524, quoted as 3.7895. Pure-Q<sub>T</sub> replay from the switch-C donor onto clean K and V measured <code>C_q_final</code> = 3.797235 logits (100.00% direction, 128/128). Sum check: 3.797235 + 0.770555 = 4.567790 against 4.560079.</p>
+    <p>B_q_final 4.560079 · C_k_color 0.770555 (71.88% direction) · C_ov_color 0.0472 (58.59%) · predicted C_q_final 3.7895 · measured 3.797235 (128/128) · C_q + C_k = 4.567790 vs 4.560079. Counting the 0.0472 value term too, the prediction would be 3.7423, 0.055 from the measurement. Medians need not add through softmax and RMSNorm, so this is a heuristic estimate, checked experimentally.</p>
     <p>The prediction and the measurement are 0.0077 logits (0.2%) apart when the 0.047-logit value term is treated as zero; including it, the prediction is 3.7423, 0.055 away <span class="ev" data-ev="arithmetic">Arithmetic</span>. It rests on four assumptions: (a) the switch-C total equals the switch-B query effect, because 4.5601 was measured with switch B; (b) keys and values at non-color positions contribute about 0; (c) the query and key effects add; (d) the value term at the color positions is 0.</p>
     <p><strong>Provenance.</strong> The measurement came from a read-only, post-hoc script (<code>diagnose_bounded_poc_v4_axis_c_q.py</code>) on the frozen v4 dataset. The prediction is narrated in the write-up; it was not hash-registered. The query pathway was then tested prospectively in v5, v6 and the capstone.</p>
     <p><strong>The routers carry most of it (F09).</strong> <code>C_upstream_Q</code> patches only 17:1, 16:4 and 15:4 at the last word from the switch-C donor, then replays only the copiers' Q<sub>T</sub> onto clean K and V: 3.3601 logits, 88.5% of <code>C_q_final</code> <span class="ev" data-ev="arithmetic">Arithmetic</span>, with 128/128 Primary and 64/64 Vocabulary in the predicted direction. In v5 and v6, all four query paths (<code>B_q_final</code>, <code>C_q_final</code>, <code>B_upstream_Q</code>, <code>C_upstream_Q</code>) were 192/192 in each run. In the capstone, <code>C_upstream_Q</code> was 3.6125 (Primary) and 2.4117 (Vocabulary), 91.7% and 85.0% of <code>C_q_final</code> <span class="ev" data-ev="arithmetic">Arithmetic</span>.</p>
@@ -4788,7 +4788,7 @@ SJ.ready(() => {
       { id: 'r1', label: 'Total to account for: the switch-B effect' },
       { id: 'r2', label: 'The values (the colors themselves)' },
       { id: 'r3', label: 'Name stamps on the answer words (the sealed guess)' },
-      { id: 'r4', label: 'Left over, so it must be in the query' },
+      { id: 'r4', label: 'Left over: the query’s estimated share' },
       { id: 'r5', label: 'Of that, carried by the three router heads alone' }
     ];
     const ACTIVE = { 0: ['r1'], 1: ['r1'], 2: ['r3'], 3: ['r2', 'r3'], 4: ['r4'] };
@@ -4796,7 +4796,7 @@ SJ.ready(() => {
       'The total to account for: 4.56 points, measured with switch B.',
       'The sealed guess: name stamps should carry about 4.5 of it.',
       'Measured: the stamps carried 0.77, and the values 0.05. The guess failed.',
-      'Bookkeeping: the remaining ≈3.79 points should be in the last word\'s query.',
+      'Treating the effects as additive: about 3.79 points estimated for the last word\'s query.',
       'Measured with the query alone: 3.797. The three router heads alone carry 3.36 of it.'
     ];
     let cur = 5, auto = 0, gen = 0, marks = [], lbls = [], groups = {}, geo = null;
@@ -5206,7 +5206,7 @@ SJ.ready(() => {
         </div>
       </div>
     </div>
-    <figcaption><span class="read">Read it:</span> the screen transplanted candidate heads only at the question span, kept <span class="tok ans">Answer:</span> clean, and swept layers 0 to 14. Six heads in layers 11 to 14 completed the route through the routers and the copiers. <span class="fig-note">Qwen3-0.6B, 28 layers × 16 heads, layer 0 at the bottom, drawn to scale. Rowan and Lumen are illustrative; the experiments used fresh single-token words. The 64 prompts used to select the heads count only as selection evidence.</span></figcaption>
+    <figcaption><span class="read">Read it:</span> the screen transplanted candidate heads only at the question span, kept <span class="tok ans">Answer:</span> clean, and swept layers 0 to 14. Six heads in layers 11 to 14 completed the route through the routers and the copiers. <span class="fig-note">Qwen3-0.6B, 28 layers × 16 heads, layer 0 at the bottom, drawn to scale. Rowan and Lumen are illustrative; from v4 on, the experiments used fresh single-token words. The 64 prompts used to select the heads count only as selection evidence.</span></figcaption>
     <details class="nums"><summary>Show the numbers</summary>
       <div class="tbl-wrap" tabindex="0" role="region" aria-label="Numbers for Fig 7.2">
         <table class="tbl"><caption>v11, Qwen3-0.6B. Ranges are medians across the calibration split and the two held-out splits. Every route moved the predicted way on all 192 held-out prompts, and on all 64 calibration prompts, which are selection evidence.</caption>
@@ -7189,7 +7189,7 @@ SJ.ready(() => {
             <p class="rec-line" data-row="4"><span><span class="tok lab">Record 4:</span> <span class="tok key">Wren</span> is <span class="tok val" data-c="red">red</span>.</span><i class="cp-pull" data-d="4" aria-hidden="true"></i></p>
             <p class="rec-line rec-q"><span><span class="tok lab">What color is</span> <span class="tok key">Lumen</span><span class="tok lab">?</span> <span class="tok ans">Answer:</span></span></p>
           </div>
-          <p class="rec-note">Simplified example, and schematic: the write-up gives no literal four-row prompt. The names are illustrative; the experiments used fresh single-token words. Here the asked-for row says blue and the last row says red, so it belongs to the “different colors” group.</p>
+          <p class="rec-note">Simplified example, and schematic: the write-up gives no literal four-row prompt. The names are illustrative; from v4 on, the experiments used fresh single-token words. Here the asked-for row says blue and the last row says red, so it belongs to the “different colors” group.</p>
         </div>
       </div>
       <p class="cp-tech tech-only">17/17 discovery errors (18/24 held-out) named row 4’s color. With two candidate colors that follows for any mismatched prompt, so the 32/32 vs 15/32 split is the informative evidence. Six opposite-assignment pairs failed both ways, which rules out a fixed color preference.</p>
@@ -7780,7 +7780,7 @@ SJ.ready(() => {
       <li class="ll-c"><p class="ll-top"><b>03</b><span>v2</span></p><h3>A rescue test needs mistakes to rescue.</h3><p class="ll-s">v2’s held-out prompts scored 128 of 128, leaving nothing to fix.</p><a class="ll-a" href="#ledger-v2">→ <span>The v2 row below</span></a></li>
       <li class="ll-c"><p class="ll-top"><b>04</b><span>v3</span></p><h3>Count the fixes and the breaks.</h3><p class="ll-s">v3: a +1.56 median gain while 15 of 17 errors got worse.</p><a class="ll-a" href="#crowd">→ <span>11 · Finding 7</span></a></li>
       <li class="ll-c"><p class="ll-top"><b>05</b><span>upstream</span></p><h3>Fit each check to each head’s job.</h3><p class="ll-s">One 30-point attention bar for every head missed two deeper heads (29.2 and 15.0).</p><a class="ll-a" href="#ledger-upstream">→ <span>The upstream row below</span></a></li>
-      <li class="ll-c"><p class="ll-top"><b>06</b><span>v4-confirm · axis-c-q</span></p><h3>A failed guess is information.</h3><p class="ll-s">Key stamps carried <span class="l-plain">0.77 points</span><span class="l-tech">0.7706 logits</span>; bookkeeping found the rest in the query.</p><a class="ll-a" href="#pointer">→ <span>06 · Finding 2</span></a></li>
+      <li class="ll-c"><p class="ll-top"><b>06</b><span>v4-confirm · axis-c-q</span></p><h3>A failed guess is information.</h3><p class="ll-s">Key stamps carried <span class="l-plain">0.77 points</span><span class="l-tech">0.7706 logits</span>; an additive estimate pointed to the query, and a measurement confirmed it.</p><a class="ll-a" href="#pointer">→ <span>06 · Finding 2</span></a></li>
       <li class="ll-c"><p class="ll-top"><b>07</b><span>v4-confirm</span></p><h3>Let code write the numbers.</h3><p class="ll-s">One reviewer number was off in the 13th decimal.</p><a class="ll-a" href="#straitjacket">→ <span>04 · Five locks</span></a></li>
       <li class="ll-c"><p class="ll-top"><b>08</b><span>v5 · v6 · v8</span></p><h3>Re-test on fresh words and layouts.</h3><p class="ll-s">A blank-line layout pulled one head to 50.78%; new key words largely removed the gold lean.</p><p class="ll-n">our reading of v5, v6, v8</p><a class="ll-a" href="#held">→ <span>08 · Finding 4</span></a></li>
       <li class="ll-c" data-new><p class="ll-top"><b>09</b><span>v9 → v11</span></p><h3>Follow the signal backwards.</h3><p class="ll-s">v9 found the router heads read the match from the question (83.3%). That pointed v11 to the question, where it found six heads.</p><a class="ll-a" href="#source">→ <span>07 · Finding 3</span></a></li>
@@ -8323,7 +8323,7 @@ SJ.ready(() => {
           <p class="use-tech tech-only">Axis C: C_q_final against C_k_color, and C_upstream_Q replaying Q_T onto clean K and V; the planted literal_query_only_control scores 0.0. Stage 1: C_U_v_qspan 2.3648 against C_U_kv_context 0.0089 logits (v11, Primary, 100% per-prompt dominance); about 17.1× in Qwen3-1.7B (v12).</p>
           <p class="use-ev"><span class="use-k">Evidence</span>Pooled across both models, the routers’ signal moved the preference <button type="button" class="gl" data-term="direction">the predicted way</button> on 960 of 960 prompts (direction only, pooled across runs with mixed verdicts); a question-copying decoy scores 0.0. In the Stage 1 version, the values at the question beat the facts’ keys and values about 265× (v11).</p>
           <p class="use-aud">For: researchers</p>
-          <details><summary>Limits</summary><p>Two sizes of one model family, and it needs matched <button type="button" class="gl" data-term="twin">twin prompts</button>. v11 failed its accuracy prerequisite, so its numbers are measured, not confirmed. Rowan and Lumen are illustrative; the experiments used fresh single-token words.</p></details>
+          <details><summary>Limits</summary><p>Two sizes of one model family, and it needs matched <button type="button" class="gl" data-term="twin">twin prompts</button>. v11 failed its accuracy prerequisite, so its numbers are measured, not confirmed. Rowan and Lumen are illustrative; from v4 on, the experiments used fresh single-token words.</p></details>
           <a class="use-link" href="#pointer"><b>See the finding</b><span>06 · The pointer</span></a>
         </article>
 
@@ -9041,7 +9041,7 @@ SJ.ready(() => {
 
   <div class="ed-pay">
     <p>Ask Qwen3 “Rowan is red. Lumen is blue. What color is Rowan?” and you can now point to where the answer comes from: six heads in layers 11 to 14 help identify which record the question asks about, three heads carry that to the answer position, and three heads in layers 19 to 22 copy the color. Six head locations from the small model told the agents where to look in the larger one, and that prediction held. You can also point to where it goes wrong: a later head that leaned toward one word in one test, and a copier that drifts toward the last row. AI agents proposed the explanations, and frozen tests decided which ones survived.</p>
-    <p class="rec-note">Rowan and Lumen are illustrative names; the experiments used fresh single-token words.</p>
+    <p class="rec-note">Rowan and Lumen are illustrative names; from v4 on, the experiments used fresh single-token words.</p>
   </div>
 
   <div class="ed-take wide">
@@ -9455,7 +9455,7 @@ SJ.ready(() => {
       <div><dt id="gt-residual-stream">Residual stream</dt><dd id="g-residual-stream">The running list of numbers for each word. Every layer reads it and adds to it. <span class="gl-tech">Width 2,048 in Qwen3-1.7B.</span></dd></div>
       <div><dt id="gt-logit-lens">Logit lens</dt><dd id="g-logit-lens">Reading the model’s running guess partway up the layers, before it has finished.</dd></div>
       <div><dt id="gt-coalition">Coalition</dt><dd id="g-coalition">Heads that do the same job together. Each stage is one; on this page the word most often means the three copiers 19:5, 21:13 and 22:9.</dd></div>
-      <div><dt id="gt-conservation">Bookkeeping (conservation)</dt><dd id="g-conservation">If a head’s output depends only on its query, keys and values, an effect missing from two of them must sit in the third. <span class="gl-tech">Conservation over Attn(Q_T, K, V). It assumes the parts add, which softmax and normalization need not respect, so the page calls it a prediction.</span></dd></div>
+      <div><dt id="gt-conservation">Bookkeeping (conservation)</dt><dd id="g-conservation">If a head’s output depends only on its query, keys and values, and their effects roughly add, an effect missing from two of them points to the third. <span class="gl-tech">Approximate additivity over Attn(Q_T, K, V). Softmax and normalization need not respect it, so the page treats the result as a heuristic estimate to check experimentally.</span></dd></div>
     </dl>
   </div>
 

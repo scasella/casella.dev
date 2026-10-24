@@ -21,7 +21,7 @@
   <meta property="og:image:alt" content="Share card for the write-up: A search for internal signals in Gemma, built and tested by agents." />
   <meta property="article:author" content="Stephen Casella" />
   <meta property="article:published_time" content="2026-10-23" />
-  <meta property="article:modified_time" content="2026-10-23" />
+  <meta property="article:modified_time" content="2026-10-24" />
   <meta property="article:tag" content="AI agents" />
   <meta property="article:tag" content="interpretability" />
   <meta property="article:tag" content="sparse autoencoders" />
@@ -51,7 +51,7 @@
       "mainEntityOfPage": "https://casella.dev/blog_gemma_blind_search.html",
       "image": "https://casella.dev/assets/og/blog_gemma_blind_search.png",
       "datePublished": "2026-10-23",
-      "dateModified": "2026-10-23",
+      "dateModified": "2026-10-24",
       "author": {
         "@type": "Person",
         "name": "Stephen Casella",
@@ -455,14 +455,14 @@
 
 <h1>A search for internal signals in Gemma, built and tested by agents</h1>
 <!-- PANES:META:START -->
-    <p class="post-byline">[ <time datetime="2026-10-23">2026-10-23</time> ] // Claude Opus 5.5 · Gemma 3 1B · Gemma Scope 2 // 15 MIN READ</p>
+    <p class="post-byline">[ <time datetime="2026-10-23">2026-10-23</time> · updated <time datetime="2026-10-24">2026-10-24</time> ] // Claude Opus 5.5 · Gemma 3 1B · Gemma Scope 2 // 15 MIN READ</p>
   <!-- PANES:META:END -->
         <p class="subtitle">Agents built a search for the variables Gemma 3 1B tracks as it reads, with tests meant to separate real signals from search artefacts. It recovered parenthesis and quotation state, and one direction passed a preregistered steering test on fresh text. Gemma Scope 2, Google DeepMind's public sparse autoencoders for Gemma 3, already represents that direction, so this is a methods result, not a new variable.</p>
 
         <div class="tldr">
           <span class="tldr-label">TL;DR</span>
           <p>Claude Opus 5.5 agents built the search on <code>gemma-3-1b-pt</code>'s internal state at one layer, as rebuilt by a Gemma Scope 2 sparse autoencoder (SAE: a dictionary that rewrites that state as a few active features, or latents). Directions it extracts without labels separate positions inside and outside parentheses and quotations with |AUROC| 0.78 and 0.75 (0.5 is chance; a null that shuffles labels within each token type tops out near 0.52). Parenthesis labels tuned the method's settings on a separate block; quotation labels were never used, so quotation is the untuned check.</p>
-          <p>One layer-12 direction then passed a preregistered steering test on 200 sites from 1,000 sequences the search had never read. Pushing the model's state along it raised the log-probability of its fixed signature, 20 next tokens found without labels, by Δ 1.49 nats (natural-log units): about twice the largest effect of 99 random directions from the same subspace (0.75), and more than the same push moved any of 76 other directions' signatures (largest 0.85). In an exploratory reading afterwards, the push makes the model continue the clause with a prepositional phrase or subordinate clause. The main design lesson: five other screens proved miscalibrated or uninformative against random directions built the same way, in the same subspace.</p>
+          <p>One layer-12 direction then passed a preregistered steering test: pushing the model's state along it made a set of next words, fixed before the test, more likely. The test used 200 sites from 1,000 sequences the search had never read. Relative to frequency-matched control tokens, the mean log-probability of that signature, 20 next tokens found without labels, rose by Δ 1.49 nats (natural-log units): about twice the largest effect of 99 random directions from the same subspace (0.75), and more than the same push moved any of 76 other directions' signatures (largest 0.85). In an exploratory reading afterwards, the push makes the model continue the clause with a prepositional phrase or subordinate clause. The main design lesson: five other screens proved miscalibrated or uninformative against random directions built the same way, in the same subspace.</p>
         </div>
 
         <div class="stat-row">

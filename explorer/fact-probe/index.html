@@ -303,7 +303,7 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--rule);
 <header class="hero">
   <p class="eyebrow"><a href="/blog_fact_probe.html">← Read the write-up</a></p>
   <div class="eyebrow">Llama 3.1 8B Instruct · FActScore biographies · human labels</div>
-  <h1>The model's activations know more than it says</h1>
+  <h1>Exploring Llama's factuality signals</h1>
   <p class="standfirst">I showed Llama 24 held-out biographies and asked how likely each factual claim was to be correct. It gave <strong>650 of 742</strong> claims a probability of exactly 1.0. A linear probe that reads Llama's own layer-19 activations ranks the same claims far better, at 0.802. The stronger comparisons are closer: P(True), which asks Llama about one claim at a time, reaches 0.735, and a lookup of how famous each subject is reaches 0.740.</p>
   <p class="defn">Scores below are <b>AUROC</b>: the chance that a randomly chosen correct claim is scored above a randomly chosen incorrect one. 0.5 is a coin flip; 1.0 is perfect. Brackets are 95% bootstrap intervals; each says whether it resamples claims or whole biographies.</p>
   <div class="panel scoreboard">
@@ -461,7 +461,7 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--rule);
   <div class="chapter-head">
     <div class="status"><span class="chip prereg">Preregistered: 200 neurons</span><span class="chip explor">Exploratory: head knockouts (E1), dose curves (E2)</span></div>
     <h2>Knocking components out</h2>
-    <p class="lede prose">If a set of components carries the signal, replacing their output with its average should hurt the probe more than doing the same to random components from the same layers (neurons are also matched on how much their contribution varies; heads only on layer). Scores here are within-biography AUROCs of the position-residualized probe, which starts at 0.644 (the fp32 counterpart of the position-residualized 0.645). In the preregistered test, knocking out each fold's 200 neurons with the most mass, chosen on the other four folds, costs 0.032 of within-biography AUROC, against 0.006 for matched random neurons. The targeted intervention had a measurable effect, 0.026 [0.013, 0.038] beyond random, but it did not meet the 0.03 effect-size criterion set before the test.</p>
+    <p class="lede prose">If a set of components carries the signal, replacing their output with its average should hurt the probe more than doing the same to random components from the same layers (neurons are also matched on how much their contribution varies; heads only on layer). Scores here are within-biography AUROCs of the position-residualized probe, which starts at 0.644 (the fp32 counterpart of the position-residualized 0.645). In the preregistered test, knocking out each fold's 200 neurons with the most mass, chosen on the other four folds, costs 0.032 of within-biography AUROC, against 0.006 for matched random neurons. The evaluated fold was left out of the scores used to choose them but helped train the probes behind those scores, so this is not a fully independent held-out test. The targeted intervention had a measurable effect, 0.026 [0.013, 0.038] beyond random, but it did not meet the 0.03 effect-size criterion set before the test.</p>
   </div>
   <div class="panel" style="display:grid; gap:12px">
     <div class="controls">
