@@ -21,7 +21,7 @@
   <meta property="og:image:alt" content="Share card for the write-up: What Llama’s internal signals reveal about factual accuracy." />
   <meta property="article:author" content="Stephen Casella" />
   <meta property="article:published_time" content="2026-10-18" />
-  <meta property="article:modified_time" content="2026-10-23" />
+  <meta property="article:modified_time" content="2026-10-24" />
   <meta property="article:tag" content="interpretability" />
   <meta property="article:tag" content="probing" />
   <meta property="article:tag" content="Llama 3.1 8B" />
@@ -51,7 +51,7 @@
       "mainEntityOfPage": "https://casella.dev/blog_fact_probe.html",
       "image": "https://casella.dev/assets/og/blog_fact_probe.png",
       "datePublished": "2026-10-18",
-      "dateModified": "2026-10-23",
+      "dateModified": "2026-10-24",
       "author": {
         "@type": "Person",
         "name": "Stephen Casella",
@@ -448,7 +448,7 @@
   <article class="post">
 <h1>What Llama’s internal signals reveal about factual accuracy</h1>
 <!-- PANES:META:START -->
-    <p class="post-byline">[ <time datetime="2026-10-18">2026-10-18</time> · updated <time datetime="2026-10-23">2026-10-23</time> ] // Claude Opus 5.5 · Llama 3.1 8B // 20 MIN READ</p>
+    <p class="post-byline">[ <time datetime="2026-10-18">2026-10-18</time> · updated <time datetime="2026-10-24">2026-10-24</time> ] // Claude Opus 5.5 · Llama 3.1 8B // 20 MIN READ</p>
   <!-- PANES:META:END -->
         <p class="subtitle">This is the second stage of a project that began with <a href="blog_interp.html">Testing internal signals for factual accuracy in legal answers and biographies</a>. There, a probe, a small readout trained on Llama 3.1 8B’s internal activity, separated correct from incorrect biography claims far better than the model’s stated confidence, a weak comparison. Such a readout could cheaply flag likely false claims in long answers, but only if it carries information simpler signals don’t. Here I test it against stronger baselines, check whether it only tracks a subject’s fame or a claim’s position, and ask which components write the signal it reads.</p>
         <div class="tldr">
@@ -484,7 +484,7 @@
         </div>
         <div class="callout">
           <span class="callout-label">Correction, 23 October 2026</span>
-          <p>An earlier version said that, by the preregistered rule, the top 200 neurons are not necessary. The targeted knockout had a measurable effect, but it did not meet the effect-size criterion set before the test. I also rewrote the post around the stronger baselines and qualified the 79% figure.</p>
+          <p>An earlier version said that, by the preregistered rule, the top 200 neurons are not necessary. The targeted knockout had a measurable effect, but it did not meet the effect-size criterion set before the test. I also rewrote the post around the stronger baselines and qualified the 79% figure. On 24 October I added what the fold overlap in the knockout’s selection means for that test.</p>
         </div>
         <div class="callout">
           <span class="callout-label">Status</span>
@@ -703,7 +703,7 @@
 </noscript>
 
         <h2 id="knockouts">Knocking components out</h2>
-        <p>If a set of components carries the signal, replacing their outputs with their average (mean ablation) should hurt the probe more than doing the same to random components from the same layers. Selection and scoring were split by fold: for each fifth of the biographies, components were chosen by mass on the other four-fifths, knocked out while Llama read that fifth, and scored with that fold’s probe, though the probes that weight the other folds’ contributions were trained with this fifth included. Over all 157 biographies the residualized probe’s within-biography AUROC starts at 0.644 (the 0.645 above, recomputed in full precision).</p>
+        <p>If a set of components carries the signal, replacing their outputs with their average (mean ablation) should hurt the probe more than doing the same to random components from the same layers. Selection and scoring were split by fold: for each fifth of the biographies, components were chosen by mass on the other four-fifths, knocked out while Llama read that fifth, and scored with that fold’s probe. The evaluated fifth was left out of the contribution scores used to choose the components, but it helped train the probes that weight the other folds’ contributions, so the knockout is not a fully independent held-out test. The accuracy comparisons above do not depend on this selection. Over all 157 biographies the residualized probe’s within-biography AUROC starts at 0.644 (the 0.645 above, recomputed in full precision).</p>
         <p>The preregistered test knocked out each fold’s 200 neurons with the most mass. That cost 0.032 [0.016, 0.046] of AUROC, about a fifth of the residualized probe’s lift above chance and five times the 0.006 removed by matched random neurons. The targeted intervention had a measurable effect, 0.026 [0.013, 0.038] beyond random, but it did not meet the 0.03 effect-size criterion set before the test.</p>
         <div class="fx" data-fx data-fx-build="c545644ee271" id="fx-knockouts">
 <div class="status"><span class="chip prereg">Preregistered: 200 neurons</span><span class="chip explor">Exploratory: head knockouts (E1), dose curves (E2)</span></div>

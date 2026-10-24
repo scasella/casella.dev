@@ -91,7 +91,7 @@
                 "headline": "A search for internal signals in Gemma, built and tested by agents",
                 "url": "https://casella.dev/blog_gemma_blind_search.html",
                 "datePublished": "2026-10-23",
-                "dateModified": "2026-10-23",
+                "dateModified": "2026-10-24",
                 "author": {
                   "@id": "https://casella.dev/#person"
                 }
@@ -101,7 +101,7 @@
                 "headline": "What Llama’s internal signals reveal about factual accuracy",
                 "url": "https://casella.dev/blog_fact_probe.html",
                 "datePublished": "2026-10-18",
-                "dateModified": "2026-10-23",
+                "dateModified": "2026-10-24",
                 "author": {
                   "@id": "https://casella.dev/#person"
                 }
@@ -191,7 +191,7 @@
                 "headline": "A panel-format adapter produces shorter answers with lower accuracy",
                 "url": "https://casella.dev/blog_multipersona.html",
                 "datePublished": "2026-04-24",
-                "dateModified": "2026-10-23",
+                "dateModified": "2026-10-24",
                 "author": {
                   "@id": "https://casella.dev/#person"
                 }
@@ -264,32 +264,32 @@
               <a href="blog_qwen_lookup.html">
                 <span class="posts__kicker">2026-10-23 — interp / patching</span>
                 <span class="posts__title">Agents traced a lookup pathway in Qwen3</span>
-                <span class="posts__dek">Agents traced how Qwen3 looks up the value for a named item: three stages, each carried by a few attention heads. Six head locations found in Qwen3-0.6B were fixed in advance and tested in Qwen3-1.7B, where a separate search had found the other two stages. Interventions there moved the answer preference in the predicted direction on 92.2–100% of held-out prompts, and the transfer test passed every registered gate.</span>
-                <span class="posts__scope">Short synthetic lookup prompts in two Qwen3 sizes; preference between two candidate answers, not free generation; the 0.6B three-stage study and the repair failed their verdicts; evidence private.</span>
+                <span class="posts__dek">Agents traced how Qwen3 looks up the value for a named item: three stages of attention heads. Interventions at six head locations from Qwen3-0.6B, fixed in advance and joined to stages a separate search found in Qwen3-1.7B, moved its answer preference in the predicted direction on 92.2–100% of held-out prompts.</span>
+                <span class="posts__scope">Synthetic lookup prompts; answer preference, not free generation; the transfer passed its gates, the 0.6B three-stage study and the repair did not; evidence private.</span>
               </a>
             </li>
             <li>
               <a href="blog_gemma_blind_search.html">
                 <span class="posts__kicker">2026-10-23 — interp / SAEs</span>
                 <span class="posts__title">A search for internal signals in Gemma, built and tested by agents</span>
-                <span class="posts__dek">On Gemma 3 1B, directions extracted without labels recovered parenthesis and quotation state (|AUROC| 0.78, 0.75), and one passed a preregistered steering test on fresh text: Δ 1.49 against at most 0.75 for 99 random directions from the same subspace. Gemma Scope 2 already had it, as a blend.</span>
-                <span class="posts__scope">One model; screens calibrated on parenthesis labels, with quotation as the untuned control; steering confirmed at layer 12 only; the search ran inside a Gemma Scope 2 SAE, so no new variable is certified.</span>
+                <span class="posts__dek">Agents built a search for what Gemma 3 1B tracks as it reads. It recovered parenthesis and quotation state, and one direction passed a preregistered steering test on fresh text: Δ 1.49 against at most 0.75 for 99 same-subspace random directions.</span>
+                <span class="posts__scope">One model; screens calibrated on parenthesis labels; steering confirmed at layer 12 only; Gemma Scope 2 already represents the direction.</span>
               </a>
             </li>
             <li>
               <a href="blog_fact_probe.html">
                 <span class="posts__kicker">2026-10-18 — interp / probes</span>
                 <span class="posts__title">What Llama’s internal signals reveal about factual accuracy</span>
-                <span class="posts__dek">On 742 held-out FActScore claims, a layer-19 probe on Llama 3.1 8B reaches AUROC 0.802, against 0.735 for P(True) and 0.740 for subject popularity, though no clear advantage over popularity is detected once whole biographies are resampled. Within biographies it keeps a signal after position controls and, in an exploratory test, adds to P(True). A preregistered decomposition attributes most of its direct signal to attention heads.</span>
-                <span class="posts__scope">One model and layer; 157 human-labelled ChatGPT biographies; the 200-neuron knockout had an effect but missed its preregistered criterion; analysis code unreleased.</span>
+                <span class="posts__dek">The follow-up tests a probe of Llama 3.1 8B’s internal activity against stronger baselines and confounds. On 742 held-out FActScore claims it reaches AUROC 0.802 against 0.735 for P(True), and a preregistered decomposition attributes most of its direct signal to attention heads.</span>
+                <span class="posts__scope">One model and layer; no clear advantage over subject popularity (0.740) once whole biographies are resampled; the knockout missed its preregistered criterion; code unreleased.</span>
               </a>
               <ul class="posts posts--stages">
                 <li>
                   <a href="blog_interp.html">
                     <span class="posts__kicker">2026-04-25 — interp / probes · initial study</span>
                     <span class="posts__title">Testing internal signals for factual accuracy in legal answers and biographies</span>
-                    <span class="posts__dek">A linear probe on Llama 3.1 8B’s layer-19 hidden states ranks 742 held-out, human-labelled FActScore claims by correctness at AUROC 0.802, against 0.541 for Llama’s stated confidence. An exploratory legal-QA test (MAUD) shows a similar gap. The first stage of the probe project.</span>
-                    <span class="posts__scope">One model and layer; FActScore claims written by ChatGPT; stronger baselines come in the follow-up; MAUD uses model-judge labels and is not yet grouped by source example.</span>
+                    <span class="posts__dek">The initial study: a small readout of Llama 3.1 8B’s hidden states ranks 742 held-out FActScore claims at AUROC 0.802, against 0.541 for Llama’s stated confidence. An exploratory legal-QA test shows a similar gap.</span>
+                    <span class="posts__scope">One model and layer; claims written by ChatGPT; stronger baselines come in the follow-up; legal-QA labels from model judges.</span>
                   </a>
                 </li>
               </ul>
@@ -298,16 +298,16 @@
               <a href="blog_reusable_binary_assurance.html">
                 <span class="posts__kicker">2026-10-05 — agents / formal verification</span>
                 <span class="posts__title">Agents reused proofs of OpenSSL routines across three callers</span>
-                <span class="posts__dek">Agents verified three experimental x86-64 callers in HOL Light by applying machine-checked contracts for two unchanged Debian OpenSSL routines through their actual linkage, instead of re-deriving the routines in each caller’s proof. The held-out caller missed its three-hour cap, then completed in a separately recorded successor.</span>
-                <span class="posts__scope">Pinned x86-64 model in HOL Light; loaded image, instruction model and extraction trusted; not all of OpenSSL; replay assets unpublished; human review pending.</span>
+                <span class="posts__dek">Agents verified three experimental x86-64 callers in HOL Light by applying machine-checked contracts for two unchanged Debian OpenSSL routines, instead of re-deriving them in each caller’s proof. The held-out caller missed its three-hour cap, then completed in a recorded successor.</span>
+                <span class="posts__scope">Pinned x86-64 model; loaded image and extraction trusted; not all of OpenSSL; replay assets unpublished; human review pending.</span>
               </a>
             </li>
             <li>
               <a href="blog_certified_narrowing.html">
                 <span class="posts__kicker">2026-09-27 — agents / formal verification</span>
                 <span class="posts__title">Agents turned a one-kernel Lean proof into a checker that certified 25 PyTorch kernels</span>
-                <span class="posts__dek">One Lean theorem and a small checker certified 32-bit size arguments for 25 torch.compile kernels: 15 of 35 development cases and 10 of 24 held out, each proof bound to the live compilation’s guards. Two of nine tuned kernels got faster.</span>
-                <span class="posts__scope">Inductor’s 1D pointwise kernels on one NVIDIA L4; per-lane guarantee under captured guards, with frontend and shape exporter trusted; proof checks rerunnable, timings recorded only; research prototype, not upstream.</span>
+                <span class="posts__dek">One Lean theorem and a small checker certified 32-bit size arguments for 25 torch.compile kernels, 10 of them from 24 held out, each proof bound to the live compilation’s guards. Two of nine tuned kernels got faster.</span>
+                <span class="posts__scope">1D pointwise kernels on one L4; the guarantee holds under captured guards, with a trusted frontend; research prototype, not upstream.</span>
               </a>
               <ul class="posts posts--stages">
                 <li>
@@ -315,7 +315,7 @@
                     <span class="posts__kicker">2026-09-26 — agents / formal verification · first experiment, one kernel</span>
                     <span class="posts__title">A Lean proof let agents cut a compiled PyTorch workload’s runtime by 26%</span>
                     <span class="posts__dek">Agents declared a torch.compile kernel’s size arguments 32-bit, proved in Lean when that is exact, and cut a changing-shape workload’s runtime by 26% on one NVIDIA L4. A maintainer closed the opt-in PR unmerged and asked for issue discussion first.</span>
-                    <span class="posts__scope">One program on one NVIDIA L4; the proof and patch cover one kernel class, with extraction and compiler trusted; PR closed unmerged.</span>
+                    <span class="posts__scope">One program on one L4; the proof and patch cover one kernel class, with extraction and compiler trusted.</span>
                   </a>
                 </li>
               </ul>
@@ -324,16 +324,16 @@
               <a href="blog_cpython_ft.html">
                 <span class="posts__kicker">2026-09-25 — agents / formal verification</span>
                 <span class="posts__title">25 bugs in free-threaded CPython, found by agents</span>
-                <span class="posts__dek">Agents confirmed 25 bugs in CPython’s free-threaded build, 18 with no earlier report found in the tracker search. Of five reports I filed upstream, two now have fixes merged into CPython main. TLAPS and Lean proofs checked a locking model; replays of real runs showed five places CPython departs from it.</span>
-                <span class="posts__scope">One macOS arm64 machine; I have reported four of the 25 bugs and none of the 92 sweep findings so far; the proofs cover the locking model, not CPython itself.</span>
+                <span class="posts__dek">Agents hunted concurrency bugs in CPython’s free-threaded build and confirmed 25, 18 with no earlier report found in the tracker search. Of the five I reported upstream, two now have fixes merged into CPython main.</span>
+                <span class="posts__scope">One macOS arm64 machine; I have reported four of the 25 so far; the proofs cover a locking model, not CPython.</span>
               </a>
             </li>
             <li>
               <a href="blog_proof_optimizer.html">
                 <span class="posts__kicker">2026-09-24 — agents / formal verification · early pilot, before the PyTorch work</span>
                 <span class="posts__title">Agents optimized four naive routines without changing their specifications</span>
-                <span class="posts__dek">Claude Opus 5.5 rewrote four deliberately naive Dafny routines while the Dafny verifier held every change to a frozen specification. Seven rewrites verified: six known algorithmic fixes and one fitted to the benchmark. On a held-out workload the run-length encoder ran 105× faster than its naive start, both measured as Dafny-compiled Python.</span>
-                <span class="posts__scope">Known algorithmic fixes to deliberately slow starts, still 5–7,400× slower than Python built-ins; one optimization run per routine on a shared machine; harness and run records unpublished.</span>
+                <span class="posts__dek">Claude Opus 5.5 rewrote four deliberately naive Dafny routines while the verifier held each change to a frozen specification. Seven rewrites verified, six of them known algorithmic fixes, and the run-length encoder ran 105× faster than its naive start on a held-out workload.</span>
+                <span class="posts__scope">Naive starts, still 5–7,400× slower than Python built-ins; one optimization run per routine; harness unpublished.</span>
               </a>
             </li>
             <li>
@@ -341,23 +341,23 @@
                 <span class="posts__kicker">2026-05-26 — rl / sampling bias</span>
                 <span class="posts__title">Training on random integers changes fixed-list choices across tasks</span>
                 <span class="posts__dek">Fifty GRPO steps on one pick-an-integer task moved Qwen3-30B-A3B-Instruct’s choices over fixed answer lists toward uniform on all nine untrained tasks (mean distance from uniform 0.74 to 0.38). On Llama-3.1-8B-Instruct the shift was narrower and concentrated on integer tasks.</span>
-                <span class="posts__scope">Scores over fixed answer lists, not open-ended text; the trained model was sampled on only three tasks; small capability checks; Qwen per-task records unpublished.</span>
+                <span class="posts__scope">Fixed answer lists, not open-ended text; the trained model was sampled on three tasks; Qwen per-task records unpublished.</span>
               </a>
             </li>
             <li>
               <a href="blog_multipersona.html">
                 <span class="posts__kicker">2026-04-24 — reasoning / tokens · exploratory</span>
                 <span class="posts__title">A panel-format adapter produces shorter answers with lower accuracy</span>
-                <span class="posts__dek">An RL-only panel-of-experts LoRA on Qwen3-30B-A3B-Base wrote far shorter completions than Qwen’s thinking model: where both were right, the thinking model’s were a median 5.9–6.9× longer. The panel was 31.5 points less accurate on matched MATH500 level-5 samples and 50.6 points on a 20-problem AIME subset.</span>
-                <span class="posts__scope">Format and training history are confounded; 20-problem AIME subset, unequal token limits, one run per training stage; tokens per correct sampled answer is a retrospective measure, not a deployment cost.</span>
+                <span class="posts__dek">An RL-only panel-of-experts LoRA on Qwen3-30B-A3B-Base wrote far shorter answers than Qwen’s thinking model but was less accurate: 31.5 points lower on matched MATH500 level-5 samples and 50.6 on a 20-problem AIME subset.</span>
+                <span class="posts__scope">Format and training history are confounded; one run per training stage; the token measure is retrospective.</span>
               </a>
               <ul class="posts posts--stages">
                 <li>
                   <a href="blog_multipersona_rl.html">
                     <span class="posts__kicker">2026-04-25 — rlvr / math · exploratory follow-up</span>
                     <span class="posts__title">Exploratory follow-up on training with partially solved math problems</span>
-                    <span class="posts__dek">One RL run on 354 competition problems that a panel-format Qwen3-30B-A3B-Base adapter solved on some but not all of 8 attempts raised its score on 100 held-out problems from 14% to 29% by its last evaluation (step 90 of a 100-step run).</span>
-                    <span class="posts__scope">One run and seed; the held-out set was scored every 10 steps during training; no random or full-pool curriculum compared; thinking-model run not completed.</span>
+                    <span class="posts__dek">One RL run on 354 problems the panel adapter solved on some but not all of 8 attempts raised its score on 100 held-out problems from 14% to 29% by its last evaluation.</span>
+                    <span class="posts__scope">One run and seed; the held-out set was scored during training; no other curriculum compared; thinking-model run unfinished.</span>
                   </a>
                 </li>
               </ul>
