@@ -556,7 +556,7 @@
 :is(#test, [data-sj="test"]) .ts-cubebox { grid-template-columns: 96px minmax(0, 1fr); }
 :is(#test, [data-sj="test"]) .ts-cube { width: 96px; height: 96px; }
 }
-@container sjx (max-width: 687px) {
+@container sjx (max-width: 779px) {
 :is(#test, [data-sj="test"]) .ts-grid { display: flex; flex-direction: column; align-items: stretch; gap: var(--sp-4); }
 :is(#test, [data-sj="test"]) .ts-left, :is(#test, [data-sj="test"]) .ts-right { display: contents; }
 :is(#test, [data-sj="test"]) .ts-card { order: 1; }
@@ -565,7 +565,7 @@
 :is(#test, [data-sj="test"]) .ts-say { order: 4; }
 :is(#test, [data-sj="test"]) .ts-cubebox { order: 5; }
 }
-@container sjx (max-width: 687px) {
+@container sjx (max-width: 779px) {
 :is(#test, [data-sj="test"]) .ts-cubebox { grid-template-columns: 96px minmax(0, 1fr); }
 :is(#test, [data-sj="test"]) .ts-cube { width: 96px; height: 96px; }
 :is(#test, [data-sj="test"]) .ts-pair { grid-template-columns: minmax(0, 1fr); }
@@ -583,7 +583,7 @@
 @container sjx (max-width: 1039.98px) {
 :is(#test, [data-sj="test"]) .prose > .mn + * { margin-top: var(--sp-3); }
 }
-@container sjx (max-width: 687px) {
+@container sjx (max-width: 779px) {
 :is(#test, [data-sj="test"]) .ts-same, :is(#test, [data-sj="test"]) .ts-same tbody, :is(#test, [data-sj="test"]) .ts-same tr, :is(#test, [data-sj="test"]) .ts-same tbody th { display: block; }
 :is(#test, [data-sj="test"]) .ts-same thead { display: none; }
 :is(#test, [data-sj="test"]) .ts-same tbody tr { padding: 10px 12px 12px; border-bottom: 1px solid var(--rule); }
@@ -1447,7 +1447,14 @@
 }
 .sjx.sjx figure svg { background: none !important; border: 0 !important; border-radius: 0; }
 .sjx.sjx .fig > figcaption { color: var(--ink-2); }
-.sjx.sjx .fig > figcaption a { color: var(--ink); white-space: nowrap; }
+/* Figure 01's record card. The explorer sized its type to the window, but the post's column is capped and Plex Mono
+   runs wider than Geist Mono, so fit the lines to the card: the longest, "What color is Rowan? Answer: → yellow",
+   measures 22.73em + 20px, plus 24px of side padding. "→ answer" keeps the room of a six-letter word (yellow,
+   silver: 4.79em + 16px), so where the type is at its floor and the line has to wrap, it wraps the same way for
+   every word pair. */
+.sjx.sjx .ts-card { container-type: inline-size; }
+.sjx.sjx .ts-card .rec-line { font-size: max(.8125rem, min(1em, calc((100cqi - 46px) / 22.9))); }
+.sjx.sjx .ts-card .rec-out { min-width: calc(4.8em + 16px); }
 .sjx.sjx .s9-scan { display: none !important; }  /* the search's screened layer ranges: not in the post */
 .sjx-mount { margin: 36px 0 40px; }
 .sjx-mount > .table-label { margin-bottom: 12px; }
