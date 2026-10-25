@@ -1447,6 +1447,11 @@
 }
 .sjx.sjx figure svg { background: none !important; border: 0 !important; border-radius: 0; }
 .sjx.sjx .fig > figcaption { color: var(--ink-2); }
+/* Figure 07's chips are labels, not links (the explorer's run ledger is private): no hover cue */
+:is(#ledger, [data-sj="ledger"]) span.rh-c:hover { border-color: var(--rule); cursor: default; }
+:is(#ledger, [data-sj="ledger"]) span.rh-c[data-f]:hover { border-color: var(--ink-3); }
+:is(#ledger, [data-sj="ledger"]) span.rh-c[data-v="pass"]:hover { border-color: var(--pos); }
+:is(#ledger, [data-sj="ledger"]) span.rh-c:hover .rh-r { text-decoration: none; }
 /* Figure 01's record card. The explorer sized its type to the window, but the post's column is capped and Plex Mono
    runs wider than Geist Mono, so fit the lines to the card: the longest, "What color is Rowan? Answer: → yellow",
    measures 22.73em + 20px, plus 24px of side padding. "→ answer" keeps the room of a six-letter word (yellow,
