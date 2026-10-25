@@ -671,7 +671,7 @@ SJ.ready(() => {
   SJ.sections.test = { state: st };
 });
 
-/* ── relay: relay-map, relay-dissoc ── */
+/* ── relay: relay-map ── */
 SJ.ready(() => {
   const root = SJ.root('relay');
   const $ = (s, el) => (el || root).querySelector(s);
@@ -869,52 +869,6 @@ SJ.ready(() => {
     });
   })();
 
-  /* ════ Fig 5.3 · the dissociation matrix ════ */
-  (function () {
-    const fig = $('#relay-dissoc');
-    const D = {
-      rb: { 'a-ov': 5.3156, 'a-qk': -0.0178, 'b-ov': 0, 'b-qk': 5.5546 },
-      gy: { 'a-ov': 6.1556, 'a-qk': -0.0578, 'b-ov': 0, 'b-qk': 6.1784 }
-    };
-    const SUB = { 'a-ov': 'same direction on 100% of prompts', 'a-qk': 'near 0', 'b-ov': 'exactly 0 by construction', 'b-qk': 'same direction on 100% of prompts' };
-    const MAX = 6.5, cells = {};
-    qa('.dm-cell', fig).forEach((c) => {
-      const k = c.getAttribute('data-cell'), h = c.getAttribute('data-h'), diag = c.hasAttribute('data-diag');
-      const v = SJ.h('p', { class: 'dm-v' }, SJ.h('span', { class: 'l-plain' }), SJ.h('span', { class: 'l-tech' }), SJ.h('span', { class: 'dm-u', html: 'logits' }));
-      const plot = SJ.h('div', { class: 'dm-plot', 'aria-hidden': 'true' });
-      const bar = diag ? SJ.h('i', { class: 'dm-bar', 'data-h': h }) : SJ.h('i', { class: 'dm-stub', 'data-h': k === 'a-qk' ? 'route' : 'ink' });
-      plot.appendChild(bar);
-      const ax = SJ.h('div', { class: 'dm-ax', 'aria-hidden': 'true' });
-      [0, 2, 4, 6].forEach((n) => ax.appendChild(SJ.h('span', { style: 'left:' + (n / MAX * 100).toFixed(3) + '%', text: String(n) })));
-      c.append(v, SJ.h('p', { class: 'dm-s', text: SUB[k] }), plot, ax);
-      cells[k] = { v, bar, diag, f: 0 };
-    });
-    let split = 'rb';
-    function labels() {
-      Object.keys(cells).forEach((k) => {
-        const n = D[split][k], c = cells[k];
-        c.v.children[0].textContent = k === 'b-ov' ? '0' : SJ.fmt(n, { dp: 2 });
-        c.v.children[1].textContent = k === 'b-ov' ? '0.000000' : SJ.fmt(n, { dp: 4 });
-      });
-    }
-    const setF = (k, f) => { cells[k].f = f; cells[k].bar.style.transform = 'scaleX(' + f.toFixed(4) + ')'; };
-    const target = (k) => D[split][k] / MAX;
-    labels();
-    SJ.stage(fig, {
-      rest() { setF('a-ov', target('a-ov')); setF('b-qk', target('b-qk')); },
-      arm() { setF('a-ov', 0); setF('b-qk', 0); },
-      play() {
-        return SJ.tween({ duration: 400, ease: SJ.ease.out, onUpdate: (u) => setF('a-ov', u * target('a-ov')) })
-          .then(() => SJ.tween({ duration: 400, ease: SJ.ease.out, onUpdate: (u) => setF('b-qk', u * target('b-qk')) }));
-      }
-    });
-    qa('input[name="relay-split"]', fig).forEach((i) => i.addEventListener('change', () => {
-      if (!i.checked) return;
-      split = i.value; labels();
-      ['a-ov', 'b-qk'].forEach((k) => { const f0 = cells[k].f, f1 = target(k); SJ.tween({ duration: 420, ease: SJ.ease.out, onUpdate: (u) => setF(k, lerp(f0, f1, u)) }); });
-      SJ.live(split === 'rb' ? 'Red/blue: copy path 5.32 logits under switch A; where-to-look path 5.55 logits under switch B.' : 'Green/yellow: copy path 6.16 logits under switch A; where-to-look path 6.18 logits under switch B.');
-    }));
-  })();
 });
 
 /* ── scale: scale-map ── */
@@ -938,8 +892,8 @@ SJ.ready(() => {
   const radios = Array.from(root.querySelectorAll('input[name="scale-step"]'));
   const lgScan = root.querySelector('.s9-lg-scan');
   const STEPS = {
-    search: '<b>1 · Separate search (study 10).</b> In Qwen3-1.7B, a search on calibration prompts screened 176 candidate copying heads and 144 candidate relay heads. It found the same three copying heads as the small model and two of its three relay heads; the third is 18:7, where the small model uses 15:4. The study passed all 108 of its registered criteria.<span class="l-tech"> Downstream screen, layers 15–25: {22:9, 19:5, 21:13}. Upstream screen, layers 10–18: {17:1, 18:7, 16:4}. 2,134 microbatches, calibration prompts only.</span>',
-    carry: '<b>2 · Carried over (study 12).</b> The six identifying heads found in Qwen3-0.6B were fixed at their small-model locations before the test in Qwen3-1.7B, with no new search. Interventions starting at them, passing through the relay and copying heads, moved the answer preference in the predicted direction on 92.2% to 100% of held-out prompts. The study passed every gate: 63 of 63 criteria.<span class="l-tech"> B_hop0_qspan 99.22% / 100%, C_hop0_qspan 92.19% / 100% (Primary / Vocabulary).</span>'
+    search: '<b>1 · Separate search (study 10).</b> In Qwen3-1.7B, a search on calibration prompts found the same three copying heads as the small model and two of its three relay heads; the third is 18:7, where the small model uses 15:4. The study passed all 108 of its registered criteria.',
+    carry: '<b>2 · Carried over (study 12).</b> The six identifying heads found in Qwen3-0.6B were fixed at their small-model locations before the test in Qwen3-1.7B, with no new search. Interventions starting at them, passing through the relay and copying heads, moved the answer preference in the predicted direction on 92.2% to 100% of held-out prompts. The study passed every gate: 63 of 63 criteria.'
   };
   const LIVE = {
     search: 'Step 1, separate search: the same three copying heads and two of three relay heads found again in Qwen3-1.7B.',
@@ -962,7 +916,7 @@ SJ.ready(() => {
     const W = Math.max(300, Math.floor(w));
     svg.textContent = '';
     const wide = W >= 640;
-    const axisW = 30, bracketW = wide ? 168 : 0, gMin = wide ? 200 : 56;
+    const axisW = 30, bracketW = 0, gMin = wide ? 200 : 56;
     const p = Math.max(7, Math.min(14, Math.floor((W - axisW - bracketW - gMin) / 32)));
     const gut = Math.max(40, Math.min(wide ? 300 : 120, W - axisW - bracketW - 32 * p));
     const total = axisW + 32 * p + gut + bracketW;
@@ -1025,20 +979,6 @@ SJ.ready(() => {
     const own17 = ring(posB('18:7'), wide ? '18:7 · 1.7B only' : '18:7');
 
     const brk = {};
-    if (bracketW) {
-      const x1 = bx + 16 * p + 12, x2 = x1 + 14, xl = x2 + 10;
-      const mk = (st, x, Lhi, Llo, Llab, l1, l2) => {
-        const g = SJ.svg('g', {}, gOver);
-        SJ.svg('path', { class: 's9-brk', 'data-stage': st, d: `M${x - 5} ${rowTop(Lhi) + 1}H${x}V${rowTop(Llo - 1) - 1}H${x - 5}` }, g);
-        const t = SJ.svg('text', { class: 's9-blab', 'data-stage': st, x: xl, y: rowY(Llab) + 4 }, g);
-        SJ.svg('tspan', { x: xl, text: l1 }, t);
-        SJ.svg('tspan', { x: xl, dy: 14, class: 'k', text: l2 }, t);
-        return g;
-      };
-      brk.move = mk('move', x1, 25, 15, 23, '176 screened', 'copying heads · L15–25');
-      brk.route = mk('route', x2, 18, 10, 13, '144 screened', 'relay heads · L10–18');
-    }
-    lgScan.hidden = !!bracketW;
     const scan = {
       move: SJ.svg('rect', { class: 's9-scan', 'data-stage': 'move', x: bx - 3, y: rowTop(25), width: 16 * p + 6, height: 0, rx: 3, opacity: 0 }, gScan),
       route: SJ.svg('rect', { class: 's9-scan', 'data-stage': 'route', x: bx - 3, y: rowTop(18), width: 16 * p + 6, height: 0, rx: 3, opacity: 0 }, gScan)
@@ -1233,38 +1173,7 @@ SJ.ready(() => {
     for (let i = 0; i < n; i++) ul.appendChild(mk(ul.getAttribute('data-g') === 'v1' ? '1' : 'g/s'));
   });
   const tickets = Array.from(root.querySelectorAll('.tickets .k8-tk'));
-  const bsvg = root.querySelector('#knew-bars');
-  let barGs = [];
-  const ROWS = [
-    { y: 16, lp: 'Readout from 19:5 · 126/128 (98.44%)', lt: 'Readout from 19:5 · 126/128 (98.4375%)', v: 126, cls: 'mv', bar: 'k8-bar-mv' },
-    { y: 66, lp: "Model's own answer · 115/128 (89.84%)", lt: "Model's own answer · 115/128 (89.84375%)", v: 115, cls: '', bar: 'k8-bar-ink' }
-  ];
-  let barP = 1;
-  function drawBars(Wc) {
-    const W = Math.max(260, Math.min(Wc, 720));
-    bsvg.querySelectorAll(':scope > g').forEach((g) => g.remove());
-    const H = 134, x0 = 1, x1 = W - 14, sx = (v) => x0 + (x1 - x0) * v / 128;
-    bsvg.setAttribute('viewBox', `0 0 ${W} ${H}`); bsvg.setAttribute('width', W); bsvg.setAttribute('height', H);
-    bsvg.style.maxWidth = W + 'px';
-    const g = SJ.svg('g', {}, bsvg);
-    [0, 32, 64, 96, 128].forEach((t) => {
-      SJ.svg('line', { class: 'gridline', x1: sx(t), x2: sx(t), y1: 22, y2: 110 }, g);
-      SJ.svg('text', { class: 't-tick', x: sx(t), y: 126, 'text-anchor': t === 0 ? 'start' : 'middle', text: String(t) }, g);
-    });
-    barGs = ROWS.map((r) => {
-      SJ.svg('text', { class: 'k8-bl l-plain ' + r.cls, x: x0, y: r.y, text: r.lp }, g);
-      SJ.svg('text', { class: 'k8-bl l-tech ' + r.cls, x: x0, y: r.y, text: r.lt }, g);
-      const bg = SJ.svg('g', { transform: `translate(${x0} ${r.y + 9})` }, g);
-      const inner = SJ.svg('g', {}, bg);
-      SJ.svg('rect', { class: r.bar, x: 0, y: 0, width: sx(r.v) - x0, height: 16 }, inner);
-      return inner;
-    });
-    ROWS.forEach((r) => SJ.svg('line', { class: 'baseline', x1: x0, x2: x0, y1: r.y + 5, y2: r.y + 29 }, g));
-    SJ.svg('line', { class: 'axisline', x1: x0, x2: sx(128), y1: 110, y2: 110 }, g);
-    setBars(barP);
-  }
-  function setBars(p) { barP = p; barGs.forEach((gg) => gg.setAttribute('transform', `scale(${Math.max(0.0001, p)} 1)`)); }
-  SJ.onResize(root.querySelector('.k8-bars'), (w) => drawBars(Math.floor(w)));
+  const setBars = () => {};
   SJ.stage(tfig, {
     rest() { tickets.forEach((t) => { t.style.opacity = ''; }); setBars(1); },
     arm() { tickets.forEach((t) => { t.style.opacity = '.35'; }); setBars(0); },
@@ -1316,192 +1225,11 @@ SJ.ready(() => {
   });
 });
 
-/* ── straitjacket: straitjacket-locks, straitjacket-miss ── */
+/* ── straitjacket: straitjacket-miss ── */
 SJ.ready(() => {
   const root = SJ.root('straitjacket');
   const wait = (ms) => new Promise((r) => setTimeout(r, SJ.reduced ? 0 : ms));
   const cancelAnims = (el) => { if (el.getAnimations) el.getAnimations().forEach((a) => a.cancel()); };
-
-  /* ── lock 1: the live fingerprint ── */
-  const SEALED_TEXT = 'Study 1 prerequisite: accuracy ≥ 90.0% (116/128)';
-  const NUDGED_TEXT = 'Study 1 prerequisite: accuracy ≥ 89.8% (115/128)';
-  const PRE = {};
-  PRE[SEALED_TEXT] = '08084d2240169f0d553d40067872b879cd101d14372738829c9a554446f7a17c';
-  PRE[NUDGED_TEXT] = 'a320b3d80d383363272b6b076d49307463ec93f1769ce77f257016ffaf4cb633';
-  const SEALED = PRE[SEALED_TEXT];
-  const field = root.querySelector('#straitjacket-field');
-  const nowEl = root.querySelector('#straitjacket-now');
-  const sealedEl = root.querySelector('#straitjacket-sealed');
-  const countEl = root.querySelector('#straitjacket-count');
-  const verdict = root.querySelector('#straitjacket-verdict');
-  const fb = root.querySelector('#straitjacket-fb');
-  function renderHex(el, hex, ref, flash) {
-    el.textContent = '';
-    for (let g = 0; g < 8; g++) {
-      const grp = SJ.h('span', { class: 'g' });
-      for (let i = g * 8; i < g * 8 + 8; i++) {
-        const d = ref && hex[i] !== ref[i];
-        grp.appendChild(SJ.h('span', { class: 'c' + (d ? ' d' : '') + (d && flash ? ' fl' : ''), text: hex[i] }));
-      }
-      el.appendChild(grp);
-    }
-  }
-  function autosize() { field.style.height = 'auto'; field.style.height = field.scrollHeight + 2 + 'px'; }
-  let seq = 0, lastPass = true, canHash = true, lastFlash = -1e9;
-  let sayT;
-  function show(hex, thump) {
-    let n = 0; for (let i = 0; i < 64; i++) if (hex[i] !== SEALED[i]) n++;
-    /* one announcement per pause in typing, not a 64-character hash per key */
-    clearTimeout(sayT);
-    sayT = setTimeout(() => SJ.live(n ? 'Fingerprint changed: ' + n + ' of 64 characters differ. Audit fails.' : 'Fingerprint matches the seal.'), 600);
-    const t = performance.now(), flash = t - lastFlash >= 400;
-    if (flash) lastFlash = t;
-    renderHex(nowEl, hex, SEALED, flash);
-    countEl.innerHTML = '';
-    countEl.append('Characters changed: ', SJ.h('b', { text: String(n) }), ' of 64');
-    const pass = n === 0;
-    verdict.setAttribute('data-v', pass ? 'pass' : 'fail');
-    verdict.textContent = pass ? 'Matches the seal' : 'Audit fails · plan changed after sealing';
-    if (pass !== lastPass || thump) SJ.stamp(verdict);
-    lastPass = pass;
-  }
-  function update(thump) {
-    autosize();
-    const text = field.value, my = ++seq;
-    if (!canHash) { show(PRE[text] || SEALED, thump); return; }
-    SJ.sha256(text).then((hex) => {
-      if (my !== seq) return;
-      show(hex || PRE[text] || SEALED, thump);
-    });
-  }
-  field.addEventListener('input', () => update(false));
-  field.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
-  root.querySelector('[data-act="nudge"]').addEventListener('click', () => { field.value = NUDGED_TEXT; update(true); });
-  root.querySelector('[data-act="reset"]').addEventListener('click', () => { field.value = SEALED_TEXT; update(true); });
-  renderHex(sealedEl, SEALED, null, false);
-  renderHex(nowEl, SEALED, SEALED, false);
-  SJ.sha256(SEALED_TEXT).then((hex) => {
-    if (!hex) { canHash = false; field.readOnly = true; fb.hidden = false; }
-    else if (hex !== SEALED) console.warn('straitjacket: sealed digest mismatch', hex);
-  });
-  SJ.onResize(field, autosize);
-
-  /* ── lock 2: the inventory bars grow on one honest scale, then the v9 catch blocks 26 keys ── */
-  const l2 = root.querySelector('#straitjacket-l2');
-  const segs = Array.from(l2.querySelectorAll('.lb-tr i'));
-  const u26 = root.querySelector('#straitjacket-u26');
-  const keys = [];
-  for (let i = 0; i < 26; i++) keys.push(u26.appendChild(SJ.h('i', { class: 'u', 'data-s': 'break' })));
-  const caught = root.querySelector('#straitjacket-caught');
-  SJ.stage(l2, {
-    rest() { segs.forEach((s) => { s.style.transform = ''; }); keys.forEach((k) => k.setAttribute('data-s', 'break')); caught.style.opacity = ''; },
-    arm() { segs.forEach((s) => { s.style.transform = 'scaleX(0)'; }); keys.forEach((k) => k.setAttribute('data-s', 'on')); caught.style.opacity = 0.3; },
-    async play() {
-      segs.forEach((s) => { s.style.transform = 'scaleX(0)'; });
-      keys.forEach((k) => k.setAttribute('data-s', 'on'));
-      caught.style.opacity = 0.3;
-      /* each row's carried-over inventory appears at once; only what that run added grows */
-      for (const [i, s] of segs.entries()) {
-        if (i > 0 && !s.classList.contains('add')) { s.style.transform = ''; continue; }
-        const big = parseFloat(s.style.getPropertyValue('--w')) > 20;
-        await SJ.tween({ duration: big ? 900 : 300, ease: SJ.ease.out, onUpdate: (v) => { s.style.transform = `scaleX(${v})`; } });
-      }
-      segs.forEach((s) => { s.style.transform = ''; });
-      await wait(160);
-      let k = 0;
-      await SJ.tween({ from: 0, to: 26, duration: 700, ease: SJ.ease.inOut, onUpdate: (v) => { const n = Math.round(v); while (k < n) { keys[k].setAttribute('data-s', 'break'); k++; } } });
-      keys.forEach((c) => c.setAttribute('data-s', 'break'));
-      caught.style.opacity = ''; SJ.stamp(caught);
-      await wait(240);
-    }
-  });
-
-  /* ── lock 3: decoy stamps thump in sequence ── */
-  const l3 = root.querySelector('#straitjacket-l3');
-  const tagStamps = [...l3.querySelectorAll('.lt .stamp')];
-  SJ.stage(l3, {
-    rest() { tagStamps.forEach((s) => { s.style.opacity = ''; }); },
-    arm() { tagStamps.forEach((s) => { s.style.opacity = 0.35; }); },
-    play() {
-      return tagStamps.reduce((p, s) => p.then(() => wait(190)).then(() => { s.style.opacity = ''; SJ.stamp(s); }), Promise.resolve()).then(() => wait(150));
-    }
-  });
-
-  /* ── lock 4: a zipper, one pair of teeth per file pair; pick the run; it zips shut on scroll ── */
-  const ZIP = {
-    v57: { pairs: 71, n: '655', lab: 'of 655 saved arrays identical,', run: '(studies 5–7, Qwen3-0.6B)' },
-    v10: { pairs: 66, n: '612', lab: 'saved arrays identical,', run: '(study 10, Qwen3-1.7B)' },
-    v12: { pairs: 84, n: '1,212', lab: 'saved arrays identical,', run: '(study 12, Qwen3-1.7B)' }
-  };
-  const zip = root.querySelector('#straitjacket-zip');
-  const zn = root.querySelector('#straitjacket-zn'), zl = root.querySelector('#straitjacket-zl'), zr = root.querySelector('#straitjacket-zr'), zp = root.querySelector('#straitjacket-zp');
-  let zKey = 'v12', zW = 0, zProg = 1, zTeeth = [], zTab = null, zMy = 0;
-  function drawZip() {
-    const w = zW; if (!w) return;
-    zip.textContent = '';
-    zip.setAttribute('viewBox', `0 0 ${w} 56`);
-    const N = ZIP[zKey].pairs, x0 = 2, x1 = w - 20, pitch = (x1 - x0) / N, tw = Math.max(1.2, Math.min(3.2, pitch * 0.5));
-    SJ.svg('rect', { class: 'zr', x: 0.5, y: 0.5, width: w - 1, height: 15, rx: 3 }, zip);
-    SJ.svg('rect', { class: 'zr', x: 0.5, y: 40.5, width: w - 1, height: 15, rx: 3 }, zip);
-    const g = SJ.svg('g', {}, zip);
-    zTeeth = [];
-    for (let i = 0; i < N; i++) {
-      const x = x0 + i * pitch;
-      const a = SJ.svg('rect', { class: 'zt', x: x.toFixed(2), y: 16, width: tw, height: 14 }, g);
-      const b = SJ.svg('rect', { class: 'zt b', x: (x + pitch / 2).toFixed(2), y: 26, width: tw, height: 14 }, g);
-      zTeeth.push([a, b]);
-    }
-    zTab = SJ.svg('g', {}, zip);
-    SJ.svg('rect', { class: 'zp', x: -15, y: 11, width: 15, height: 34, rx: 3 }, zTab);
-    SJ.svg('rect', { class: 'zp', x: -11, y: 20, width: 7, height: 16, rx: 1.5 }, zTab);
-    SJ.svg('text', { class: 'zl', x: 6, y: 11.8, text: 'Run A' }, zip);
-    SJ.svg('text', { class: 'zl', x: 6, y: 51.8, text: 'Run B' }, zip);
-    setZip(zProg);
-  }
-  function setZip(p) {
-    zProg = p;
-    const N = zTeeth.length, k = Math.round(p * N);
-    zTeeth.forEach((t, i) => { const on = i < k; t[0].style.opacity = on ? '' : 0.12; t[1].style.opacity = on ? '' : 0.12; });
-    if (zTab) zTab.setAttribute('transform', `translate(${(2 + p * (zW - 20 - 2) + 15).toFixed(2)} 0)`);
-  }
-  function sayZip() {
-    const d = ZIP[zKey];
-    zn.textContent = d.n; zl.textContent = d.lab; zr.textContent = d.run;
-    zp.textContent = d.pairs + ' pairs of saved files, one pair of zipper teeth each';
-  }
-  const zipRun = (dur) => { const my = ++zMy; setZip(0); return SJ.tween({ duration: dur, ease: SJ.ease.inOut, onUpdate: (v) => { if (my === zMy) setZip(v); } }).then(() => { if (my === zMy) setZip(1); }); };
-  SJ.onResize(zip, (w) => { zW = w; drawZip(); });
-  root.querySelectorAll('input[name="straitjacket-zip"]').forEach((inp) => inp.addEventListener('change', () => {
-    if (!inp.checked) return;
-    zKey = inp.value; sayZip(); drawZip(); zipRun(700);
-  }));
-  const l4 = root.querySelector('#straitjacket-l4');
-  SJ.stage(l4, {
-    rest() { zMy++; setZip(1); },
-    arm() { zMy++; setZip(0); },
-    play() { return zipRun(1000).then(() => wait(120)); }
-  });
-
-  /* ── lock 5: 55 of 56, then 83, 109 and 31 numbers written by code ── */
-  const u56 = root.querySelector('#straitjacket-u56');
-  for (let i = 0; i < 56; i++) u56.appendChild(SJ.h('i', { class: 'u', 'data-s': i === 55 ? 'miss' : 'on' }));
-  const bound = [];
-  [['#straitjacket-u83', 83], ['#straitjacket-u109', 109], ['#straitjacket-u31', 31]].forEach(([sel, n]) => {
-    const el = root.querySelector(sel);
-    for (let i = 0; i < n; i++) bound.push(el.appendChild(SJ.h('i', { class: 'u', 'data-s': 'on' })));
-  });
-  const l5 = root.querySelector('#straitjacket-l5');
-  SJ.stage(l5, {
-    rest() { bound.forEach((c) => c.setAttribute('data-s', 'on')); },
-    arm() { bound.forEach((c) => c.setAttribute('data-s', 'off')); },
-    play() {
-      bound.forEach((c) => c.setAttribute('data-s', 'off'));
-      let k = 0;
-      return SJ.tween({ from: 0, to: bound.length, duration: 1100, ease: SJ.ease.inOut, onUpdate: (v) => {
-        const n = Math.round(v); while (k < n) { bound[k].setAttribute('data-s', 'on'); k++; }
-      } }).then(() => { bound.forEach((c) => c.setAttribute('data-s', 'on')); return wait(120); });
-    }
-  });
 
   /* ── Fig 4.2: one prompt short ── */
   const units = root.querySelector('#straitjacket-units');
@@ -1527,7 +1255,6 @@ SJ.ready(() => {
       }).then(() => { inc.style.opacity = ''; SJ.stamp(inc); return wait(240); });
     }
   });
-  SJ.sections.straitjacket = { sealed: SEALED };
 });
 
 /* ── ledger: ledger-strip ── */

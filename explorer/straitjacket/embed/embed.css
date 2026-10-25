@@ -1448,12 +1448,10 @@
 .sjx.sjx figure svg { background: none !important; border: 0 !important; border-radius: 0; }
 .sjx.sjx .fig > figcaption { color: var(--ink-2); }
 .sjx.sjx .fig > figcaption a { color: var(--ink); white-space: nowrap; }
+.sjx.sjx .s9-scan { display: none !important; }  /* the search's screened layer ranges: not in the post */
 .sjx-mount { margin: 36px 0 40px; }
 .sjx-mount > .table-label { margin-bottom: 12px; }
-details.sjx-more { margin: -16px 0 40px; }
-details.sjx-more > summary, details.sjx-numbers > summary { cursor: pointer; font-size: 13px; color: var(--pn-quiet); }
-details.sjx-more[open] > summary { margin-bottom: 4px; }
-details.sjx-more > .sjx-mount { margin-top: 20px; }
+details.sjx-numbers > summary { cursor: pointer; font-size: 13px; color: var(--pn-quiet); }
 details.sjx-numbers { margin: -24px 0 28px; }
 details.sjx-numbers[open] > summary { margin-bottom: 4px; }
 /* the sprite, tooltip and live region: not a size container, so the fixed tooltip places against the viewport */
