@@ -21,7 +21,7 @@
   <meta property="og:image:alt" content="Share card for the write-up: Agents traced a lookup pathway in Qwen3." />
   <meta property="article:author" content="Stephen Casella" />
   <meta property="article:published_time" content="2026-10-23" />
-  <meta property="article:modified_time" content="2026-10-23" />
+  <meta property="article:modified_time" content="2026-10-25" />
   <meta property="article:tag" content="AI agents" />
   <meta property="article:tag" content="mechanistic interpretability" />
   <meta property="article:tag" content="activation patching" />
@@ -50,7 +50,7 @@
       "mainEntityOfPage": "https://casella.dev/blog_qwen_lookup.html",
       "image": "https://casella.dev/assets/og/blog_qwen_lookup.png",
       "datePublished": "2026-10-23",
-      "dateModified": "2026-10-23",
+      "dateModified": "2026-10-25",
       "author": {
         "@type": "Person",
         "name": "Stephen Casella",
@@ -384,6 +384,9 @@
   <link rel="stylesheet" href="panes.css?v=87bdb6c4" />
   <script src="ascii.js?v=6f1f421a" defer></script>
   <!-- PANES:HEAD:END -->
+  <link rel="stylesheet" href="explorer/straitjacket/embed/embed.css?v=87078509" />
+  <noscript><style>.sjx-mount, details.sjx-more { display: none !important; }</style></noscript>
+  <script defer src="explorer/straitjacket/embed/embed.js?v=c2e3e485"></script>
 </head>
 <body class="pn-body panes-post">
   <!-- PANES:BAR:START -->
@@ -435,7 +438,7 @@
   <article class="post">
 <h1>Agents traced a lookup pathway in Qwen3</h1>
 <!-- PANES:META:START -->
-    <p class="post-byline">[ <time datetime="2026-10-23">2026-10-23</time> ] // gpt-6-luna · Qwen3-0.6B · Qwen3-1.7B // 15 MIN READ</p>
+    <p class="post-byline">[ <time datetime="2026-10-23">2026-10-23</time> · updated <time datetime="2026-10-25">2026-10-25</time> ] // gpt-6-luna · Qwen3-0.6B · Qwen3-1.7B // 15 MIN READ</p>
   <!-- PANES:META:END -->
         <p class="subtitle">Tell a language model that Rowan is red and Lumen is blue, then ask what color Rowan is. To answer, it has to look up the value that belongs to the named item. I wanted to see how a model does that, and whether an explanation found in one model could predict what happens inside a larger one.</p>
         <div class="paper-links">
@@ -481,6 +484,52 @@
         <p>Now swap the names in the facts:</p>
         <blockquote><p>Lumen is red.<br />Rowan is blue.<br />What color is Rowan?</p></blockquote>
         <p>The question is identical. The colors appear in the same order. Only the relationship between names and colors has changed, and the answer must change with it. (Rowan and Lumen are illustrative. From study 4 on, the keys were other single-token words, drawn fresh for each study without reference to the model’s answers.)</p>
+<div class="sjx-mount">
+<div class="table-label" id="test-switch-t"><span class="id">Figure 01</span>The three switches</div>
+<div class="sjx" data-sj="test">
+<figure class="fig wide" id="test-switch" aria-labelledby="test-switch-t">
+    <div class="fig-head"><span class="ev" data-ev="schematic">Schematic</span></div>
+    <div class="plate">
+      <div class="ts-grid">
+        <div class="ts-left">
+          <div class="rec ts-card" id="test-card" data-a="0" data-b="0" data-c="0" aria-label="Example prompt">
+            <span class="ts-band" id="test-band" aria-hidden="true"><span class="ts-band-l"><span class="l"><span aria-hidden="true">◂</span>&nbsp;holds the asked-for name</span><span class="s"><span aria-hidden="true">◂</span>&nbsp;match</span></span></span>
+            <p class="rec-line" data-row="1"><span class="ts-slot" data-slot="k1"><span class="tok key" data-key="1">Rowan</span></span> is <span class="ts-slot" data-slot="c1"><span class="tok val" data-c="red" data-w="0">red</span></span>.</p>
+            <p class="rec-line" data-row="2"><span class="ts-slot" data-slot="k2"><span class="tok key" data-key="2">Lumen</span></span> is <span class="ts-slot" data-slot="c2"><span class="tok val" data-c="blue" data-w="1">blue</span></span>.</p>
+            <p class="rec-line rec-q">What color is <span class="tok key ts-qk">Rowan</span>? <span class="tok ans">Answer:</span> <span class="rec-out">→ <span class="tok val ts-ans" data-c="red">red</span></span></p>
+          </div>
+          <p class="rec-note">Rowan and Lumen are illustrative. From study 4 on, the keys were other single-token words, drawn fresh for each study; earlier studies used generated identifiers.</p>
+          <output class="readout ts-say" id="test-say" aria-live="polite">The original prompt.</output>
+        </div>
+        <div class="ts-right">
+          <div class="ts-sws" role="group" aria-label="Switches">
+            <button type="button" class="sw" role="switch" aria-checked="false" data-k="a"><span class="sw-k"><svg viewBox="0 0 26 26" aria-hidden="true"><circle class="bdg-shape" cx="13" cy="13" r="11.5"/><text class="bdg-t" x="13" y="13.5">A</text></svg></span><span class="sw-l">Swap the colors</span></button>
+            <button type="button" class="sw" role="switch" aria-checked="false" data-k="b"><span class="sw-k"><svg viewBox="0 0 26 26" aria-hidden="true"><polygon class="bdg-shape" points="13,0.5 25.5,13 13,25.5 0.5,13"/><text class="bdg-t" x="13" y="13.5">B</text></svg></span><span class="sw-l">Ask about Lumen</span></button>
+            <button type="button" class="sw" role="switch" aria-checked="false" data-k="c"><span class="sw-k"><svg viewBox="0 0 26 26" aria-hidden="true"><rect class="bdg-shape" x="2" y="2" width="22" height="22"/><text class="bdg-t" x="13" y="13.5">C</text></svg></span><span class="sw-l">Swap the names between the facts</span></button>
+          </div>
+          <div class="ts-cubebox">
+            <svg class="ts-cube" id="test-cube" viewBox="0 0 120 120" aria-hidden="true"></svg>
+            <div class="ts-cubetx">
+              <p class="k">8 versions of one question</p>
+              <p class="ts-ver" id="test-ver"><b>Now:</b> <span class="nw">the original</span></p>
+              <p class="ts-ver" id="test-anl"><b>Right answer:</b> <span class="nw">red</span></p>
+            </div>
+            <p class="ts-ver ts-tuple tech-only" id="test-tuple"><span class="nw">(k_order, c_order, q_key)</span> <span class="nw">= (0, 0, 0)</span></p>
+          </div>
+        </div>
+      </div>
+      <div class="fig-ctrl ts-pair">
+        <p class="ts-pair-k" id="test-pair-k">Color words</p>
+        <fieldset class="seg" aria-labelledby="test-pair-k"><legend class="vh">Color words</legend><label><input type="radio" name="test-pair" value="0" checked><span>red/blue</span></label><label><input type="radio" name="test-pair" value="1"><span>green/yellow</span></label><label><input type="radio" name="test-pair" value="2"><span>gold/silver</span></label></fieldset>
+        <p class="ts-pair-c">The heads were found with red/blue. Green/yellow tests whether they transfer. Gold/silver appears in a follow-up that failed a calibration prerequisite, and again with fresh words in the study 8 repair.</p>
+      </div>
+    </div>
+    <figcaption>Switch C is the name swap above: the colors and the question stay where they are, and the answer still changes. Switch B asks about the other name with the facts unchanged, and switch A swaps the colors. The shaded line is the fact that holds the requested name. Schematic. <a href="explorer/straitjacket/#test-switch">Open it in the explorer →</a></figcaption>
+    <details class="nums"><summary>Show the numbers</summary><div class="tbl-wrap" tabindex="0" role="region" aria-label="All 8 versions for Fig 3.1"><table class="tbl ts-vt"><thead><tr><th>Switches on</th><th>First fact</th><th>Second fact</th><th>Asks about</th><th>Answer</th></tr></thead><tbody id="test-vt"></tbody><caption>The current version is marked. Each family of eight contains all of these; “none” is the original prompt.</caption></table></div></details>
+  </figure>
+</div>
+</div>
+
         <p>A signal that only carries the name “Rowan” would be the same in both cases. A signal that incorporates which record belongs to Rowan must reflect the changed context. To tell them apart, the experiment runs the model on both versions, then transplants selected internal signals from one run into the other and measures what changes. This intervention is called <em>activation patching</em>.</p>
         <p>The outcome measured throughout is the model’s <em>answer preference</em>: how strongly it favors one of the two candidate answers, such as red over blue, as the next word. It is measured in logits, the raw scores the model assigns to possible next words. Free-form generation was not tested. A second kind of swap asks about the other name with the facts unchanged; only the name swap above rules out simply copying the name from the question.</p>
         <p>One especially informative experiment changed the signal the copying heads use to choose where to read, while keeping their other lookup inputs fixed. In the confirmation of the last two stages, the three copying heads’ average attention shifted toward the record selected by the transplanted signal by a median of 14 to 21 percentage points, depending on the comparison, and their contribution to the answer moved with it. In the name swap, where the question stays the same, that signal still changed in a way that affected which record was selected, so it was carrying information about the relationship between the question and the facts.</p>
@@ -492,7 +541,50 @@
           <li><strong>Relay it to the answer position.</strong> Three heads in layers 15 to 18 read that information from the question region and carry it to the position where the model is about to produce its answer.</li>
           <li><strong>Select the source and copy its value.</strong> Three later heads, in layers 19 to 22, use the relayed signal to direct their attention to one record’s value and copy that value into the answer.</li>
         </ol>
-        <div class="table-wrap">
+        <div class="sjx-mount">
+<div class="table-label" id="relay-map-t"><span class="id">Figure 02</span>Three stages, one answer</div>
+<div class="sjx" data-sj="relay">
+<figure class="fig wide" id="relay-map" aria-labelledby="relay-map-t">
+    <div class="fig-head"><span class="ev" data-ev="schematic">Map · layers to scale, positions schematic</span></div>
+    <div class="plate">
+      <div class="tm">
+        <div class="tm-dia">
+          <svg class="tm-svg" id="relay-tm-svg" role="img" aria-labelledby="relay-tm-title relay-tm-desc"><title id="relay-tm-title">The three-stage pathway in Qwen3-0.6B</title><desc id="relay-tm-desc">Columns are positions in the prompt: the two facts, the question, and the answer position. Rows are layers 11 to 22. Six stage-1 heads in layers 11 to 14 sit at the question. Three stage-2 heads in layers 15 to 17 sit at the answer position and read the question. Three stage-3 heads in layers 19 to 22 attend back to red in the first fact and copy it into the answer.</desc></svg>
+        </div>
+        <ol class="tm-cards" aria-label="The three stages">
+          <li class="tm-card" data-st="hop">
+            <p class="tm-k">Stage 1 · layers 11–14 · at the question</p>
+            <p class="tm-t">Identify the requested record</p>
+            <p class="tm-d">Six heads, working over the question and the text that follows it, influence a signal that depends on which record answers the question.</p>
+            <p class="tm-h"><span class="hid" data-stage="hop">13:6</span><span class="hid" data-stage="hop">12:6</span><span class="hid" data-stage="hop">13:14</span><span class="hid" data-stage="hop">14:12</span><span class="hid" data-stage="hop">11:9</span><span class="hid" data-stage="hop">13:15</span></p>
+            <p class="tm-e">Found by a screen at the question in study 11</p>
+          </li>
+          <li class="tm-card" data-st="route">
+            <p class="tm-k">Stage 2 · layers 15–17 · at Answer:</p>
+            <p class="tm-t">Relay it to the answer position</p>
+            <p class="tm-d">Three heads read that information from the question region and carry it to the position where the model is about to produce its answer.</p>
+            <p class="tm-h"><span class="hid" data-stage="route">15:4</span><span class="hid" data-stage="route">16:4</span><span class="hid" data-stage="route">17:1</span></p>
+            <p class="tm-e">Upstream study; confirmed in study 7 · Qwen3-1.7B uses 16:4, 17:1, 18:7</p>
+          </li>
+          <li class="tm-card" data-st="move">
+            <p class="tm-k">Stage 3 · layers 19–22 · at Answer:</p>
+            <p class="tm-t">Select the source and copy its value</p>
+            <p class="tm-d">Three heads use the relayed signal to direct their attention to one record’s value and copy that value into the answer.</p>
+            <p class="tm-h"><span class="hid" data-stage="move">19:5</span><span class="hid" data-stage="move">21:13</span><span class="hid" data-stage="move">22:9</span></p>
+            <p class="tm-e">Study 2; confirmed in study 7 · the same three in Qwen3-1.7B (study 10)</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+    <figcaption>Qwen3-0.6B, one row per layer, drawn to scale; positions within the prompt and within a layer are schematic. The pulse follows the hand-off from the question to the answer. In Qwen3-1.7B, the relay stage uses 18:7 in place of 15:4. <a href="explorer/straitjacket/#relay-map">Open it in the explorer →</a></figcaption>
+    
+    <button type="button" class="btn replay" data-replay hidden>↻ Replay</button>
+  </figure>
+</div>
+</div>
+<details class="sjx-numbers" open>
+<summary>Table 01 as numbers</summary>
+<div class="table-wrap">
           <div class="table-label"><span class="id">Table 01</span>The twelve heads, as layer:head (zero-based)</div>
           <table>
             <thead>
@@ -505,7 +597,34 @@
             </tbody>
           </table>
         </div>
+</details>
         <p>The experiments let a change travel only through the proposed route while holding other inputs fixed, which separates an effect through the tested components from a direct effect or one that bypasses them.</p>
+<div class="sjx-mount">
+<div class="table-label" id="relay-dissoc-t"><span class="id">Figure 03</span>Each switch moves exactly one path</div>
+<div class="sjx" data-sj="relay">
+<figure class="fig wide" id="relay-dissoc" aria-labelledby="relay-dissoc-t">
+    <div class="fig-head"><span class="ev" data-ev="measured">Measured · upstream study</span></div>
+    <div class="plate">
+      <div class="dm" id="relay-dm">
+        <div class="dm-c0" aria-hidden="true"></div>
+        <p class="dm-ch"><span class="sw-g" data-g="move" aria-hidden="true"></span>Copy path<small>what gets copied</small></p>
+        <p class="dm-ch"><span class="sw-g" data-g="route" aria-hidden="true"></span>Where-to-look path<small>which row gets read</small></p>
+        <p class="dm-rh">Swap the colors<small>switch A</small></p>
+        <div class="dm-cell" data-cell="a-ov" data-h="move" data-diag></div>
+        <div class="dm-cell" data-cell="a-qk" data-h="route"></div>
+        <p class="dm-rh">Ask about the other name<small>switch B</small></p>
+        <div class="dm-cell" data-cell="b-ov" data-h="move"></div>
+        <div class="dm-cell" data-cell="b-qk" data-h="route" data-diag></div>
+      </div>
+      <div class="fig-ctrl"><fieldset class="seg"><legend class="vh">Word pair</legend><label><input type="radio" name="relay-split" value="rb" checked><span>Red/blue</span></label><label><input type="radio" name="relay-split" value="gy"><span>Green/yellow</span></label></fieldset></div>
+    </div>
+    <figcaption>From the upstream study, which failed its single-head, attention-shift and accuracy requirements; this three-head test passed. Swapping the colors moved the copy path and left the where-to-look path near zero, and asking about the other name did the reverse. The exact zero follows from the design, since the facts did not change. All four cells share one scale, in logits. <a href="explorer/straitjacket/#relay-dissoc">Open it in the explorer →</a></figcaption>
+    
+    <button type="button" class="btn replay" data-replay hidden>↻ Replay</button>
+  </figure>
+</div>
+</div>
+
         <p>In the smaller model, the full three-stage intervention moved the answer preference in the predicted direction on all <strong>192 held-out prompts</strong> (128 in the main set and 64 with new answer colors), and on the 64 calibration prompts used to select the heads. “Predicted direction” means the preference moved toward the answer associated with the transplanted signal. That study passed all 63 of its mechanism criteria but failed its overall verdict: its registered prerequisite was that the unmodified model answer at least 103 of the 128 main held-out prompts correctly, and it answered 101. The mechanism results stand as measured, but the pathway was not fully confirmed in the smaller model.</p>
         <p>Separate tests isolated the copying step. In the confirmation of the last two stages, changing the value information at the color positions moved the answer preference by a median of 4.14 logits, against a median absolute 0.02 when the same change was made elsewhere. That confirmation also passed on fresh color words, green and yellow, without reselecting any heads.</p>
         <p>An address is a useful analogy for the routing signal: it helps determine where to read before the value is copied. That is a functional interpretation. The causal experiments establish the signal’s role in selecting a source; they do not decode a literal address stored in the network.</p>
@@ -515,14 +634,141 @@
         <p>In Qwen3-1.7B, a separate search on calibration prompts first located the last two stages. It recovered the same three copying heads as the smaller model, and two of its three relay heads matched; the third was 18:7 in place of 15:4. That study passed all 108 of its registered criteria, 36 of them on the calibration prompts used for the search.</p>
         <p>Then came the prediction. The six identifying heads had been found in the smaller model, and their locations were fixed before the transfer test in the larger model, with no new search for them. The study reused the smaller model’s 63 mechanism criteria unchanged and asked whether these six locations would feed the larger model’s relay in the expected way.</p>
         <p>They did. Interventions starting at the six heads moved the larger model’s answer preference in the predicted direction on <strong>92.2% to 100% of held-out prompts</strong>, across both kinds of swap and both held-out prompt sets. The study passed every registered gate, and the unmodified larger model answered 127 of the 128 main held-out prompts correctly.</p>
+<div class="sjx-mount">
+<div class="table-label" id="scale-map-t"><span class="id">Figure 04</span>Same coordinates, two models</div>
+<div class="sjx" data-sj="scale">
+<figure class="fig wide" id="scale-map" aria-labelledby="scale-map-t">
+    <div class="fig-head"><span class="ev" data-ev="confirmed">Head positions real · studies 10 and 12</span></div>
+    <div class="plate">
+      <div class="s9-ctrl">
+        <fieldset class="seg s9-seg">
+          <legend class="vh">Which test to show</legend>
+          <label><input type="radio" name="scale-step" value="search"><span><b>1 · Separate search</b><small>study 10 · copying and relay heads</small></span></label>
+          <label><input type="radio" name="scale-step" value="carry" checked><span><b>2 · Carried over</b><small>study 12 · six identifying heads</small></span></label>
+        </fieldset>
+      </div>
+      <div class="s9-wrap" id="scale-wrap">
+        <svg class="s9-svg" id="scale-svg" role="img" aria-label="Two head grids side by side, Qwen3-0.6B on the left and Qwen3-1.7B on the right, each 28 layers by 16 heads. Lines join heads at the same coordinates in both models: the three copying heads 19:5, 21:13 and 22:9 and the relay heads 16:4 and 17:1, found again by a separate search in the larger model, and the six identifying heads 13:6, 12:6, 13:14, 14:12, 11:9 and 13:15, carried from the small model with no new search. Relay head 15:4 appears only in the small model and 18:7 only in the larger one."></svg>
+      </div>
+      <ul class="s9-legend">
+        <li><span class="s9-key s9-gl"><i data-s="hop"></i></span><span><b>Stage 1 · identifying heads.</b> Six found in Qwen3-0.6B, carried to Qwen3-1.7B with no new search (study 12).</span></li>
+        <li><span class="s9-key s9-gl"><i data-s="route"></i></span><span><b>Stage 2 · relay heads.</b> 16:4 and 17:1 found again by the separate search (study 10).</span></li>
+        <li><span class="s9-key s9-gl"><i data-s="move"></i></span><span><b>Stage 3 · copying heads.</b> 19:5, 21:13 and 22:9, the same three found again by the separate search (study 10).</span></li>
+        <li><span class="s9-key"><i class="rg"></i></span><span>Found in one model only: <span class="hid" data-stage="route">15:4</span> in Qwen3-0.6B, <span class="hid" data-stage="route">18:7</span> in Qwen3-1.7B.</span></li>
+        <li><span class="s9-key"><i class="ln"></i></span><span>A line joins the same layer and head number in both models.</span></li>
+        <li class="s9-lg-scan"><span class="s9-key"><i class="sc"></i></span><span>The separate search screened 176 heads in layers 15–25 for copying heads and 144 in layers 10–18 for relay heads.</span></li>
+      </ul>
+      <output class="readout s9-ro" id="scale-ro" for="scale-svg"></output>
+    </div>
+    <figcaption>Each grid is one model, layer 0 at the bottom and 16 heads across. Head positions are real; the pulse shows only the order of the hand-off. Eleven of the twelve locations are shared: six because they were carried over, five because the separate search found them again. <a href="explorer/straitjacket/#scale-map">Open it in the explorer →</a></figcaption>
+    <button type="button" class="btn replay" data-replay hidden>↻ Replay</button>
+  </figure>
+</div>
+</div>
+
         <p>The 92.2–100% figure counts direction only: it is not answer accuracy, the effect sizes varied from the smaller model’s, and it does not show that the pathway is a complete account of lookup. A separate, ungated check that carried all twelve original locations unchanged into the larger model fell short of the main threshold on one measure.</p>
         <p>That connects to a question from my <a href="blog_reusable_binary_assurance.html">recent work on reusing proofs of OpenSSL code</a>: can a result become something the next investigation starts with? Here, a search in one model supplied concrete targets for an experiment in another, removing the need to repeat that particular search.</p>
 
         <h2 id="retrieval-vs-answer">A model can retrieve the right value and still answer incorrectly</h2>
         <p>On the first study’s 128 held-out two-record prompts, the full model made thirteen errors. A readout of one copying head, 19:5, favored the correct value on all thirteen. In a separate test using “gold” and “silver,” the same head favored the correct value on all nine of the model’s calibration errors in that test. Neither study passed its own overall test: the first missed its accuracy prerequisite by one prompt, and the gold/silver follow-up failed a calibration prerequisite. The readouts are descriptive findings from those runs.</p>
+<div class="sjx-mount">
+<div class="table-label" id="knew-tickets-t"><span class="id">Figure 05</span>22 wrong answers, one head pointing the right way</div>
+<div class="sjx" data-sj="knew">
+<figure class="fig wide" id="knew-tickets" aria-labelledby="knew-tickets-t">
+    <div class="fig-head"><span class="ev" data-ev="descriptive">Descriptive · study 1 and gold/silver</span></div>
+    <div class="plate">
+      <div class="k8-tix">
+        <div class="k8-spec" aria-hidden="true">
+          <div class="k8-tk"><span class="k8-tg">study 1</span><span class="k8-th"><i class="k8-dot"></i><i class="k8-ok">✓</i></span><span class="k8-tb"><i class="k8-no">✕</i></span></div>
+          <div class="k8-spl">
+            <span></span>
+            <p><span class="k8-sk">19:5 pointed to</span><span class="k8-sv"><i class="k8-dot"></i><i class="k8-ok">✓ right color</i></span></p>
+            <p><span class="k8-sk">Final answer</span><span class="k8-sv"><i class="k8-no">✕ wrong</i></span></p>
+          </div>
+        </div>
+        <div class="k8-grp" role="img" aria-label="Study 1, red/blue: 13 wrong answers. On every one, head 19:5’s readout pointed to the right color.">
+          <p class="k8-gl"><b>13</b><span>study 1 · red/blue errors</span></p>
+          <ul class="tickets" style="--tc:7" data-g="v1"></ul>
+        </div>
+        <div class="k8-grp" role="img" aria-label="Gold/silver test: 9 wrong answers. On every one, head 19:5 pointed to silver, the right answer.">
+          <p class="k8-gl"><b>9</b><span>g/s · gold/silver errors</span></p>
+          <ul class="tickets" style="--tc:5" data-g="g/s"></ul>
+        </div>
+      </div>
+      <div class="k8-sum">
+        <div class="k8-tot">
+          <p class="stat-n"><span class="count" data-to="22">22</span><span class="stat-of"> of 22</span></p>
+          <p class="stat-say">wrong answers examined. On every one, head 19:5 pointed to the right color.</p>
+        </div>
+        <div class="k8-bars">
+          <svg class="k8-bsvg" id="knew-bars" role="img" aria-labelledby="knew-bars-t knew-bars-d"><title id="knew-bars-t">Study 1: head 19:5’s readout against the model’s own answer</title><desc id="knew-bars-d">On 128 held-out prompts, the readout from head 19:5 was right on 126 (98.44%). The model's own final answer was right on 115 (89.84%).</desc></svg>
+          <span class="ev" data-ev="measured">Measured · study 1 (inconclusive)</span>
+        </div>
+      </div>
+      
+    </div>
+    <figcaption>Each ticket is one model error: 13 on study 1’s held-out prompts and 9 on the gold/silver test’s calibration prompts. On every one, head 19:5’s readout favored the correct value. Neither study passed its own overall test, so these are descriptive findings; ticket order is illustrative. <a href="explorer/straitjacket/#knew-tickets">Open it in the explorer →</a></figcaption>
+    
+    <button type="button" class="btn replay" data-replay hidden>↻ Replay</button>
+  </figure>
+</div>
+</div>
+
         <p>Interventions showed that this head also pushed the output toward the correct answer: its signal was participating in the computation, and later processing could outweigh it. That suggested a possible repair: strengthen the copying heads’ contribution.</p>
         <p>On four-record prompts, the copying heads had different preferences for where to look: 19:5 leaned toward the last record, while the other two leaned away from it. Simply amplifying the heads also amplified values retrieved from the wrong position. The first amplification attempt raised the median margin on the prompts used to choose it, yet made 15 of their 17 existing errors worse.</p>
         <p>The later repair accounted for those position preferences. It subtracted part of each head’s habitual lean toward particular records before the head mixed in values, and amplified head 22:9. Its settings were chosen on calibration prompts and then frozen. On the 192 held-out four-record prompts, it fixed six errors and introduced one new error, a net gain of five; naive amplification of all three heads fixed ten and broke seven on the same prompts. The repair still failed its registered test. On the main held-out set it did not improve the margins of the recency errors it targeted, and on fresh colors its net gain only tied naive amplification. A separate repair on the gold/silver task fixed two errors and broke two.</p>
+<div class="sjx-mount">
+<div class="table-label" id="crowd-repair-t"><span class="id">Figure 06</span>Fixed and broken: the repair against naive amplification</div>
+<div class="sjx" data-sj="crowd">
+<figure class="fig wide" id="crowd-repair" aria-labelledby="crowd-repair-t">
+    <div class="fig-head"><span class="fig-chips"><span class="ev" data-ev="measured">Measured · study 8, held-out prompts</span></span></div>
+    <div class="plate">
+      <div class="cr-vs">
+        <div class="cr-b" data-k="repair">
+          <p class="cr-r"><span class="vh">6 fixed to 1 broken</span><span aria-hidden="true"><span class="f">6</span><span class="c">:</span><span class="b">1</span></span></p>
+          <p class="cr-fb">fixed : broken</p>
+          <p class="cr-name">Re-aim attention + turn up 22:9</p>
+          <p class="cr-tot">145 → 150 of 192</p>
+        </div>
+        <p class="cr-vs-mid">vs</p>
+        <div class="cr-b" data-k="naive">
+          <p class="cr-r"><span class="vh">10 fixed to 7 broken</span><span aria-hidden="true"><span class="f">10</span><span class="c">:</span><span class="b">7</span></span></p>
+          <p class="cr-fb">fixed : broken</p>
+          <p class="cr-name">Turn the copying heads up ×2</p>
+          <p class="cr-tot">145 → 148 of 192</p>
+        </div>
+      </div>
+      <div class="fb" id="crowd-fb">
+        <div class="fb-row" aria-hidden="true"><span class="fb-label"></span><span class="fb-head">✕ broken</span><span></span><span class="fb-head">fixed ✓</span><span class="fb-net fb-head">net</span></div>
+        <div class="fb-row"><span class="fb-label">Re-aim attention + turn up 22:9 (study 8)</span>
+          <span class="fb-break" role="img" aria-label="1 broken"><i class="u" data-s="break"></i></span>
+          <span class="fb-axis" aria-hidden="true"></span>
+          <span class="fb-fix" role="img" aria-label="6 fixed"><i class="u" data-s="fix"></i><i class="u" data-s="fix"></i><i class="u" data-s="fix"></i><i class="u" data-s="fix"></i><i class="u" data-s="fix"></i><i class="u" data-s="fix"></i></span>
+          <span class="fb-net">net +5</span></div>
+        <div class="fb-row"><span class="fb-label">Turn the copying heads up ×2 (naive, same 192 prompts)</span>
+          <span class="fb-break" role="img" aria-label="7 broken"><i class="u" data-s="break"></i><i class="u" data-s="break"></i><i class="u" data-s="break"></i><i class="u" data-s="break"></i><i class="u" data-s="break"></i><i class="u" data-s="break"></i><i class="u" data-s="break"></i></span>
+          <span class="fb-axis" aria-hidden="true"></span>
+          <span class="fb-fix" role="img" aria-label="10 fixed"><i class="u" data-s="fix"></i><i class="u" data-s="fix"></i><i class="u" data-s="fix"></i><i class="u" data-s="fix"></i><i class="u" data-s="fix"></i><i class="u" data-s="fix"></i><i class="u" data-s="fix"></i><i class="u" data-s="fix"></i><i class="u" data-s="fix"></i><i class="u" data-s="fix"></i></span>
+          <span class="fb-net">net +3</span></div>
+        <div class="fb-row" data-muted><span class="fb-label">Re-aim, on the calibration prompts used to choose the settings</span>
+          <span class="fb-break" role="img" aria-label="0 broken"></span>
+          <span class="fb-axis" aria-hidden="true"></span>
+          <span class="fb-fix" role="img" aria-label="2 fixed"><i class="u" data-s="fix"></i><i class="u" data-s="fix"></i></span>
+          <span class="fb-net mute"><span aria-hidden="true">–</span><span class="vh">not counted in the comparison</span></span></div>
+      </div>
+      
+      <div class="cr-foot">
+        <p class="cr-note">It uses no answer labels at test time. Its two settings were chosen on a separate labelled calibration set, and it needs to know where the rows are.</p>
+        <span class="stamp cr-stamp" data-v="fail" id="crowd-stamp">Failed<small>3 of its 4 gates</small><small>Tied on fresh colors (+2 vs +2)</small></span>
+      </div>
+    </div>
+    <figcaption>One square per prompt, on the same 192 held-out four-record prompts. The repair fixed six errors and introduced one; naive amplification of all three copying heads fixed ten and broke seven. The repair still failed its registered test, and on fresh colors its net gain only tied naive amplification. <a href="explorer/straitjacket/#crowd-repair">Open it in the explorer →</a></figcaption>
+    
+    <button type="button" class="btn replay" data-replay hidden>↻ Replay</button>
+  </figure>
+</div>
+</div>
+
         <p>The value of this small pilot was the link between explanation and intervention: knowing how the heads divided the task suggested a more targeted repair than amplifying every head, with fewer new errors on both four-record sets.</p>
         <p>My recent post on <a href="blog_fact_probe.html">what Llama’s internal signals reveal about factual accuracy</a> asked what activations reveal about whether an answer is correct. This project traces how an answer is selected, relayed, and sometimes outweighed before it reaches the output.</p>
 
@@ -534,6 +780,178 @@
         <p><strong>Make predictions before measuring.</strong> Before each confirmation run, the harness froze the selected heads, prompts, interventions and pass criteria, and recorded file fingerprints. Heads were chosen on calibration prompts and tested on held-out prompts. The transfer study is the clearest case: name six locations first, then measure what happens there in the other model.</p>
         <p><strong>Keep failures in the record.</strong> The first amplification attempt made answers worse, and that pointed to the position preferences the later repair used. A version with structured, JSON-like records failed both its tracks, and its measurements pointed the search back toward the question. The appendix lists every study and its verdict.</p>
         <p>Several checks stood behind each result. Each confirmation ran twice in fresh processes and had to reproduce its saved numbers exactly, and a separate NumPy script recomputed every gate from the saved arrays. In the later studies, the AI review cited numbers by reference and code filled in the audited values, so it could not misquote them. These are internal checks, not outside review.</p>
+<div class="sjx-mount">
+<div class="table-label" id="straitjacket-locks-t"><span class="id">Figure 07</span>The five locks</div>
+<div class="sjx" data-sj="straitjacket">
+<figure class="fig wide" id="straitjacket-locks" aria-labelledby="straitjacket-locks-t">
+    <div class="fig-head"><span class="ev" data-ev="inplace">In place · self-reported, studies 1 to 12</span></div>
+    <ol class="locks">
+      <li class="lk lk-1 plate" id="straitjacket-l1">
+        <div class="lk-h"><svg class="lk-ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#sj-lock"/></svg><span class="lk-n">1</span><h3>Seal the plan.</h3></div>
+        <p class="lk-stops"><span class="k">stops</span>changing the rules after seeing the data.</p>
+        <p class="lk-how">Before the model runs, the plan is pre-registered: every question, pass mark and line of code gets a SHA-256 fingerprint. Change one byte afterwards and the audit fails.</p>
+        <div class="lk-inst">
+          <div class="lh">
+            <div class="lh-top"><label class="lh-lab" for="straitjacket-field">Sealed rule</label><span class="lh-demo">Demo: this hashes the text in the box, in your browser.</span></div>
+            <textarea id="straitjacket-field" class="lk-field" rows="1" spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="straitjacket-count">Study 1 prerequisite: accuracy ≥ 90.0% (116/128)</textarea>
+            <div class="lh-btns"><button type="button" class="btn" data-act="nudge">Nudge the bar to 89.8%</button><button type="button" class="btn ghost" data-act="reset">Reset</button></div>
+            <div class="lh-dig">
+              <p class="lh-dl" id="straitjacket-sealed-l">Fingerprint sealed before the run</p>
+              <p class="lh-hex sealed" id="straitjacket-sealed" aria-labelledby="straitjacket-sealed-l"></p>
+              <p class="lh-dl" id="straitjacket-now-l">Fingerprint of the box now</p>
+              <output class="lh-hex" id="straitjacket-now" for="straitjacket-field" aria-labelledby="straitjacket-now-l" aria-live="off"></output>
+            </div>
+            <div class="lh-foot">
+              <p class="lh-count" id="straitjacket-count" aria-live="off">Characters changed: <b>0</b> of 64</p>
+              <span class="stamp" id="straitjacket-verdict" data-v="pass">Matches the seal</span>
+            </div>
+            <p class="lh-fb" id="straitjacket-fb" hidden>Your browser cannot compute fingerprints here, so the box is read-only. The two buttons show precomputed fingerprints.</p>
+          </div>
+        </div>
+        <div class="lk-fact"><svg class="seal lk-seal" viewBox="0 0 112 112" role="img" aria-label="Sealed: the study 7 manifest"><use href="#sj-seal-ring"/><text x="56" y="59" class="seal-c">7</text><text x="56" y="73" class="seal-s">STUDY</text></svg><p>Study 7’s real fingerprint: <span class="nw"><code>a5956691…a899</code>&nbsp;·</span> <span class="nw">commit <code>ff46c4b</code></span></p></div>
+        
+      </li>
+
+      <li class="lk plate" id="straitjacket-l2">
+        <div class="lk-h"><svg class="lk-ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#sj-lock"/></svg><span class="lk-n">2</span><h3>Retire what you peeked at.</h3></div>
+        <p class="lk-stops"><span class="k">stops</span>tuning on the test.</p>
+        <div class="lk-body">
+          <div class="lk-inst lb" id="straitjacket-bars" role="img" aria-label="The protected inventory grew: 1,053 protected files by study 7, 1,416 after the repair in study 8, and 21,073 protected file references verified by study 12, on one linear scale from 0 to 22,000.">
+            <div><p class="lb-l"><span class="lb-n"><span class="count" data-to="1053" data-format="comma">1,053</span></span>protected files by study 7</p><div class="lb-tr" aria-hidden="true"><i style="--w: 4.786%"></i></div></div>
+            <div><p class="lb-l"><span class="lb-n"><span class="count" data-to="1416" data-format="comma">1,416</span></span>after the repair in study 8</p><div class="lb-tr" aria-hidden="true"><i style="--w: 4.786%"></i><i class="add" style="--x: 4.786%; --w: 1.65%"></i></div></div>
+            <div><p class="lb-l"><span class="lb-n"><span class="count" data-to="21073" data-format="comma">21,073</span></span>protected file references verified by study 12</p><div class="lb-tr" aria-hidden="true"><i style="--w: 6.436%"></i><i class="add" style="--x: 6.436%; --w: 89.35%"></i></div></div>
+            <div aria-hidden="true"><div class="lb-ax"><span style="--x: 0%">0</span><span style="--x: 45.4545%">10,000</span><span style="--x: 90.909%">20,000</span></div><p class="lb-unit">one linear scale, no break</p><p class="lb-unit lb-key"><i class="lb-hk"></i>hatched: added since the row above</p></div>
+          </div>
+          <p class="lk-txt">Any test set opened to diagnose an error is locked away for good. Every new idea gets fresh prompts and new key words.</p>
+          <div class="lc" id="straitjacket-catch">
+            <p class="lc-h"><span class="lc-k">The lock at work · study 9 preflight</span><span class="stamp" data-v="pass" id="straitjacket-caught">Caught before inference</span></p>
+            <div class="units glyph" id="straitjacket-u26" role="img" aria-label="26 retired key words that a bug would have reused, all blocked"></div>
+            <p class="lc-key" aria-hidden="true"><span class="units glyph"><i class="u" data-s="break"></i></span>one retired key word, blocked</p>
+            <p class="lc-t">A bug in a file pattern would have reused 26 retired key words. The harness caught it in preflight, before any held-out prompt ran.</p>
+          </div>
+          <div class="lb-foot"><button type="button" class="btn ghost replay" data-replay hidden aria-label="Replay the retired-files bars">↻ Replay</button></div>
+          
+        </div>
+      </li>
+
+      <li class="lk plate" id="straitjacket-l3">
+        <div class="lk-h"><svg class="lk-ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#sj-lock"/></svg><span class="lk-n">3</span><h3>Test the grader on decoys first.</h3></div>
+        <p class="lk-stops"><span class="k">stops</span>a grader that passes anything.</p>
+        <div class="lk-body">
+          <div class="lk-inst">
+            <p class="lt-head" aria-hidden="true"><span>Planted model</span><span>Grader, study 7</span></p>
+            <ul class="lt">
+              <li class="lt-row"><span class="lt-tag"><span class="lt-name"><span class="l-plain">The right mechanism, built in by hand</span></span><span class="lt-req">must pass</span></span><span class="stamp" data-v="pass">PASS</span></li>
+              <li class="lt-row"><span class="lt-tag"><span class="lt-name"><span class="l-plain">Copies the question word only</span></span><span class="lt-req">must fail</span></span><span class="stamp" data-v="fail">FAIL</span></li>
+              <li class="lt-row"><span class="lt-tag"><span class="lt-name"><span class="l-plain">Stamps keys on the answer words only</span></span><span class="lt-req">must fail</span></span><span class="stamp" data-v="fail">FAIL</span></li>
+              <li class="lt-row"><span class="lt-tag"><span class="lt-name"><span class="l-plain">Noise only</span></span><span class="lt-req">must fail</span></span><span class="stamp" data-v="fail">FAIL</span></li>
+              <li class="lt-row"><span class="lt-tag"><span class="lt-name"><span class="l-plain">Reversed output</span></span><span class="lt-req">must fail</span></span><span class="stamp" data-v="fail">FAIL</span></li>
+              <li class="lt-sep" aria-hidden="true">added in later studies</li>
+              <li class="lt-row" data-new><span class="lt-tag"><span class="lt-name"><span class="l-plain">Does the matching at the last word only</span></span><span class="lt-req">must fail</span></span><span class="stamp" data-v="note">must fail</span></li>
+            </ul>
+            <div class="lt-foot"><button type="button" class="btn ghost replay" data-replay hidden aria-label="Replay the decoy stamps">↻ Replay</button></div>
+          </div>
+          <p class="lk-txt">In study 7, the grader passed the built-in mechanism and rejected all four decoys. The three-stage work later added a planted model that does the matching at the last word only, which the grader must fail.</p>
+          
+        </div>
+      </li>
+
+      <li class="lk plate" id="straitjacket-l4">
+        <div class="lk-h"><svg class="lk-ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#sj-lock"/></svg><span class="lk-n">4</span><h3>Run it twice, audit it separately.</h3></div>
+        <p class="lk-stops"><span class="k">checks</span>repeatability and catches some implementation errors.</p>
+        <div class="lk-body">
+          <div class="lk-inst lz">
+            <fieldset class="seg lz-seg"><legend class="vh">Which confirmation runs to show</legend><label><input type="radio" name="straitjacket-zip" value="v57"><span>Studies 5–7</span></label><label><input type="radio" name="straitjacket-zip" value="v10"><span>Study 10</span></label><label><input type="radio" name="straitjacket-zip" value="v12" checked><span>Study 12</span></label></fieldset>
+            <svg class="lz-zip" id="straitjacket-zip" aria-hidden="true"></svg>
+            <div class="lz-say" id="straitjacket-zsay" aria-live="polite">
+              <p class="lz-n" id="straitjacket-zn">1,212</p>
+              <p><span id="straitjacket-zl">saved arrays identical,</span> bit for bit <span class="nw" id="straitjacket-zr">(study 12, Qwen3-1.7B)</span></p>
+              <p class="sub" id="straitjacket-zp">84 pairs of saved files, one pair of zipper teeth each</p>
+            </div>
+            <p class="lz-all" aria-hidden="true"><span>Studies 5–7 <b>655</b></span><span>Study 10 <b>612</b></span><span>Study 12 <b>1,212</b></span></p>
+            <div class="lm" style="--f: 51%" role="img" aria-label="In the manuscript's audit, the separate check agreed with the main code to within 1.53 times 10 to the minus 5 (0.0000153), against an allowed 3.0 times 10 to the minus 5 (0.000030).">
+              <p class="lm-v" aria-hidden="true"><b>1.53×10<sup>−5</sup> <span class="l-plain lm-dec">(0.0000153)</span></b>largest gap found</p>
+              <div class="lm-tr" aria-hidden="true"><i class="lm-fill"></i><i class="lm-nd"></i><i class="lm-end"></i></div>
+              <p class="lm-ax" aria-hidden="true"><span>0</span><span>allowed: 3.0×10<sup>−5</sup> <span class="l-plain">(0.000030)</span></span></p>
+              <p class="lm-src" aria-hidden="true">audit gap reported in the manuscript</p>
+            </div>
+            <div class="lz-foot"><button type="button" class="btn ghost replay" data-replay hidden aria-label="Replay the zipper">↻ Replay</button></div>
+          </div>
+          <p class="lk-txt">Separate numerical checks recompute the reported numbers from the saved arrays; they reuse some of the production code’s NumPy arithmetic. The two fresh runs show the numbers repeat exactly. They are not extra samples.</p>
+          
+        </div>
+      </li>
+
+      <li class="lk plate" id="straitjacket-l5">
+        <div class="lk-h"><svg class="lk-ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#sj-lock"/></svg><span class="lk-n">5</span><h3>Let code write the numbers.</h3></div>
+        <p class="lk-stops"><span class="k">stops</span>misquoted results.</p>
+        <div class="lk-body">
+          <div class="lk-inst ld">
+            <div class="ld-nums" role="img" aria-label="Reviewer wrote 0.03109455108691406. Saved array: 0.03109455108642578. They first differ at the 13th decimal place.">
+              <p class="ld-l" aria-hidden="true">Reviewer wrote</p>
+              <p class="ld-v" aria-hidden="true">0.031094551086<span class="ld-box bad">91406</span></p>
+              <p class="ld-l" aria-hidden="true">Saved array</p>
+              <p class="ld-v" aria-hidden="true">0.031094551086<span class="ld-box">42578</span></p>
+              <p class="ld-caret" aria-hidden="true"><span class="sp">0.031094551086</span><span class="ar">↑ 13th decimal</span></p>
+            </div>
+            <div class="ld-u">
+              <p class="ld-h"><b>55 of 56</b> matched<span class="ld-src">one review, study 4</span></p>
+              <div class="units" id="straitjacket-u56" role="img" aria-label="55 of 56 quoted numbers matched; 1 drifted"></div>
+              <p class="ld-key" aria-hidden="true"><span class="units"><i class="u" data-s="miss"></i></span>ringed: the one that drifted</p>
+            </div>
+            <div class="ld-u ld-b">
+              <p class="ld-h">Then code wrote every number<span class="ld-src">each one bound by code and verified</span></p>
+              <div class="ld-g" id="straitjacket-bound">
+                <p class="ld-gl"><b>83/83</b>study 7</p><div class="units" id="straitjacket-u83" role="img" aria-label="Study 7: 83 of 83 numbers bound by code"></div>
+                <p class="ld-gl"><b>109/109</b>study 10</p><div class="units" id="straitjacket-u109" role="img" aria-label="Study 10: 109 of 109 numbers bound by code"></div>
+                <p class="ld-gl"><b>31/31</b>study 12</p><div class="units" id="straitjacket-u31" role="img" aria-label="Study 12: 31 of 31 numbers bound by code"></div>
+              </div>
+              <div class="ld-foot"><button type="button" class="btn ghost replay" data-replay hidden aria-label="Replay the code-bound numbers">↻ Replay</button></div>
+            </div>
+          </div>
+          <p class="lk-txt">In one review, 55 of 56 quoted numbers matched exactly. One was off in the 13th decimal place, a negligible amount, and the checker caught it. From then on the AI only names which number it means, and code writes the value: 83 of 83 in study 7, 109 of 109 in study 10 and 31 of 31 in study 12.</p>
+          
+        </div>
+      </li>
+    </ol>
+    <figcaption>Each lock blocks one shortcut. Lock 1 is a live demo that fingerprints the text in your browser; the others show counts the harness reported. These are internal checks, not outside review, and the saved arrays behind them are private. <a href="explorer/straitjacket/#straitjacket-locks">Open it in the explorer →</a></figcaption>
+    
+  </figure>
+</div>
+</div>
+<details class="sjx-more">
+<summary>Figure 08 · The near miss in study 1</summary>
+<div class="sjx-mount">
+<div class="table-label" id="straitjacket-miss-t"><span class="id">Figure 08</span>One prompt short</div>
+<div class="sjx" data-sj="straitjacket">
+<figure class="fig wide" id="straitjacket-miss" aria-labelledby="straitjacket-miss-t">
+    <div class="fig-head"><span class="ev" data-ev="measured">Measured · study 1 (inconclusive)</span></div>
+    <div class="plate nm">
+      <div class="nm-wrap">
+        <div class="units nm-units" id="straitjacket-units" style="--cols: 16" role="img" aria-label="128 held-out prompts: the model answered 115 right and 13 wrong. The sealed bar needed 116 right."></div>
+        <span class="nm-mark" id="straitjacket-mark" aria-hidden="true"></span>
+        <span class="nm-mlab" aria-hidden="true"><span class="nw">Sealed bar: ≥ 90.0%,</span> <span class="nw">so at least 116 of 128</span></span>
+      </div>
+      <div class="nm-side">
+        <p class="stat-n sm nm-big">115/128 = 89.84%</p>
+        <p class="nm-say">The unmodified model’s score in study 1, one prompt short of the sealed bar.</p>
+        <span class="stamp big" id="straitjacket-inc" data-v="inconclusive">Inconclusive</span>
+        <p class="nm-small">The head under study, <span class="hid" data-stage="move">19:5</span> (layer 19, head 5), passed every head-level check on these same 128 prompts.</p>
+      </div>
+      <ul class="nm-key" aria-hidden="true">
+        <li><span class="units"><i class="u" data-s="on"></i></span>answered right: 115</li>
+        <li><span class="units"><i class="u" data-s="off"></i></span>answered wrong: 13 (one is ringed)</li>
+        <li><span class="units"><i class="u" data-s="miss"></i></span>ringed: the 116th right answer the bar needed</li>
+      </ul>
+    </div>
+    <figcaption>The sealed rule needed 116 right answers out of 128. The unmodified model gave 115, so study 1 was marked inconclusive rather than rounded up. No finished study was regraded. Counts are exact; positions are illustrative. <a href="explorer/straitjacket/#straitjacket-miss">Open it in the explorer →</a></figcaption>
+    
+    <button type="button" class="btn replay" data-replay hidden>↻ Replay</button>
+  </figure>
+</div>
+</div>
+</details>
+
         <p>All of this ran on one 24 GB M4 Pro MacBook Pro. Broader uses, such as starting new investigations from a tested map of a model, monitoring deployed models, or repairing errors automatically, are future possibilities; this campaign shows one prospective reuse and one small repair that did not pass.</p>
 
         <h2 id="related">Where this fits</h2>
@@ -556,7 +974,21 @@
 
         <h2 id="study-record">Appendix: every study and its verdict</h2>
         <p>An earlier broad sweep over real text tested 36 hypotheses and produced no survivor, which is why the campaign moved to this controlled task. The table lists the controlled studies in order, with the verdict set by each study’s own criteria. Post-hoc diagnostics of finished studies are described in the <a href="https://github.com/scasella/qwen3-auto-interp/blob/b193b4aadbd6151216399ec710e6c1aa57ed4a9f/docs/RESULTS_INDEX.md">results ledger</a> and are not counted as confirmations.</p>
-        <div class="table-wrap">
+        <div class="sjx-mount">
+<div class="table-label" id="ledger-strip-t"><span class="id">Figure 09</span>Every study, in order</div>
+<div class="sjx" data-sj="ledger">
+<figure class="fig wide" id="ledger-strip" aria-labelledby="ledger-strip-t">
+    <div class="fig-head"><span class="ev" data-ev="measured">Measured · formal verdicts</span></div>
+    <div class="plate">
+      <ol class="rh" id="ledger-rh" aria-label="Study verdicts in order"><li><a class="rh-c" href="explorer/straitjacket/#ledger-v1" data-v="inconclusive"><span class="rh-r">1</span><span class="rh-v">inconclusive</span></a></li><li><a class="rh-c" href="explorer/straitjacket/#ledger-goldsilver" data-v="inconclusive" data-f><span class="rh-r">gold/silver</span><span class="rh-v">inconclusive</span></a></li><li><a class="rh-c" href="explorer/straitjacket/#ledger-v2" data-v="fail"><span class="rh-r">2</span><span class="rh-v">failed</span></a></li><li><a class="rh-c" href="explorer/straitjacket/#ledger-v3" data-v="rejected"><span class="rh-r">3</span><span class="rh-v">rejected</span></a></li><li><a class="rh-c" href="explorer/straitjacket/#ledger-upstream" data-v="fail" data-f><span class="rh-r">upstream</span><span class="rh-v">failed</span></a></li><li><a class="rh-c" href="explorer/straitjacket/#ledger-v4" data-v="fail"><span class="rh-r">4</span><span class="rh-v">failed</span></a></li><li><a class="rh-c" href="explorer/straitjacket/#ledger-v5" data-v="fail"><span class="rh-r">5</span><span class="rh-v">failed</span></a></li><li><a class="rh-c" href="explorer/straitjacket/#ledger-v6" data-v="fail"><span class="rh-r">6</span><span class="rh-v">failed</span></a></li><li><a class="rh-c" href="explorer/straitjacket/#ledger-v7" data-v="pass"><span class="rh-r">7</span><span class="rh-v">passed · 0.6B</span></a></li><li><a class="rh-c" href="explorer/straitjacket/#ledger-v8" data-v="fail"><span class="rh-r">8</span><span class="rh-v">failed</span></a></li><li><a class="rh-c" href="explorer/straitjacket/#ledger-v9" data-v="fail"><span class="rh-r">9</span><span class="rh-v">failed</span></a></li><li><a class="rh-c" href="explorer/straitjacket/#ledger-v10" data-v="pass"><span class="rh-r">10</span><span class="rh-v">passed · 1.7B</span></a></li><li><a class="rh-c" href="explorer/straitjacket/#ledger-v11" data-v="fail"><span class="rh-r">11</span><span class="rh-v">failed</span></a></li><li><a class="rh-c" href="explorer/straitjacket/#ledger-v12" data-v="pass"><span class="rh-r">12</span><span class="rh-v">passed · 1.7B</span></a></li></ol>
+      <p class="rh-key" aria-hidden="true"><span><i></i>numbered study</span><span><i class="f"></i>follow-up study</span><span><i class="p"></i>passed every registered gate</span></p>
+      <div class="rh-foot"><button type="button" class="btn ghost replay" data-replay hidden aria-label="Replay the run chips">↻ Replay</button></div>
+    </div>
+    <figcaption>Three of the twelve numbered studies passed every registered gate: study 7 in Qwen3-0.6B, and studies 10 and 12 in Qwen3-1.7B. Study 11 met all 63 of its mechanism criteria but failed its accuracy prerequisite. Each chip opens that study’s row in the explorer’s run ledger. <a href="explorer/straitjacket/#ledger-strip">Open it in the explorer →</a></figcaption>
+  </figure>
+</div>
+</div>
+<div class="table-wrap">
           <div class="table-label"><span class="id">Table 02</span>The study record, from the results ledger and run reports</div>
           <table>
             <thead>
@@ -592,6 +1024,41 @@
             <tr><th scope="row">Status</th><td>Published 2026-10-23 · Source public, evidence private, not independently reproduced. The confirmation of the last two stages, the larger-model search and the transfer passed every registered gate; the other studies were inconclusive or failed. No external review.</td></tr>
           </tbody>
         </table>
+    <div class="sjx sjx-global">
+<svg id="sj-sprite" width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false">
+  <defs>
+    <pattern id="sj-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="6" height="6" style="fill:var(--plate)"/>
+      <line x1="0" y1="0" x2="0" y2="6" style="stroke:var(--hatch)" stroke-width="1.6"/>
+    </pattern>
+    <pattern id="sj-hatch-dense" width="3.5" height="3.5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="3.5" height="3.5" style="fill:var(--plate)"/>
+      <line x1="0" y1="0" x2="0" y2="3.5" style="stroke:var(--hatch)" stroke-width="1.4"/>
+    </pattern>
+    <marker id="sj-arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--ink)"/></marker>
+    <marker id="sj-arrow-route" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--route)"/></marker>
+    <marker id="sj-arrow-move" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--move)"/></marker>
+    <marker id="sj-arrow-key" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--key)"/></marker>
+    <path id="sj-seal-path" d="M56,56 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0"/>
+  </defs>
+  <symbol id="sj-seal-ring" viewBox="0 0 112 112">
+    <circle cx="56" cy="56" r="54" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    <circle cx="56" cy="56" r="51.5" fill="none" stroke="currentColor" stroke-width=".6"/>
+    <circle cx="56" cy="56" r="39.5" fill="none" stroke="currentColor" stroke-width="1"/>
+    <circle cx="56" cy="56" r="37" fill="none" stroke="currentColor" stroke-width=".7" stroke-dasharray="1 2.4"/>
+    <text font-size="7.4" letter-spacing="1.05" fill="currentColor" style="font-family:var(--f-mono);font-weight:500"><textPath href="#sj-seal-path">PRE-REGISTERED · SEALED BEFORE INFERENCE · SHA-256 ·</textPath></text>
+  </symbol>
+  <symbol id="sj-lock" viewBox="0 0 24 24">
+    <rect x="4.5" y="10.5" width="15" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    <circle cx="12" cy="15.2" r="1.4" fill="currentColor"/><path d="M12 16.2v2" stroke="currentColor" stroke-width="1.6"/>
+  </symbol>
+  <symbol id="sj-check" viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"/></symbol>
+  <symbol id="sj-cross" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"/></symbol>
+</svg>
+<div id="sj-tip" role="tooltip" hidden></div>
+<div id="sj-live" class="vh" aria-live="polite"></div>
+</div>
     <!-- PANES:NEXT:START -->
     <nav class="post-next" aria-label="More research">
       <a href="blog_gemma_blind_search.html"><span>next →</span><span>A search for internal signals in Gemma, built and tested by agents</span></a>
