@@ -1,4 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="8" fill="#111"/>
-  <text x="16" y="21" text-anchor="middle" fill="#fff" font-size="12" font-family="Arial, Helvetica, sans-serif" font-weight="700">SC</text>
+  <rect width="32" height="32" fill="#17160c"/>
+  <g fill="#e8cdb0">
+    <!-- S and C from the site's 5x7 label face (tools/make-font.py), 2 units to the cell -->
+    <path d="M6 9h8v2h-8zM4 11h2v4h-2zM6 15h6v2h-6zM12 17h2v4h-2zM4 21h8v2h-8z"/>
+    <path d="M20 9h6v2h-6zM18 11h2v10h-2zM26 11h2v2h-2zM26 19h2v2h-2zM20 21h6v2h-6z"/>
+  </g>
+  <rect x="4" y="26" width="24" height="2" fill="#ff6a3d"/>
 </svg>
